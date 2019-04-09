@@ -233,13 +233,13 @@ void Resubscribe(DataSubscriber* source)
 }
 
 // Callback which is called to display status messages from the subscriber.
-void DisplayStatusMessage(DataSubscriber* source, const string& message)
+void DisplayStatusMessage(DataSubscriber*, const string& message)
 {
     cout << message << endl << endl;
 }
 
 // Callback which is called to display error messages from the connector and subscriber.
-void DisplayErrorMessage(DataSubscriber* source, const string& message)
+void DisplayErrorMessage(DataSubscriber*, const string& message)
 {
     cerr << message << endl << endl;
 }
