@@ -71,23 +71,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\samples\</OutDir>
+    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\samples\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\..\..\boost\stage\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\samples\</OutDir>
+    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\samples\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\..\..\boost\stage\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\samples\</OutDir>
+    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\samples\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\..\..\boost\stage\lib\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\samples\</OutDir>
+    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\samples\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)\..\..\boost\stage\lib\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
@@ -105,7 +105,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY $(ProjectDir)Metadata.xml $(TargetDir)</Command>
@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY $(ProjectDir)Metadata.xml $(TargetDir)</Command>
@@ -147,7 +147,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY $(ProjectDir)Metadata.xml $(TargetDir)</Command>
@@ -170,7 +170,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\build\output\$(Platform)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\build\output\$(PlatformTarget)\$(Configuration)\lib\sttp.cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY $(ProjectDir)Metadata.xml $(TargetDir)</Command>
