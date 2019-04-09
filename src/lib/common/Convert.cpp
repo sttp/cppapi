@@ -400,19 +400,19 @@ string sttp::RegExEncode(const char value)
     return "\\u" + PadLeft(stream.str(), 4, '0');
 }
 
-Guid sttp::ParseGuid(const uint8_t* data, bool swapEndianness, bool useGEPEncoding)
+Guid sttp::ParseGuid(const uint8_t* data, bool swapEndianness)
 {
     Guid id;
     uint8_t swappedBytes[16];
     uint8_t* encodedBytes;
 
-    if (swapEndianness || useGEPEncoding)
+    if (swapEndianness)
     {
         uint8_t copy[8];
 
         for (uint32_t i = 0; i < 16; i++)
         {
-            swappedBytes[i] = useGEPEncoding ? data[15 - i] : data[i];
+            swappedBytes[i] = data[i];
 
             if (i < 8)
                 copy[i] = swappedBytes[i];
@@ -452,9 +452,8 @@ Guid sttp::ParseGuid(const char* data)
     return generator(data);
 }
 
-void sttp::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
+void sttp::SwapGuidEndianness(Guid& value)
 {
-    // Convert RFC encoding to Microsoft or vice versa
     uint8_t* data = value.data;
     uint8_t copy[8];
 
@@ -474,18 +473,6 @@ void sttp::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
 
     data[6] = copy[7];
     data[7] = copy[6];
-
-    // GEP encodes Guid bytes in reverse order
-    if (useGEPEncoding)
-    {
-        uint8_t swappedBytes[16];
-
-        for (uint32_t i = 0; i < 16; i++)
-            swappedBytes[i] = data[15 - i];
-
-        for (uint32_t i = 0; i < 16; i++)
-            data[i] = swappedBytes[i];
-    }
 }
 
 const char* sttp::Coalesce(const char* data, const char* nonEmptyValue)

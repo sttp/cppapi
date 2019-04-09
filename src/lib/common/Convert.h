@@ -95,9 +95,11 @@ namespace sttp
     std::string RegExEncode(char value);
 
     // Converts 16 contiguous bytes of character data into a globally unique identifier
-    Guid ParseGuid(const uint8_t* data, bool swapEndianness = false, bool useGEPEncoding = false);
+    Guid ParseGuid(const uint8_t* data, bool swapEndianness = false);
     Guid ParseGuid(const char* data);
-    void SwapGuidEndianness(Guid& value, bool useGEPEncoding = false);
+    
+    // Convert RFC encoding to Microsoft or vice versa
+    void SwapGuidEndianness(Guid& value);
 
     // Returns a non-empty nor null value
     const char* Coalesce(const char* data, const char* nonEmptyValue);

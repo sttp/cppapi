@@ -1326,6 +1326,7 @@ void DataSubscriber::SendOperationalModes()
     uint32_t operationalModes = CompressionModes::GZip;
     uint32_t bigEndianOperationalModes;
 
+    operationalModes |= OperationalModes::VersionMask & 1U;
     operationalModes |= OperationalEncoding::UTF8;
     operationalModes |= OperationalModes::UseCommonSerializationFormat;
 

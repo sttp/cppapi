@@ -156,10 +156,9 @@ const uint32_t OperationalModes::CompressSignalIndexCache;
 const uint32_t OperationalModes::CompressMetadata;
 const uint32_t OperationalModes::NoFlags;
 
-const uint32_t OperationalEncoding::Unicode;
-const uint32_t OperationalEncoding::BigEndianUnicode;
+const uint32_t OperationalEncoding::UTF16LE;
+const uint32_t OperationalEncoding::UTF16BE;
 const uint32_t OperationalEncoding::UTF8;
-const uint32_t OperationalEncoding::ANSI;
 
 const uint32_t CompressionModes::GZip;
 const uint32_t CompressionModes::TSSC;

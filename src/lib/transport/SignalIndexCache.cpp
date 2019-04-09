@@ -201,7 +201,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
 
         // Set values for measurement key
         const uint16_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
-        const Guid signalID = ParseGuid(signalIDPtr, true, true);
+        const Guid signalID = ParseGuid(signalIDPtr);
         const string source = sourceStream.str();
         const uint32_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
 
@@ -227,22 +227,19 @@ void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<
     WriteBytes(buffer, uint32_t(0));
 
     // Encode subscriber ID
-    Guid subscriberID = connection.GetSubscriberID();
-    SwapGuidEndianness(subscriberID, true);
-    WriteBytes(buffer, subscriberID);
+    WriteBytes(buffer, connection.GetSubscriberID());
 
     // Encode number of references
     EndianConverter::WriteBigEndianBytes(buffer, ConvertInt32(m_reference.size()));
 
     for (size_t i = 0; i < m_signalIDList.size(); i++)
     {
-        Guid signalID = m_signalIDList[i];
+        const Guid signalID = m_signalIDList[i];
 
         // Encode run-time signal index
         EndianConverter::WriteBigEndianBytes(buffer, GetSignalIndex(signalID));
 
         // Encode signal ID
-        SwapGuidEndianness(signalID, true);
         WriteBytes(buffer, signalID);
 
         // Encode source

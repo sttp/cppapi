@@ -1016,7 +1016,7 @@ void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, uint32_t 
 
     const uint32_t operationalModes = EndianConverter::ToBigEndian<uint32_t>(data, 0);
 
-    if ((operationalModes & OperationalModes::VersionMask) != 0U)
+    if ((operationalModes & OperationalModes::VersionMask) != 1U)
         m_parent->DispatchStatusMessage("Protocol version not supported. Operational modes may not be set correctly for client \"" + GetConnectionID() + "\".");
 
     SetOperationalModes(operationalModes);
@@ -1079,9 +1079,8 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
 
     switch (GetEncoding())
     {
-        case OperationalEncoding::ANSI:
-        case OperationalEncoding::Unicode:
-        case OperationalEncoding::BigEndianUnicode:
+        case OperationalEncoding::UTF16LE:
+        case OperationalEncoding::UTF16BE:
             charSizeEstimate = 2U;
             break;
         default:
@@ -1715,13 +1714,12 @@ string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, 
 
     switch (m_encoding)
     {
-        case OperationalEncoding::ANSI:
         case OperationalEncoding::UTF8:
             return string(reinterpret_cast<char*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(char));
-        case OperationalEncoding::BigEndianUnicode:
+        case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
-        case OperationalEncoding::Unicode:
+        case OperationalEncoding::UTF16LE:
         {
             wstring value(length / enc_sizeof_wchar, L'\0');
 
@@ -1754,15 +1752,14 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
 
     switch (m_encoding)
     {
-        case OperationalEncoding::ANSI:
         case OperationalEncoding::UTF8:
             result.reserve(value.size() * sizeof(char));
             result.assign(value.begin(), value.end());
             break;
-        case OperationalEncoding::BigEndianUnicode:
+        case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
-        case OperationalEncoding::Unicode:
+        case OperationalEncoding::UTF16LE:
         {
             const wstring utf16 = ToUTF16(value);            
             result.reserve(utf16.size() * enc_sizeof_wchar);

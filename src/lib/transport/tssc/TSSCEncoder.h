@@ -31,7 +31,7 @@ namespace sttp {
 namespace transport {
 namespace tssc
 {
-    // Encoder for the compact measurement format of the Gateway Exchange Protocol.
+    // Encoder for the Time-Series Special Compression algorithm of the Streaming Telemetry Transport Protocol.
     class TSSCEncoder
     {
     private:

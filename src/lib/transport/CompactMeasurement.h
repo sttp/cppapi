@@ -32,7 +32,7 @@
 namespace sttp {
 namespace transport
 {
-    // Parser for the compact measurement format of the Gateway Exchange Protocol.
+    // Encoder / decoder for the compact measurement format of the Streaming Telemetry Transport Protocol.
     class CompactMeasurement
     {
     private:

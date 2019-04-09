@@ -235,7 +235,7 @@ namespace transport
     // Operational modes that affect how DataPublisher and DataSubscriber communicate.
     struct OperationalModes
     {
-        // Mask to get version number of protocol. Version number is currently set to 0.
+        // Mask to get version number of protocol. Version number is currently set to 1.
         static const uint32_t VersionMask = 0x0000001F;
         // Mask to get mode of compression. GZip and TSSC compression are the only modes currently supported. Remaining bits are reserved for future compression modes.
         static const uint32_t CompressionModeMask = 0x000000E0;
@@ -262,20 +262,18 @@ namespace transport
     // silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
     // apply to fundamental protocol control.
 
-    // Enumeration for character encodings supported by the Gateway Exchange Protocol.
+    // Enumeration for character encodings supported by the Streaming Telemetry Transport Protocol.
     struct OperationalEncoding
     {
         // UTF-16, little endian
-        static const uint32_t Unicode = 0x00000000;
+        static const uint32_t UTF16LE = 0x00000000;
         // UTF-16, big endian
-        static const uint32_t BigEndianUnicode = 0x00000100;
+        static const uint32_t UTF16BE = 0x00000100;
         // UTF-8
         static const uint32_t UTF8 = 0x00000200;
-        // ANSI
-        static const uint32_t ANSI = 0x00000300;
     };
 
-    // Enumeration for compression modes supported by the Gateway Exchange Protocol.
+    // Enumeration for compression modes supported by the Streaming Telemetry Transport Protocol.
     struct CompressionModes
     {
         // GZip compression
