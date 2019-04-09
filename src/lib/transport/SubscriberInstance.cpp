@@ -752,7 +752,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     m_configurationUpdateLock.unlock();
 
     stringstream message;
-    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from GEP meta data...";
+    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from STTP meta data...";
     StatusMessage(message.str());
 
     // Release uncompressed buffer

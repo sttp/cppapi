@@ -1404,14 +1404,14 @@ int main(int argc, char* argv[])
     std::ifstream ifs1("Test.xml");
     std::ifstream ifs2("Test2.xml");
 
-    const istream_iterator<char> b1(ifs1), e1 {};
-    const istream_iterator<char> b2(ifs2); // , e2 {};
+    const istream_iterator<char> b1(ifs1), e1 {}; //-V808
+    const istream_iterator<char> b2(ifs2); // , e2 {}; //-V808
 
     assert(equal(b1, e1, b2));
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 148
-    auto settings = sttp::ParseKeyValuePairs("a=1; b=2; c={a=3; b=4}");
+    auto settings = sttp::ParseKeyValuePairs("a=1; b=2; c={a=3; b=4}"); //-V808
 
     assert(settings.size() == 3);
     assert(IsEqual(settings["B"], "2", false));

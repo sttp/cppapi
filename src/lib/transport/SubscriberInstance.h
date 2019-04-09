@@ -159,17 +159,17 @@ namespace transport
         const std::string& GetMetadataFilters() const;
         void SetMetadataFilters(const std::string& metadataFilters);
 
-        // Starts the connection cycle to a GEP publisher. Upon connection, meta-data will be requested,
+        // Starts the connection cycle to an STTP publisher. Upon connection, meta-data will be requested,
         // when received, a subscription will be established
         void Connect();
         void ConnectAsync();
 
-        // Disconnects from the GEP publisher
+        // Disconnects from the STTP publisher
         void Disconnect() const;
 
         // Historical subscription functions
 
-        // Defines the desired time-range of data from the GEP publisher, if the publisher supports
+        // Defines the desired time-range of data from the STTP publisher, if the publisher supports
         // historical queries. If specified, this function must be called before Connect.
         void EstablishHistoricalRead(const std::string& startTime, const std::string& stopTime);
 

@@ -92,7 +92,7 @@ void PublisherHandler::DefineMetadata()
     device1Metadata->Longitude = 300;
     device1Metadata->Latitude = 200;
     device1Metadata->FramesPerSecond = 30;
-    device1Metadata->ProtocolName = "GEP";
+    device1Metadata->ProtocolName = "STTP";
     device1Metadata->UpdatedOn = timestamp;
 
     m_deviceMetadata.emplace_back(device1Metadata);

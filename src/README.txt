@@ -14,19 +14,19 @@ directory for the Boost libraries in a parallel location to the C++ STTP API
 project in a folder called "boost" regardless of version, for example:
 
 STTP API project files:
-    C:\Projects\sttp\cppapi\
+    C:\projects\sttp\cppapi\
                    \src
                    \build
                    etc...
 
 Boost library files:
-    C:\Projects\boost
+    C:\projects\sttp\boost
                      \boost
                      \libs
                      etc...
 
 If you have an existing Boost installation you can simply create a symbolic
-link to the folder, e.g., mklink /D C:\Projects\boost C:\boost_1_66_0
+link to the folder, e.g., mklink /D C:\projects\sttp\boost C:\boost_1_66_0
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code

@@ -53,7 +53,7 @@ namespace transport
         const char* what() const noexcept;
     };
 
-    // Fundamental data type used by the Time Series Framework
+    // Fundamental data type representing a measurement in STTP
     struct Measurement
     {
         // Identification number used in

@@ -1152,7 +1152,7 @@ void DataSubscriber::Subscribe()
     connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
-    connectionStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" STTP_VERSION "; buildDate=" STTP_BUILD_DATE "};";
+    connectionStream << "assemblyInfo={source=STTP C++ Library; version=" STTP_VERSION "; buildDate=" STTP_BUILD_DATE "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
         connectionStream << "inputMeasurementKeys={" << m_subscriptionInfo.FilterExpression << "};";
