@@ -293,7 +293,7 @@ SignalKind GSF::TimeSeries::ParseSignalKind(const string& acronym)
     return SignalKind::Unknown;
 }
 
-TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits) :
+TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits) : //-V730
     TSSCPointMetadata::TSSCPointMetadata(
         std::move(writeBits),
         function<int32_t()>(nullptr),
@@ -301,7 +301,7 @@ TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits)
 {
 }
 
-TSSCPointMetadata::TSSCPointMetadata(function<int32_t()> readBit, function<int32_t()> readBits5) :
+TSSCPointMetadata::TSSCPointMetadata(function<int32_t()> readBit, function<int32_t()> readBits5) : //-V730
     TSSCPointMetadata::TSSCPointMetadata(
         function<void(int32_t, int32_t)>(nullptr),
         std::move(readBit),
