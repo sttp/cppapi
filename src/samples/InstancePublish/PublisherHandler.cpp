@@ -187,7 +187,7 @@ void PublisherHandler::Start()
     // data type reasonable random values every 33 milliseconds
     m_publishTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*)
     {
-        static uint32_t count = m_measurementMetadata.size();
+        static uint32_t count = ConvertUInt32(m_measurementMetadata.size());
         const int64_t timestamp = ToTicks(UtcNow());
         vector<MeasurementPtr> measurements;
 
