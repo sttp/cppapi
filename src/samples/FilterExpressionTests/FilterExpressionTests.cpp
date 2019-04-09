@@ -26,16 +26,16 @@
 #include <fstream>
 #include <iterator>
 #include <boost/filesystem.hpp>
-#include "../../lib/FilterExpressions/FilterExpressionParser.h"
-#include "../../lib/Data/DataSet.h"
+#include "../../lib/filterexpressions/FilterExpressionParser.h"
+#include "../../lib/data/DataSet.h"
 
 using namespace std;
 using namespace boost::gregorian;
 using namespace boost::posix_time;
 using namespace boost::filesystem;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::FilterExpressions;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::filterexpressions;
 
 void Evaluate(const FilterExpressionParserPtr& parser)
 {
@@ -1411,7 +1411,7 @@ int main(int argc, char* argv[])
     cout << "Test " << ++test << " succeeded..." << endl;
 
     // Test 148
-    auto settings = GSF::ParseKeyValuePairs("a=1; b=2; c={a=3; b=4}");
+    auto settings = sttp::ParseKeyValuePairs("a=1; b=2; c={a=3; b=4}");
 
     assert(settings.size() == 3);
     assert(IsEqual(settings["B"], "2", false));

@@ -22,19 +22,18 @@
 //******************************************************************************************************
 
 // ReSharper disable once CppUnusedIncludeDirective
-#include "../FilterExpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressions.h"
 #include "DataPublisher.h"
 #include "MetadataSchema.h"
 #include "ActiveMeasurementsSchema.h"
-#include "../FilterExpressions/FilterExpressionParser.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace boost::asio::ip;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::FilterExpressions;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::filterexpressions;
+using namespace sttp::transport;
 
 struct UserCommandData
 {
@@ -334,7 +333,7 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
     delete userCommandData;
 }
 
-int32_t DataPublisher::GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName)
+int32_t DataPublisher::GetColumnIndex(const sttp::data::DataTablePtr& table, const std::string& columnName)
 {
         const DataColumnPtr& column = table->Column(columnName);
     
@@ -803,12 +802,12 @@ void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     m_routingTables.PublishMeasurements(measurements);
 }
 
-const GSF::Guid& DataPublisher::GetNodeID() const
+const sttp::Guid& DataPublisher::GetNodeID() const
 {
     return m_nodeID;
 }
 
-void DataPublisher::SetNodeID(const GSF::Guid& value)
+void DataPublisher::SetNodeID(const sttp::Guid& value)
 {
     m_nodeID = value;
 }

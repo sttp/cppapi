@@ -23,12 +23,12 @@
 
 #include "FilterExpressionParser.h"
 #include "tree/ParseTreeWalker.h"
-#include "../Common/Nullable.h"
+#include "../common/Nullable.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::FilterExpressions;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::filterexpressions;
 using namespace antlr4;
 using namespace antlr4::tree;
 using namespace boost;
@@ -46,7 +46,7 @@ static string ParseStringLiteral(string stringLiteral)
     return stringLiteral;
 }
 
-static GSF::Guid ParseGuidLiteral(string guidLiteral)
+static sttp::Guid ParseGuidLiteral(string guidLiteral)
 {
     // Remove any quotes from GUID (boost currently only handles optional braces),
     // ANTLR grammar already ensures GUID starting with quote also ends with one
@@ -162,7 +162,7 @@ void FilterExpressionParser::InitializeSetOperations()
     }
 }
 
-void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, const int32_t signalIDColumnIndex)
+void FilterExpressionParser::AddMatchedRow(const sttp::data::DataRowPtr& row, const int32_t signalIDColumnIndex)
 {
     if (m_filterExpressionStatementCount > 1)
     {
@@ -172,11 +172,11 @@ void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, con
 
         if (m_trackFilteredSignalIDs)
         {
-            const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+            const Nullable<sttp::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
             if (signalIDField.HasValue())
             {
-                const GSF::Guid signalID = signalIDField.GetValueOrDefault();
+                const sttp::Guid signalID = signalIDField.GetValueOrDefault();
 
                 if (signalID != Empty::Guid && m_filteredSignalIDSet.insert(signalID).second)
                     m_filteredSignalIDs.push_back(signalID);
@@ -191,11 +191,11 @@ void FilterExpressionParser::AddMatchedRow(const GSF::Data::DataRowPtr& row, con
 
         if (m_trackFilteredSignalIDs)
         {
-            const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+            const Nullable<sttp::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
             if (signalIDField.HasValue())
             {
-                const GSF::Guid signalID = signalIDField.GetValueOrDefault();
+                const sttp::Guid signalID = signalIDField.GetValueOrDefault();
 
                 if (signalID != Empty::Guid)
                     m_filteredSignalIDs.push_back(signalID);
@@ -370,12 +370,12 @@ void FilterExpressionParser::SetTrackFilteredSignalIDs(const bool trackFilteredS
     m_trackFilteredSignalIDs = trackFilteredSignalIDs;
 }
 
-const vector<GSF::Guid>& FilterExpressionParser::FilteredSignalIDs() const
+const vector<sttp::Guid>& FilterExpressionParser::FilteredSignalIDs() const
 {
     return m_filteredSignalIDs;
 }
 
-const unordered_set<GSF::Guid>& FilterExpressionParser::FilteredSignalIDSet()
+const unordered_set<sttp::Guid>& FilterExpressionParser::FilteredSignalIDSet()
 {
     InitializeSetOperations();
     return m_filteredSignalIDSet;
@@ -466,7 +466,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
  */
 void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParser::IdentifierStatementContext* context)
 {
-    GSF::Guid signalID = Empty::Guid;
+    sttp::Guid signalID = Empty::Guid;
 
     if (context->GUID_LITERAL())
     {
@@ -526,7 +526,7 @@ void FilterExpressionParser::exitIdentifierStatement(FilterExpressionSyntaxParse
 
             if (row)
             {
-                const Nullable<GSF::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
+                const Nullable<sttp::Guid> signalIDField = row->ValueAsGuid(signalIDColumnIndex);
 
                 if (signalIDField.HasValue() && signalIDField.GetValueOrDefault() == signalID)
                 {

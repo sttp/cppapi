@@ -26,9 +26,9 @@
 #include "DataSet.h"
 
 using namespace std;
-using namespace GSF::Data;
+using namespace sttp::data;
 
-const char* GSF::Data::DataTypeAcronym[] =
+const char* sttp::data::DataTypeAcronym[] =
 {
     "String",
     "Boolean",
@@ -47,7 +47,7 @@ const char* GSF::Data::DataTypeAcronym[] =
     "UInt64"
 };
 
-const char* GSF::Data::EnumName(DataType type)
+const char* sttp::data::EnumName(DataType type)
 {
     return DataTypeAcronym[static_cast<int32_t>(type)];
 }

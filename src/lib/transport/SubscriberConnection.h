@@ -24,42 +24,41 @@
 #ifndef __SUBSCRIBER_CONNECTION_H
 #define __SUBSCRIBER_CONNECTION_H
 
-#include "../Common/CommonTypes.h"
-#include "../Common/Timer.h"
-#include "../Data/DataSet.h"
+#include "../common/CommonTypes.h"
+#include "../common/Timer.h"
+#include "../data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
-#include "TSSCEncoder.h"
+#include "tssc/TSSCEncoder.h"
 #include <deque>
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class DataPublisher;
-    typedef GSF::SharedPtr<DataPublisher> DataPublisherPtr;
+    typedef sttp::SharedPtr<DataPublisher> DataPublisherPtr;
 
     class SubscriberConnection;
-    typedef GSF::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+    typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
 
     // Represents a subscriber connection to a data publisher
-    class SubscriberConnection : public GSF::EnableSharedThisPtr<SubscriberConnection> // NOLINT
+    class SubscriberConnection : public sttp::EnableSharedThisPtr<SubscriberConnection> // NOLINT
     {
     private:
         static constexpr const uint32_t TSSCBufferSize = 32768U;
 
         const DataPublisherPtr m_parent;
-        GSF::IOContext& m_commandChannelService;
-        GSF::Strand m_tcpWriteStrand;
-        GSF::Timer m_pingTimer;
-        GSF::Guid m_subscriberID;
-        const GSF::Guid m_instanceID;
+        sttp::IOContext& m_commandChannelService;
+        sttp::Strand m_tcpWriteStrand;
+        sttp::Timer m_pingTimer;
+        sttp::Guid m_subscriberID;
+        const sttp::Guid m_instanceID;
         std::string m_connectionID;
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
-        GSF::datetime_t m_startTimeConstraint;
-        GSF::datetime_t m_stopTimeConstraint;
+        sttp::datetime_t m_startTimeConstraint;
+        sttp::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
         bool m_temporalSubscriptionCanceled;
         bool m_usingPayloadCompression;
@@ -78,19 +77,19 @@ namespace Transport
         volatile bool m_stopped;
 
         // Command channel
-        GSF::TcpSocket m_commandChannelSocket;
+        sttp::TcpSocket m_commandChannelSocket;
         std::vector<uint8_t> m_readBuffer;
         std::deque<SharedPtr<std::vector<uint8_t>>> m_tcpWriteBuffers;
-        GSF::IPAddress m_ipAddress;
+        sttp::IPAddress m_ipAddress;
         std::string m_hostName;
 
         // Data channel
         uint16_t m_udpPort;
-        GSF::Mutex m_dataChannelMutex;
-        GSF::WaitHandle m_dataChannelWaitHandle;
-        GSF::IOContext m_dataChannelService;
-        GSF::UdpSocket m_dataChannelSocket;
-        GSF::Strand m_udpWriteStrand;
+        sttp::Mutex m_dataChannelMutex;
+        sttp::WaitHandle m_dataChannelWaitHandle;
+        sttp::IOContext m_dataChannelService;
+        sttp::UdpSocket m_dataChannelSocket;
+        sttp::Strand m_udpWriteStrand;
         std::deque<SharedPtr<std::vector<uint8_t>>> m_udpWriteBuffers;
         std::vector<uint8_t> m_keys[2];
         std::vector<uint8_t> m_ivs[2];
@@ -107,11 +106,11 @@ namespace Transport
         int64_t m_baseTimeOffsets[2];
         int64_t m_latestTimestamp;
         datetime_t m_lastPublishTime;
-        std::unordered_map<GSF::Guid, MeasurementPtr> m_latestMeasurements;
-        GSF::Mutex m_latestMeasurementsLock;
+        std::unordered_map<sttp::Guid, MeasurementPtr> m_latestMeasurements;
+        sttp::Mutex m_latestMeasurementsLock;
         TimerPtr m_throttledPublicationTimer;
-        TSSCEncoder m_tsscEncoder;
-        GSF::Mutex m_tsscEncoderLock;
+        tssc::TSSCEncoder m_tsscEncoder;
+        sttp::Mutex m_tsscEncoderLock;
         uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
         bool m_tsscResetRequested;
         uint16_t m_tsscSequenceNumber;
@@ -136,8 +135,8 @@ namespace Transport
         void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
         std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
-        std::vector<uint8_t> SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const;
-        GSF::Data::DataSetPtr FilterClientMetadata(const StringMap<GSF::FilterExpressions::ExpressionTreePtr>& filterExpressions) const;
+        std::vector<uint8_t> SerializeMetadata(const sttp::data::DataSetPtr& metadata) const;
+        sttp::data::DataSetPtr FilterClientMetadata(const StringMap<sttp::filterexpressions::ExpressionTreePtr>& filterExpressions) const;
         void CommandChannelSendAsync();
         void CommandChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred);
         void DataChannelSendAsync();
@@ -145,27 +144,27 @@ namespace Transport
 
         static void PingTimerElapsed(Timer*, void* userData);
     public:
-        SubscriberConnection(DataPublisherPtr parent, GSF::IOContext& commandChannelService);
+        SubscriberConnection(DataPublisherPtr parent, sttp::IOContext& commandChannelService);
         ~SubscriberConnection();
 
         const DataPublisherPtr& GetParent() const;
         SubscriberConnectionPtr GetReference();
 
-        GSF::TcpSocket& CommandChannelSocket();
+        sttp::TcpSocket& CommandChannelSocket();
 
         // Gets or sets subscriber UUID used when subscriber is known and pre-established
-        const GSF::Guid& GetSubscriberID() const;
-        void SetSubscriberID(const GSF::Guid& id);
+        const sttp::Guid& GetSubscriberID() const;
+        void SetSubscriberID(const sttp::Guid& id);
 
         // Gets a UUID representing a unique run-time identifier for the current subscriber connection,
         // this can be used to disambiguate when the same subscriber makes multiple connections
-        const GSF::Guid& GetInstanceID() const;
+        const sttp::Guid& GetInstanceID() const;
 
         // Gets subscriber connection identification, e.g., remote IP/port, for display and logging references
         const std::string& GetConnectionID() const;
 
         // Gets subscriber remote IP address
-        const GSF::IPAddress& GetIPAddress() const;
+        const sttp::IPAddress& GetIPAddress() const;
 
         // Gets subscriber communications port
         const std::string& GetHostName() const;
@@ -181,12 +180,12 @@ namespace Transport
         bool GetIsTemporalSubscription() const;
 
         // Gets or sets the start time temporal processing constraint
-        const GSF::datetime_t& GetStartTimeConstraint() const;
-        void SetStartTimeConstraint(const GSF::datetime_t& value);
+        const sttp::datetime_t& GetStartTimeConstraint() const;
+        void SetStartTimeConstraint(const sttp::datetime_t& value);
 
         // Gets or sets the stop time temporal processing constraint
-        const GSF::datetime_t& GetStopTimeConstraint() const;
-        void SetStopTimeConstraint(const GSF::datetime_t& value);
+        const sttp::datetime_t& GetStopTimeConstraint() const;
+        void SetStopTimeConstraint(const sttp::datetime_t& value);
 
         // Gets or sets the desired processing interval, in milliseconds, for temporal history playback.
         // With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
@@ -274,19 +273,19 @@ namespace Transport
         std::vector<uint8_t> EncodeString(const std::string& value) const;
     };
 
-    typedef GSF::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+    typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
 
-}}}
+}}
 
 // Setup standard hash code for SubscriberConnectionPtr
 namespace std  // NOLINT
 {
     template<>
-    struct hash<GSF::TimeSeries::Transport::SubscriberConnectionPtr>
+    struct hash<sttp::transport::SubscriberConnectionPtr>
     {
-        size_t operator () (const GSF::TimeSeries::Transport::SubscriberConnectionPtr& connection) const
+        size_t operator () (const sttp::transport::SubscriberConnectionPtr& connection) const
         {
-            return boost::hash<GSF::TimeSeries::Transport::SubscriberConnectionPtr>()(connection);
+            return boost::hash<sttp::transport::SubscriberConnectionPtr>()(connection);
         }
     };
 }

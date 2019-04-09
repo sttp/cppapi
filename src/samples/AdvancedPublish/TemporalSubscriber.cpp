@@ -24,11 +24,10 @@
 #include "TemporalSubscriber.h"
  
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::TimeSeries;
+using namespace sttp;
+using namespace sttp::data;
 
-GSF::Data::DataSetPtr TemporalSubscriber::s_history = nullptr;
+sttp::data::DataSetPtr TemporalSubscriber::s_history = nullptr;
 
 TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     m_connection(std::move(connection)),

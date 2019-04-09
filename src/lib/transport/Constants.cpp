@@ -23,10 +23,9 @@
 
 #include "Constants.h"
 
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp::transport;
 
-MeasurementStateFlags GSF::TimeSeries::operator &(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags sttp::transport::operator &(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
         static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
@@ -34,7 +33,7 @@ MeasurementStateFlags GSF::TimeSeries::operator &(MeasurementStateFlags lhs, Mea
     );
 }
 
-MeasurementStateFlags GSF::TimeSeries::operator ^(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags sttp::transport::operator ^(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
         static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
@@ -42,14 +41,14 @@ MeasurementStateFlags GSF::TimeSeries::operator ^(MeasurementStateFlags lhs, Mea
     );
 }
 
-MeasurementStateFlags GSF::TimeSeries::operator ~(MeasurementStateFlags rhs)
+MeasurementStateFlags sttp::transport::operator ~(MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
         ~static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
     );
 }
 
-MeasurementStateFlags& GSF::TimeSeries::operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
         static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) |
@@ -59,7 +58,7 @@ MeasurementStateFlags& GSF::TimeSeries::operator |=(MeasurementStateFlags &lhs, 
     return lhs;
 }
 
-MeasurementStateFlags& GSF::TimeSeries::operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
         static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
@@ -69,7 +68,7 @@ MeasurementStateFlags& GSF::TimeSeries::operator &=(MeasurementStateFlags &lhs, 
     return lhs;
 }
 
-MeasurementStateFlags& GSF::TimeSeries::operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
         static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
@@ -80,7 +79,6 @@ MeasurementStateFlags& GSF::TimeSeries::operator ^=(MeasurementStateFlags &lhs, 
 }
 
 // Define "instances" of all static constants so values can be passed by reference and found by linker
-
 const size_t Common::MaxPacketSize;
 const uint32_t Common::PayloadHeaderSize;
 const uint32_t Common::ResponseHeaderSize;
@@ -166,33 +164,3 @@ const uint32_t OperationalEncoding::ANSI;
 const uint32_t CompressionModes::GZip;
 const uint32_t CompressionModes::TSSC;
 const uint32_t CompressionModes::None;
-
-const uint8_t TSSCCodeWords::EndOfStream;
-const uint8_t TSSCCodeWords::PointIDXOR4;
-const uint8_t TSSCCodeWords::PointIDXOR8;
-const uint8_t TSSCCodeWords::PointIDXOR12;
-const uint8_t TSSCCodeWords::PointIDXOR16;
-const uint8_t TSSCCodeWords::TimeDelta1Forward;
-const uint8_t TSSCCodeWords::TimeDelta2Forward;
-const uint8_t TSSCCodeWords::TimeDelta3Forward;
-const uint8_t TSSCCodeWords::TimeDelta4Forward;
-const uint8_t TSSCCodeWords::TimeDelta1Reverse;
-const uint8_t TSSCCodeWords::TimeDelta2Reverse;
-const uint8_t TSSCCodeWords::TimeDelta3Reverse;
-const uint8_t TSSCCodeWords::TimeDelta4Reverse;
-const uint8_t TSSCCodeWords::Timestamp2;
-const uint8_t TSSCCodeWords::TimeXOR7Bit;
-const uint8_t TSSCCodeWords::Quality2;
-const uint8_t TSSCCodeWords::Quality7Bit32;
-const uint8_t TSSCCodeWords::Value1;
-const uint8_t TSSCCodeWords::Value2;
-const uint8_t TSSCCodeWords::Value3;
-const uint8_t TSSCCodeWords::ValueZero;
-const uint8_t TSSCCodeWords::ValueXOR4;
-const uint8_t TSSCCodeWords::ValueXOR8;
-const uint8_t TSSCCodeWords::ValueXOR12;
-const uint8_t TSSCCodeWords::ValueXOR16;
-const uint8_t TSSCCodeWords::ValueXOR20;
-const uint8_t TSSCCodeWords::ValueXOR24;
-const uint8_t TSSCCodeWords::ValueXOR28;
-const uint8_t TSSCCodeWords::ValueXOR32;

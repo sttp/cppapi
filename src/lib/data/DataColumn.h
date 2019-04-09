@@ -24,10 +24,10 @@
 #ifndef __DATA_COLUMN_H
 #define __DATA_COLUMN_H
 
-#include "../Common/CommonTypes.h"
+#include "../common/CommonTypes.h"
 
-namespace GSF {
-namespace Data
+namespace sttp {
+namespace data
 {
     enum class DataType
     {
@@ -52,10 +52,10 @@ namespace Data
     const char* EnumName(DataType type);
 
     class DataTable;
-    typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    typedef sttp::SharedPtr<DataTable> DataTablePtr;
 
     class DataColumn;
-    typedef GSF::SharedPtr<DataColumn> DataColumnPtr;
+    typedef sttp::SharedPtr<DataColumn> DataColumnPtr;
 
     class DataColumn // NOLINT
     {

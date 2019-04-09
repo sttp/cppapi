@@ -24,27 +24,27 @@
 #ifndef __DATA_TABLE_H
 #define __DATA_TABLE_H
 
-#include "../Common/CommonTypes.h"
+#include "../common/CommonTypes.h"
 #include "DataColumn.h"
 #include "DataRow.h"
 
-namespace GSF {
-namespace Data
+namespace sttp {
+namespace data
 {
     class DataSet;
-    typedef GSF::SharedPtr<DataSet> DataSetPtr;
+    typedef sttp::SharedPtr<DataSet> DataSetPtr;
 
     class DataTable;
-    typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    typedef sttp::SharedPtr<DataTable> DataTablePtr;
 
     enum class DataType;
 
-    class DataTable : public GSF::EnableSharedThisPtr<DataTable> // NOLINT
+    class DataTable : public sttp::EnableSharedThisPtr<DataTable> // NOLINT
     {
     private:
         DataSetPtr m_parent;
         std::string m_name;
-        GSF::StringMap<int32_t> m_columnIndexes;
+        sttp::StringMap<int32_t> m_columnIndexes;
         std::vector<DataColumnPtr> m_columns;
         std::vector<DataRowPtr> m_rows;
 
@@ -85,7 +85,7 @@ namespace Data
         static const DataTablePtr NullPtr;
     };
 
-    typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    typedef sttp::SharedPtr<DataTable> DataTablePtr;
 }}
 
 #endif

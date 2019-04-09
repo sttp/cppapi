@@ -23,12 +23,11 @@
 
 #include <iostream>
 #include "PublisherHandler.h"
-#include "../../lib/Common/Convert.h"
+#include "../../lib/common/Convert.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 #define TotalInstances 3
 PublisherHandler* Publisher[TotalInstances];

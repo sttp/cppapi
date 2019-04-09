@@ -22,23 +22,22 @@
 //******************************************************************************************************
 
 // ReSharper disable once CppUnusedIncludeDirective
-#include "../FilterExpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressions.h"
 #include "SubscriberConnection.h"
 #include "DataPublisher.h"
 #include "CompactMeasurement.h"
 #include "ActiveMeasurementsSchema.h"
-#include "../Common/EndianConverter.h"
-#include "../Data/DataSet.h"
-#include "../FilterExpressions/FilterExpressionParser.h"
+#include "../common/EndianConverter.h"
+#include "../data/DataSet.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace boost::asio;
 using namespace boost::asio::ip;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::FilterExpressions;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::filterexpressions;
+using namespace sttp::transport;
 
 static const uint32_t MaxPacketSize = 32768U;
 static const float64_t DefaultLagTime = 5.0;
@@ -115,17 +114,17 @@ TcpSocket& SubscriberConnection::CommandChannelSocket()
     return m_commandChannelSocket;
 }
 
-const GSF::Guid& SubscriberConnection::GetSubscriberID() const
+const sttp::Guid& SubscriberConnection::GetSubscriberID() const
 {
     return m_subscriberID;
 }
 
-void SubscriberConnection::SetSubscriberID(const GSF::Guid& id)
+void SubscriberConnection::SetSubscriberID(const sttp::Guid& id)
 {
     m_subscriberID = id;
 }
 
-const GSF::Guid& SubscriberConnection::GetInstanceID() const
+const sttp::Guid& SubscriberConnection::GetInstanceID() const
 {
     return m_instanceID;
 }
@@ -135,7 +134,7 @@ const string& SubscriberConnection::GetConnectionID() const
     return m_connectionID;
 }
 
-const GSF::IPAddress& SubscriberConnection::GetIPAddress() const
+const sttp::IPAddress& SubscriberConnection::GetIPAddress() const
 {
     return m_ipAddress;
 }
@@ -166,22 +165,22 @@ bool SubscriberConnection::GetIsTemporalSubscription() const
     return m_startTimeConstraint < DateTime::MaxValue;
 }
 
-const GSF::datetime_t& SubscriberConnection::GetStartTimeConstraint() const
+const sttp::datetime_t& SubscriberConnection::GetStartTimeConstraint() const
 {
     return m_startTimeConstraint;
 }
 
-void SubscriberConnection::SetStartTimeConstraint(const GSF::datetime_t& value)
+void SubscriberConnection::SetStartTimeConstraint(const sttp::datetime_t& value)
 {
     m_startTimeConstraint = value;
 }
 
-const GSF::datetime_t& SubscriberConnection::GetStopTimeConstraint() const
+const sttp::datetime_t& SubscriberConnection::GetStopTimeConstraint() const
 {
     return m_stopTimeConstraint;
 }
 
-void SubscriberConnection::SetStopTimeConstraint(const GSF::datetime_t& value)
+void SubscriberConnection::SetStopTimeConstraint(const sttp::datetime_t& value)
 {
     m_stopTimeConstraint = value;
 }
@@ -495,7 +494,7 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         // Track latest measurements
         for (const auto& measurement : measurements)
         {
-            const GSF::Guid signalID = measurement->SignalID;
+            const sttp::Guid signalID = measurement->SignalID;
 
             if (TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription())
             {
@@ -925,7 +924,7 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
             if (length >= responseLength + 4)
             {
                 const string metadataFilters = DecodeString(data, index, responseLength);
-                const vector<ExpressionTreePtr> expressions = FilterExpressions::FilterExpressionParser::GenerateExpressionTrees(m_parent->m_metadata, "MeasurementDetail", metadataFilters);
+                const vector<ExpressionTreePtr> expressions = filterexpressions::FilterExpressionParser::GenerateExpressionTrees(m_parent->m_metadata, "MeasurementDetail", metadataFilters);
 
                 // Go through each subscriber specified filter expressions and add it to dictionary
                 for (const auto& expression : expressions)
@@ -1460,7 +1459,7 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndex
     return serializationBuffer;
 }
 
-std::vector<uint8_t> SubscriberConnection::SerializeMetadata(const GSF::Data::DataSetPtr& metadata) const
+std::vector<uint8_t> SubscriberConnection::SerializeMetadata(const sttp::data::DataSetPtr& metadata) const
 {
     vector<uint8_t> serializationBuffer;
 

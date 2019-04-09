@@ -24,26 +24,26 @@
 #ifndef __SUBSCRIBER_HANDLER_H
 #define __SUBSCRIBER_HANDLER_H
 
-#include "../../lib/Common/CommonTypes.h"
-#include "../../lib/Transport/SubscriberInstance.h"
+#include "../../lib/common/CommonTypes.h"
+#include "../../lib/transport/SubscriberInstance.h"
 
-class SubscriberHandler : public GSF::TimeSeries::Transport::SubscriberInstance
+class SubscriberHandler : public sttp::transport::SubscriberInstance
 {
 private:
     std::string m_name;
     uint64_t m_processCount;
 
-    static GSF::Mutex s_coutLock;
+    static sttp::Mutex s_coutLock;
 
 protected:
-    GSF::TimeSeries::Transport::SubscriptionInfo CreateSubscriptionInfo() override;
-    void SetupSubscriberConnector(GSF::TimeSeries::Transport::SubscriberConnector& connector) override;
+    sttp::transport::SubscriptionInfo CreateSubscriptionInfo() override;
+    void SetupSubscriberConnector(sttp::transport::SubscriberConnector& connector) override;
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
     void DataStartTime(time_t unixSOC, uint16_t milliseconds) override;
-    void DataStartTime(GSF::datetime_t startTime) override;
+    void DataStartTime(sttp::datetime_t startTime) override;
     void ReceivedMetadata(const std::vector<uint8_t>& payload) override;
-    void ReceivedNewMeasurements(const std::vector<GSF::TimeSeries::MeasurementPtr>& measurements) override;
+    void ReceivedNewMeasurements(const std::vector<sttp::transport::MeasurementPtr>& measurements) override;
     void ParsedMetadata() override;
     void ConfigurationChanged() override;
     void HistoricalReadComplete() override;
@@ -54,6 +54,6 @@ public:
     SubscriberHandler(std::string name);
 };
 
-typedef GSF::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;
+typedef sttp::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;
 
 #endif

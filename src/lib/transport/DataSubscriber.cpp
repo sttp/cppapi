@@ -27,8 +27,8 @@
 #include "Version.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
-#include "../Common/Convert.h"
-#include "../Common/EndianConverter.h"
+#include "../common/Convert.h"
+#include "../common/EndianConverter.h"
 #include <sstream>
 #include <boost/bind.hpp>
 
@@ -36,9 +36,8 @@ using namespace std;
 using namespace boost;
 using namespace boost::asio;
 using namespace boost::asio::ip;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 // --- SubscriptionInfo ---
 
@@ -1153,7 +1152,7 @@ void DataSubscriber::Subscribe()
     connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
-    connectionStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" GSFTS_VERSION "; buildDate=" GSFTS_BUILD_DATE "};";
+    connectionStream << "assemblyInfo={source=TimeSeriesPlatformLibrary; version=" STTP_VERSION "; buildDate=" STTP_BUILD_DATE "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
         connectionStream << "inputMeasurementKeys={" << m_subscriptionInfo.FilterExpression << "};";

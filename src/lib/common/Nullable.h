@@ -27,7 +27,7 @@
 
 #include "Convert.h"
 
-namespace GSF
+namespace sttp
 {
     template<class T>
     class Nullable final // NOLINT

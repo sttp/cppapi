@@ -49,7 +49,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleSubscribe", "samples\
 		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ED33BF83-3D08-4D02-89E8-1ADD916E8F14}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution docs", "solution docs", "{ED33BF83-3D08-4D02-89E8-1ADD916E8F14}"
 	ProjectSection(SolutionItems) = preProject
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md

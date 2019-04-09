@@ -24,10 +24,10 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
-#include "../Common/CommonTypes.h"
+#include "../common/CommonTypes.h"
 
-namespace GSF {
-namespace TimeSeries
+namespace sttp {
+namespace transport
 {
     // Measurement state flags.
     enum class MeasurementStateFlags : unsigned int
@@ -106,12 +106,7 @@ namespace TimeSeries
     MeasurementStateFlags& operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs);
     MeasurementStateFlags& operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs);
     MeasurementStateFlags& operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs);
-}}
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
-{
     // Common constants.
     struct Common
     {
@@ -297,48 +292,8 @@ namespace Transport
         // No security.
         None,
         // Transport Layer Security.
-        TLS,
-        // Pre-shared key. Deprecated - use TLS instead.
-        Gateway
+        TLS
     };
-
-    // The encoding commands supported by TSSC
-    struct TSSCCodeWords
-    {
-        static const uint8_t EndOfStream = 0;
-
-        static const uint8_t PointIDXOR4 = 1;
-        static const uint8_t PointIDXOR8 = 2;
-        static const uint8_t PointIDXOR12 = 3;
-        static const uint8_t PointIDXOR16 = 4;
-
-        static const uint8_t TimeDelta1Forward = 5;
-        static const uint8_t TimeDelta2Forward = 6;
-        static const uint8_t TimeDelta3Forward = 7;
-        static const uint8_t TimeDelta4Forward = 8;
-        static const uint8_t TimeDelta1Reverse = 9;
-        static const uint8_t TimeDelta2Reverse = 10;
-        static const uint8_t TimeDelta3Reverse = 11;
-        static const uint8_t TimeDelta4Reverse = 12;
-        static const uint8_t Timestamp2 = 13;
-        static const uint8_t TimeXOR7Bit = 14;
-
-        static const uint8_t Quality2 = 15;
-        static const uint8_t Quality7Bit32 = 16;
-
-        static const uint8_t Value1 = 17;
-        static const uint8_t Value2 = 18;
-        static const uint8_t Value3 = 19;
-        static const uint8_t ValueZero = 20;
-        static const uint8_t ValueXOR4 = 21;
-        static const uint8_t ValueXOR8 = 22;
-        static const uint8_t ValueXOR12 = 23;
-        static const uint8_t ValueXOR16 = 24;
-        static const uint8_t ValueXOR20 = 25;
-        static const uint8_t ValueXOR24 = 26;
-        static const uint8_t ValueXOR28 = 27;
-        static const uint8_t ValueXOR32 = 28;
-    };
-}}}
+}}
 
 #endif

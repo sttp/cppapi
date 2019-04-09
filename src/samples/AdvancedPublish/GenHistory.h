@@ -23,15 +23,15 @@
 
 #pragma once
 
-#include "../../lib/Common/CommonTypes.h"
-#include "../../lib/Data/DataSet.h"
-#include "../../lib/Transport/DataSubscriber.h"
+#include "../../lib/common/CommonTypes.h"
+#include "../../lib/data/DataSet.h"
+#include "../../lib/transport/DataSubscriber.h"
 
 class GenHistory // NOLINT
 {
 private:
-    GSF::TimeSeries::Transport::DataSubscriberPtr m_subscriber;
-    GSF::Data::DataSetPtr m_history;
+    sttp::transport::DataSubscriberPtr m_subscriber;
+    sttp::data::DataSetPtr m_history;
     const uint16_t m_port;
 
 public:
@@ -40,7 +40,7 @@ public:
     void StartArchive();
     void StopArchive() const;
 
-    static void ProcessMeasurements(GSF::TimeSeries::Transport::DataSubscriber* source, const std::vector<GSF::TimeSeries::MeasurementPtr>& measurements);
+    static void ProcessMeasurements(sttp::transport::DataSubscriber* source, const std::vector<sttp::transport::MeasurementPtr>& measurements);
 };
 
-typedef GSF::SharedPtr<GenHistory> GenHistoryPtr;
+typedef sttp::SharedPtr<GenHistory> GenHistoryPtr;

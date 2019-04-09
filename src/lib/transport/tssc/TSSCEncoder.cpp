@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 #include "TSSCEncoder.h"
-#include "Constants.h"
+#include "../Constants.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
+using namespace sttp::transport::tssc;
 
 void Encode7BitUInt32(uint8_t* stream, uint32_t& position, uint32_t value);
 void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value);

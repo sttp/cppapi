@@ -25,8 +25,8 @@
 #include "DataSet.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
+using namespace sttp;
+using namespace sttp::data;
 
 const DataTablePtr DataTable::NullPtr = nullptr;
 

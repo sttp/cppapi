@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include "../../lib/Common/CommonTypes.h"
-#include "../../lib/Transport/SubscriberConnection.h"
+#include "../../lib/common/CommonTypes.h"
+#include "../../lib/transport/SubscriberConnection.h"
 
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp::transport;
 
 class TemporalSubscriber // NOLINT
 {
@@ -37,12 +37,12 @@ private:
     int64_t m_currentTimestamp;
     int32_t m_currentRow;
     int32_t m_lastRow;
-    GSF::TimerPtr m_processTimer;
+    sttp::TimerPtr m_processTimer;
     bool m_stopped;
 
     void SendTemporalData();
 
-    static GSF::Data::DataSetPtr s_history;
+    static sttp::data::DataSetPtr s_history;
 
 public:
     TemporalSubscriber(SubscriberConnectionPtr connection);
@@ -53,7 +53,7 @@ public:
 
     bool GetIsStopped() const;
 
-    static constexpr const int64_t HistoryInterval = GSF::Ticks::PerMillisecond * 33L;
+    static constexpr const int64_t HistoryInterval = sttp::Ticks::PerMillisecond * 33L;
 };
 
-typedef GSF::SharedPtr<TemporalSubscriber> TemporalSubscriberPtr;
+typedef sttp::SharedPtr<TemporalSubscriber> TemporalSubscriberPtr;

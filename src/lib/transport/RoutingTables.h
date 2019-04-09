@@ -24,28 +24,27 @@
 #ifndef __ROUTING_TABLES_H
 #define __ROUTING_TABLES_H
 
-#include "../Common/CommonTypes.h"
-#include "../Common/ThreadSafeQueue.h"
+#include "../common/CommonTypes.h"
+#include "../common/ThreadSafeQueue.h"
 #include "SubscriberConnection.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class RoutingTables // NOLINT
     {
     private:
         typedef std::unordered_set<SubscriberConnectionPtr> Destinations;
-        typedef GSF::SharedPtr<Destinations> DestinationsPtr;
-        typedef std::unordered_map<GSF::Guid, DestinationsPtr> RoutingTable;
-        typedef GSF::SharedPtr<RoutingTable> RoutingTablePtr;
-        typedef std::pair<SubscriberConnectionPtr, std::unordered_set<GSF::Guid>> DestinationRoutes;
+        typedef sttp::SharedPtr<Destinations> DestinationsPtr;
+        typedef std::unordered_map<sttp::Guid, DestinationsPtr> RoutingTable;
+        typedef sttp::SharedPtr<RoutingTable> RoutingTablePtr;
+        typedef std::pair<SubscriberConnectionPtr, std::unordered_set<sttp::Guid>> DestinationRoutes;
         typedef std::function<void(RoutingTables&, const DestinationRoutes&)> RoutingTableOperationHandler;
         typedef std::pair<RoutingTableOperationHandler, DestinationRoutes> RoutingTableOperation;
 
-        GSF::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
+        sttp::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
         RoutingTablePtr m_activeRoutes;
-        GSF::SharedMutex m_activeRoutesLock;
+        sttp::SharedMutex m_activeRoutesLock;
         volatile bool m_enabled;
 
         RoutingTablePtr CloneActiveRoutes();
@@ -57,10 +56,10 @@ namespace Transport
         RoutingTables();
         ~RoutingTables();
 
-        void UpdateRoutes(const SubscriberConnectionPtr& destination, const std::unordered_set<GSF::Guid>& routes);
+        void UpdateRoutes(const SubscriberConnectionPtr& destination, const std::unordered_set<sttp::Guid>& routes);
         void RemoveRoutes(const SubscriberConnectionPtr& destination);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
     };
-}}}
+}}
 
 #endif

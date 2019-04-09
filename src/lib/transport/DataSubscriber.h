@@ -28,12 +28,11 @@
 
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
-#include "TSSCDecoder.h"
-#include "../Common/ThreadSafeQueue.h"
+#include "tssc/TSSCDecoder.h"
+#include "../common/ThreadSafeQueue.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class DataSubscriber;
 
@@ -181,7 +180,7 @@ namespace Transport
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
-        TSSCDecoder m_tsscDecoder;
+        tssc::TSSCDecoder m_tsscDecoder;
         bool m_tsscResetRequested;
         uint16_t m_tsscSequenceNumber;
 
@@ -365,6 +364,6 @@ namespace Transport
     };
 
     typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
-}}}
+}}
 
 #endif

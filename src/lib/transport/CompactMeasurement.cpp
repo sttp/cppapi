@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 #include "CompactMeasurement.h"
-#include "../Common/EndianConverter.h"
+#include "../common/EndianConverter.h"
 
 using namespace std;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 // These constants represent each flag in the 8-bit compact measurement state flags.
 static const uint8_t CompactDataRangeFlag = 0x01;

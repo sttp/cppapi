@@ -33,7 +33,7 @@ using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
-using namespace GSF;
+using namespace sttp;
 
 boost::uuids::random_generator RandomGuidGen;
 boost::uuids::nil_generator NilGuidGen;
@@ -81,7 +81,7 @@ bool StringComparer::operator()(const std::string& left, const std::string& righ
     return Compare(left, right) < 0;
 }
 
-uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const uint8_t* source, const uint32_t offset, const uint32_t length)
+uint32_t sttp::WriteBytes(vector<uint8_t>& buffer, const uint8_t* source, const uint32_t offset, const uint32_t length)
 {
     for (uint32_t i = 0; i < length; i++)
         buffer.push_back(source[offset + i]);
@@ -89,7 +89,7 @@ uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const uint8_t* source, const u
     return length;
 }
 
-uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const vector<uint8_t>& source)
+uint32_t sttp::WriteBytes(vector<uint8_t>& buffer, const vector<uint8_t>& source)
 {
     const uint32_t length = ConvertUInt32(source.size());
 
@@ -99,7 +99,7 @@ uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const vector<uint8_t>& source)
     return length;
 }
 
-uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const Guid& value)
+uint32_t sttp::WriteBytes(vector<uint8_t>& buffer, const Guid& value)
 {
     const uint8_t* bytes = value.data;
 
@@ -109,12 +109,12 @@ uint32_t GSF::WriteBytes(vector<uint8_t>& buffer, const Guid& value)
     return 16;
 }
 
-Guid GSF::NewGuid()
+Guid sttp::NewGuid()
 {
     return RandomGuidGen();
 }
 
-bool GSF::IsEqual(const string& left, const string& right, bool ignoreCase)
+bool sttp::IsEqual(const string& left, const string& right, bool ignoreCase)
 {
     if (ignoreCase)
         return iequals(left, right);
@@ -122,7 +122,7 @@ bool GSF::IsEqual(const string& left, const string& right, bool ignoreCase)
     return equals(left, right);
 }
 
-bool GSF::StartsWith(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::StartsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return istarts_with(value, findValue);
@@ -130,7 +130,7 @@ bool GSF::StartsWith(const string& value, const string& findValue, bool ignoreCa
     return starts_with(value, findValue);
 }
 
-bool GSF::EndsWith(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::EndsWith(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return iends_with(value, findValue);
@@ -138,7 +138,7 @@ bool GSF::EndsWith(const string& value, const string& findValue, bool ignoreCase
     return ends_with(value, findValue);
 }
 
-bool GSF::Contains(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::Contains(const string& value, const string& findValue, bool ignoreCase)
 {
     if (ignoreCase)
         return icontains(value, findValue);
@@ -146,7 +146,7 @@ bool GSF::Contains(const string& value, const string& findValue, bool ignoreCase
     return contains(value, findValue);
 }
 
-int32_t GSF::Count(const string& value, const string& findValue, bool ignoreCase)
+int32_t sttp::Count(const string& value, const string& findValue, bool ignoreCase)
 {
     find_iterator<string::const_iterator> it = ignoreCase ?
         make_find_iterator(value, first_finder(findValue, is_iequal())) :
@@ -162,7 +162,7 @@ int32_t GSF::Count(const string& value, const string& findValue, bool ignoreCase
     return count;
 }
 
-int32_t GSF::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
+int32_t sttp::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
 {
     if (ignoreCase)
     {
@@ -184,7 +184,7 @@ int32_t GSF::Compare(const string& leftValue, const string& rightValue, bool ign
     return 0;
 }
 
-int32_t GSF::IndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t sttp::IndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
 
@@ -194,7 +194,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, bool ignoreCa
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
+int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
 
@@ -204,7 +204,7 @@ int32_t GSF::IndexOf(const string& value, const string& findValue, int32_t index
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t sttp::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
     iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
 
@@ -214,7 +214,7 @@ int32_t GSF::LastIndexOf(const string& value, const string& findValue, bool igno
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-vector<string> GSF::Split(const string& value, const string& delimiterValue, bool ignoreCase)
+vector<string> sttp::Split(const string& value, const string& delimiterValue, bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -231,7 +231,7 @@ vector<string> GSF::Split(const string& value, const string& delimiterValue, boo
     return values;
 }
 
-string GSF::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
+string sttp::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -249,7 +249,7 @@ string GSF::Split(const string& value, const string& delimiterValue, int32_t ind
     return string {};
 }
 
-string GSF::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
+string sttp::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
 {
     if (ignoreCase)
         return ireplace_all_copy(value, findValue, replaceValue);
@@ -257,47 +257,47 @@ string GSF::Replace(const string& value, const string& findValue, const string& 
     return replace_all_copy(value, findValue, replaceValue);
 }
 
-string GSF::ToUpper(const string& value)
+string sttp::ToUpper(const string& value)
 {
     return to_upper_copy(value);
 }
 
-string GSF::ToLower(const string& value)
+string sttp::ToLower(const string& value)
 {
     return to_lower_copy(value);
 }
 
-string GSF::Trim(const string& value)
+string sttp::Trim(const string& value)
 {
     return trim_copy(value);
 }
 
-string GSF::Trim(const string& value, const string& trimValues)
+string sttp::Trim(const string& value, const string& trimValues)
 {
     return trim_copy_if(value, is_any_of(trimValues));
 }
 
-string GSF::TrimRight(const string& value)
+string sttp::TrimRight(const string& value)
 {
     return trim_right_copy(value);
 }
 
-string GSF::TrimRight(const string& value, const string& trimValues)
+string sttp::TrimRight(const string& value, const string& trimValues)
 {
     return trim_right_copy_if(value, is_any_of(trimValues));
 }
 
-string GSF::TrimLeft(const string& value)
+string sttp::TrimLeft(const string& value)
 {
     return trim_left_copy(value);
 }
 
-string GSF::TrimLeft(const string& value, const string& trimValues)
+string sttp::TrimLeft(const string& value, const string& trimValues)
 {
     return trim_left_copy_if(value, is_any_of(trimValues));
 }
 
-string GSF::PadLeft(const string& value, uint32_t count, char padChar)
+string sttp::PadLeft(const string& value, uint32_t count, char padChar)
 {
     if (value.size() < count)
         return string(count - value.size(), padChar) + value;
@@ -305,7 +305,7 @@ string GSF::PadLeft(const string& value, uint32_t count, char padChar)
     return value;
 }
 
-string GSF::PadRight(const string& value, uint32_t count, char padChar)
+string sttp::PadRight(const string& value, uint32_t count, char padChar)
 {
     if (value.size() < count)
         return value + string(count - value.size(), padChar);
@@ -313,7 +313,7 @@ string GSF::PadRight(const string& value, uint32_t count, char padChar)
     return value;
 }
 
-datetime_t GSF::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval interval)
+datetime_t sttp::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval interval)
 {
     switch (interval)
     {
@@ -340,7 +340,7 @@ datetime_t GSF::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval 
     }
 }
 
-int32_t GSF::DateDiff(const datetime_t& startTime, const datetime_t& endTime, TimeInterval interval)
+int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, TimeInterval interval)
 {
     if (interval < TimeInterval::Hour)
     {
@@ -378,7 +378,7 @@ int32_t GSF::DateDiff(const datetime_t& startTime, const datetime_t& endTime, Ti
     }
 }
 
-int32_t GSF::DatePart(const datetime_t& value, TimeInterval interval)
+int32_t sttp::DatePart(const datetime_t& value, TimeInterval interval)
 {
     static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
 
@@ -409,12 +409,12 @@ int32_t GSF::DatePart(const datetime_t& value, TimeInterval interval)
     }
 }
 
-datetime_t GSF::Now()
+datetime_t sttp::Now()
 {
     return datetime_t { microsec_clock::local_time() };
 }
 
-datetime_t GSF::UtcNow()
+datetime_t sttp::UtcNow()
 {
     return datetime_t { microsec_clock::universal_time() };
 }

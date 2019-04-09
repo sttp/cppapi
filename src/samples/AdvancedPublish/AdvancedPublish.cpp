@@ -22,17 +22,16 @@
 //******************************************************************************************************
 
 // ReSharper disable CppAssignedValueIsNeverUsed
-#include "../../lib/Transport/DataPublisher.h"
+#include "../../lib/transport/DataPublisher.h"
 #include "GenHistory.h"
 #include "TemporalSubscriber.h"
 #include <iostream>
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
-using namespace GSF::FilterExpressions;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::transport;
+using namespace sttp::filterexpressions;
 
 DataPublisherPtr Publisher;
 GenHistoryPtr HistoryGenerator;
@@ -40,7 +39,7 @@ TimerPtr PublishTimer;
 vector<DeviceMetadataPtr> DevicesToPublish;
 vector<MeasurementMetadataPtr> MeasurementsToPublish;
 vector<PhasorMetadataPtr> PhasorsToPublish;
-unordered_map<GSF::Guid, TemporalSubscriberPtr> TemporalSubscriptions;
+unordered_map<sttp::Guid, TemporalSubscriberPtr> TemporalSubscriptions;
 Mutex TemporalSubscriptionsLock;
 const TemporalSubscriberPtr NullTemporalSubscription = nullptr;
 
@@ -369,7 +368,7 @@ void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberC
 
 bool UpdateTemporalSubscriptionProcessingInterval(const SubscriberConnectionPtr& connection)
 {
-    const GSF::Guid& instanceID = connection->GetInstanceID();
+    const sttp::Guid& instanceID = connection->GetInstanceID();
     TemporalSubscriberPtr temporalSubscription;
     const int32_t processingInterval = connection->GetProcessingInterval();
     bool updated = false;
@@ -389,13 +388,13 @@ bool UpdateTemporalSubscriptionProcessingInterval(const SubscriberConnectionPtr&
 
 TemporalSubscriberPtr CreateNewTemporalSubscription(const SubscriberConnectionPtr& connection)
 {
-    const GSF::Guid& instanceID = connection->GetInstanceID();
+    const sttp::Guid& instanceID = connection->GetInstanceID();
     TemporalSubscriberPtr temporalSubscription;
 
     TemporalSubscriptionsLock.lock();
 
     temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
-    TemporalSubscriptions.insert(pair<GSF::Guid, TemporalSubscriberPtr>(instanceID, temporalSubscription));
+    TemporalSubscriptions.insert(pair<sttp::Guid, TemporalSubscriberPtr>(instanceID, temporalSubscription));
 
     TemporalSubscriptionsLock.unlock();
 
@@ -404,7 +403,7 @@ TemporalSubscriberPtr CreateNewTemporalSubscription(const SubscriberConnectionPt
 
 bool RemoveTemporalSubscription(const SubscriberConnectionPtr& connection, bool& completed)
 {
-    const GSF::Guid& instanceID = connection->GetInstanceID();
+    const sttp::Guid& instanceID = connection->GetInstanceID();
     TemporalSubscriberPtr temporalSubscription;
     bool removed = false;
 

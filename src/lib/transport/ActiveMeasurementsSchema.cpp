@@ -1,9 +1,9 @@
 // Auto-generated on Fri Feb  8 13:02:59 2019
-// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\gsf\Source\Libraries\TimeSeriesPlatformLibrary\Transport\ActiveMeasurementsSchema.xml GSF::TimeSeries::Transport::
+// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\cppapi\src\lib\transport\ActiveMeasurementsSchema.xml sttp::transport::
 
 #include "ActiveMeasurementsSchema.h"
 
-const uint8_t GSF::TimeSeries::Transport::ActiveMeasurementsSchema[] = {
+const uint8_t sttp::transport::ActiveMeasurementsSchema[] = {
     0x3C, 0x3F, 0x78, 0x6D, 0x6C, 0x20, 0x76, 0x65, 0x72, 0x73,
     0x69, 0x6F, 0x6E, 0x3D, 0x22, 0x31, 0x2E, 0x30, 0x22, 0x20,
     0x73, 0x74, 0x61, 0x6E, 0x64, 0x61, 0x6C, 0x6F, 0x6E, 0x65,
@@ -209,4 +209,4 @@ const uint8_t GSF::TimeSeries::Transport::ActiveMeasurementsSchema[] = {
     0x2F, 0x49, 0x61, 0x6F, 0x6E, 0x3E
 };
 
-const uint32_t GSF::TimeSeries::Transport::ActiveMeasurementsSchemaLength = sizeof(GSF::TimeSeries::Transport::ActiveMeasurementsSchema);
+const uint32_t sttp::transport::ActiveMeasurementsSchemaLength = sizeof(sttp::transport::ActiveMeasurementsSchema);

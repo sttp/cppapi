@@ -23,7 +23,7 @@
 
 #include "EndianConverter.h"
 
-using namespace GSF;
+using namespace sttp;
 
 // Creates a new instance of the EndianConverter.
 EndianConverter::EndianConverter()

@@ -24,11 +24,11 @@
 #ifndef __EXPRESSION_TREE_H
 #define __EXPRESSION_TREE_H
 
-#include "../../Common/CommonTypes.h"
-#include "../../Data/DataSet.h"
+#include "../../common/CommonTypes.h"
+#include "../../data/DataSet.h"
 
-namespace GSF {
-namespace FilterExpressions
+namespace sttp {
+namespace filterexpressions
 {
     // Simple exception type thrown by the expression tree
     class ExpressionTreeException : public Exception
@@ -61,9 +61,9 @@ namespace FilterExpressions
         const ExpressionType Type;
     };
 
-    typedef GSF::SharedPtr<Expression> ExpressionPtr;
+    typedef sttp::SharedPtr<Expression> ExpressionPtr;
     typedef std::vector<ExpressionPtr> ExpressionCollection;
-    typedef GSF::SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
+    typedef sttp::SharedPtr<ExpressionCollection> ExpressionCollectionPtr;
 
     // These expression value data types are reduced to a reasonable set of possible types
     // that can be represented in a filter expression. All data table column values will be
@@ -96,9 +96,9 @@ namespace FilterExpressions
         void ValidateValueType(ExpressionValueType valueType) const;
 
     public:
-        ValueExpression(ExpressionValueType valueType, GSF::Object value, bool valueIsNullable = false);
+        ValueExpression(ExpressionValueType valueType, sttp::Object value, bool valueIsNullable = false);
 
-        const GSF::Object Value;
+        const sttp::Object Value;
         const ExpressionValueType ValueType;
         const bool ValueIsNullable;
 
@@ -115,23 +115,23 @@ namespace FilterExpressions
         int64_t ValueAsInt64() const;
         Nullable<int64_t> ValueAsNullableInt64() const;
 
-        GSF::decimal_t ValueAsDecimal() const;
-        Nullable<GSF::decimal_t> ValueAsNullableDecimal() const;
+        sttp::decimal_t ValueAsDecimal() const;
+        Nullable<sttp::decimal_t> ValueAsNullableDecimal() const;
 
-        GSF::float64_t ValueAsDouble() const;
-        Nullable<GSF::float64_t> ValueAsNullableDouble() const;
+        sttp::float64_t ValueAsDouble() const;
+        Nullable<sttp::float64_t> ValueAsNullableDouble() const;
 
         std::string ValueAsString() const;
         Nullable<std::string> ValueAsNullableString() const;
 
-        GSF::Guid ValueAsGuid() const;
-        Nullable<GSF::Guid> ValueAsNullableGuid() const;
+        sttp::Guid ValueAsGuid() const;
+        Nullable<sttp::Guid> ValueAsNullableGuid() const;
 
-        GSF::datetime_t ValueAsDateTime() const;
-        Nullable<GSF::datetime_t> ValueAsNullableDateTime() const;
+        sttp::datetime_t ValueAsDateTime() const;
+        Nullable<sttp::datetime_t> ValueAsNullableDateTime() const;
     };
 
-    typedef GSF::SharedPtr<ValueExpression> ValueExpressionPtr;
+    typedef sttp::SharedPtr<ValueExpression> ValueExpressionPtr;
 
     enum class ExpressionUnaryType
     {
@@ -152,17 +152,17 @@ namespace FilterExpressions
         const ExpressionPtr Value;
     };
 
-    typedef GSF::SharedPtr<UnaryExpression> UnaryExpressionPtr;
+    typedef sttp::SharedPtr<UnaryExpression> UnaryExpressionPtr;
 
     class ColumnExpression : public Expression
     {
     public:
-        ColumnExpression(GSF::Data::DataColumnPtr dataColumn);
+        ColumnExpression(sttp::data::DataColumnPtr dataColumn);
 
-        const GSF::Data::DataColumnPtr DataColumn;
+        const sttp::data::DataColumnPtr DataColumn;
     };
 
-    typedef GSF::SharedPtr<ColumnExpression> ColumnExpressionPtr;
+    typedef sttp::SharedPtr<ColumnExpression> ColumnExpressionPtr;
 
     class InListExpression : public Expression
     {
@@ -175,7 +175,7 @@ namespace FilterExpressions
         const bool ExactMatch;
     };
 
-    typedef GSF::SharedPtr<InListExpression> InListExpressionPtr;
+    typedef sttp::SharedPtr<InListExpression> InListExpressionPtr;
 
     enum class ExpressionFunctionType
     {
@@ -231,7 +231,7 @@ namespace FilterExpressions
         const ExpressionCollectionPtr Arguments;
     };
 
-    typedef GSF::SharedPtr<FunctionExpression> FunctionExpressionPtr;
+    typedef sttp::SharedPtr<FunctionExpression> FunctionExpressionPtr;
 
     enum class ExpressionOperatorType
     {
@@ -276,13 +276,13 @@ namespace FilterExpressions
         const ExpressionPtr RightValue;
     };
 
-    typedef GSF::SharedPtr<OperatorExpression> OperatorExpressionPtr;
+    typedef sttp::SharedPtr<OperatorExpression> OperatorExpressionPtr;
 
     class ExpressionTree
     {
     private:
-        GSF::Data::DataRowPtr m_currentRow;
-        GSF::Data::DataTablePtr m_table;
+        sttp::data::DataRowPtr m_currentRow;
+        sttp::data::DataTablePtr m_table;
 
         ValueExpressionPtr Evaluate(const ExpressionPtr& expression, ExpressionValueType targetValueType = ExpressionValueType::Boolean) const;
         ValueExpressionPtr EvaluateUnary(const ExpressionPtr& expression) const;
@@ -376,15 +376,15 @@ namespace FilterExpressions
         ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
         ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
     public:
-        ExpressionTree(GSF::Data::DataTablePtr table);
+        ExpressionTree(sttp::data::DataTablePtr table);
 
-        const GSF::Data::DataTablePtr& Table() const;
+        const sttp::data::DataTablePtr& Table() const;
         int32_t TopLimit;
-        std::vector<std::tuple<GSF::Data::DataColumnPtr, bool, bool>> OrderByTerms;
+        std::vector<std::tuple<sttp::data::DataColumnPtr, bool, bool>> OrderByTerms;
 
         ExpressionPtr Root = nullptr;
 
-        ValueExpressionPtr Evaluate(const GSF::Data::DataRowPtr& row);
+        ValueExpressionPtr Evaluate(const sttp::data::DataRowPtr& row);
 
         static const ValueExpressionPtr True;
         static const ValueExpressionPtr False;
@@ -392,7 +392,7 @@ namespace FilterExpressions
         static ValueExpressionPtr NullValue(ExpressionValueType targetValueType);
     };
 
-    typedef GSF::SharedPtr<ExpressionTree> ExpressionTreePtr;
+    typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
 
 #endif

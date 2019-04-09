@@ -22,16 +22,16 @@
 //******************************************************************************************************
 
 // ReSharper disable once CppUnusedIncludeDirective
-#include "../FilterExpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressions.h"
 #include "DataRow.h"
 #include "DataTable.h"
 #include "DataSet.h"
-#include "../FilterExpressions/FilterExpressionParser.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::FilterExpressions;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::filterexpressions;
 
 const DataRowPtr DataRow::NullPtr = nullptr;
 
@@ -798,18 +798,18 @@ void DataRow::SetDecimalValue(const string& columnName, const Nullable<decimal_t
     SetDecimalValue(GetColumnIndex(columnName), value);
 }
 
-Nullable<GSF::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
+Nullable<sttp::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, DataType::Guid, true);
 
     if (column->Computed())
-        return Cast<GSF::Guid>(GetComputedValue(column, DataType::Guid));
+        return Cast<sttp::Guid>(GetComputedValue(column, DataType::Guid));
 
     int8_t* data = static_cast<int8_t*>(m_values[columnIndex]);
 
     if (data)
     {
-        GSF::Guid value;
+        sttp::Guid value;
         memcpy(value.data, data, 16);
         return value;
     }
@@ -817,12 +817,12 @@ Nullable<GSF::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
     return nullptr;
 }
 
-Nullable<GSF::Guid> DataRow::ValueAsGuid(const string& columnName)
+Nullable<sttp::Guid> DataRow::ValueAsGuid(const string& columnName)
 {
     return ValueAsGuid(GetColumnIndex(columnName));
 }
 
-void DataRow::SetGuidValue(const int32_t columnIndex, const Nullable<GSF::Guid>& value)
+void DataRow::SetGuidValue(const int32_t columnIndex, const Nullable<sttp::Guid>& value)
 {
     ValidateColumnType(columnIndex, DataType::Guid);
 
@@ -841,7 +841,7 @@ void DataRow::SetGuidValue(const int32_t columnIndex, const Nullable<GSF::Guid>&
     }
 }
 
-void DataRow::SetGuidValue(const string& columnName, const Nullable<GSF::Guid>& value)
+void DataRow::SetGuidValue(const string& columnName, const Nullable<sttp::Guid>& value)
 {
     SetGuidValue(GetColumnIndex(columnName), value);
 }

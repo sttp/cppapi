@@ -25,13 +25,12 @@
 
 #include "SignalIndexCache.h"
 #include "DataPublisher.h"
-#include "../Common/Convert.h"
-#include "../Common/EndianConverter.h"
+#include "../common/Convert.h"
+#include "../common/EndianConverter.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 SignalIndexCache::SignalIndexCache() :
     m_binaryLength(28)

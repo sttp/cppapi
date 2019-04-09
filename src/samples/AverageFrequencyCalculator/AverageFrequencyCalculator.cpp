@@ -21,14 +21,13 @@
 //
 //******************************************************************************************************
 
-#include "../../lib/Transport/DataSubscriber.h"
-#include "../../lib/Common/Convert.h"
+#include "../../lib/transport/DataSubscriber.h"
+#include "../../lib/common/Convert.h"
 #include <iostream>
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 DataSubscriber* Subscriber;
 SubscriptionInfo Info;

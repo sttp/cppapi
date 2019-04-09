@@ -24,32 +24,32 @@
 #ifndef __DATA_ROW_H
 #define __DATA_ROW_H
 
-#include "../Common/CommonTypes.h"
-#include "../Common/Nullable.h"
+#include "../common/CommonTypes.h"
+#include "../common/Nullable.h"
 #include "DataColumn.h"
 
-namespace GSF {
-namespace FilterExpressions
+namespace sttp {
+namespace filterexpressions
 {
     class ValueExpression;
-    typedef GSF::SharedPtr<ValueExpression> ValueExpressionPtr;
+    typedef sttp::SharedPtr<ValueExpression> ValueExpressionPtr;
 
     class ExpressionTree;
-    typedef GSF::SharedPtr<ExpressionTree> ExpressionTreePtr;
+    typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
 
-namespace GSF {
-namespace Data
+namespace sttp {
+namespace data
 {
     enum class DataType;
 
     class DataTable;
-    typedef GSF::SharedPtr<DataTable> DataTablePtr;
+    typedef sttp::SharedPtr<DataTable> DataTablePtr;
 
     class DataRow;
-    typedef GSF::SharedPtr<DataRow> DataRowPtr;
+    typedef sttp::SharedPtr<DataRow> DataRowPtr;
 
-    class DataRow : public GSF::EnableSharedThisPtr<DataRow> // NOLINT
+    class DataRow : public sttp::EnableSharedThisPtr<DataRow> // NOLINT
     {
     private:
         DataTablePtr m_parent;
@@ -58,14 +58,14 @@ namespace Data
         int32_t GetColumnIndex(const std::string& columnName) const;
         DataColumnPtr ValidateColumnType(int32_t columnIndex, DataType targetType, bool read = false) const;
 
-        GSF::FilterExpressions::ExpressionTreePtr GetExpressionTree(const DataColumnPtr& column);
-        GSF::Object GetComputedValue(const DataColumnPtr& column, DataType targetType);
+        sttp::filterexpressions::ExpressionTreePtr GetExpressionTree(const DataColumnPtr& column);
+        sttp::Object GetComputedValue(const DataColumnPtr& column, DataType targetType);
 
         template<class T>
-        GSF::Nullable<T> GetValue(int32_t columnIndex, DataType targetType);
+        sttp::Nullable<T> GetValue(int32_t columnIndex, DataType targetType);
 
         template<class T>
-        void SetValue(int32_t columnIndex, const GSF::Nullable<T>& value, DataType targetType);
+        void SetValue(int32_t columnIndex, const sttp::Nullable<T>& value, DataType targetType);
     public:
         DataRow(DataTablePtr parent);
         ~DataRow();
@@ -77,80 +77,80 @@ namespace Data
         void SetNullValue(int32_t columnIndex);
         void SetNullValue(const std::string& columnName);
 
-        GSF::Nullable<std::string> ValueAsString(int32_t columnIndex);
-        GSF::Nullable<std::string> ValueAsString(const std::string& columnName);
-        void SetStringValue(int32_t columnIndex, const GSF::Nullable<std::string>& value);
-        void SetStringValue(const std::string& columnName, const GSF::Nullable<std::string>& value);
+        sttp::Nullable<std::string> ValueAsString(int32_t columnIndex);
+        sttp::Nullable<std::string> ValueAsString(const std::string& columnName);
+        void SetStringValue(int32_t columnIndex, const sttp::Nullable<std::string>& value);
+        void SetStringValue(const std::string& columnName, const sttp::Nullable<std::string>& value);
 
-        GSF::Nullable<bool> ValueAsBoolean(int32_t columnIndex);
-        GSF::Nullable<bool> ValueAsBoolean(const std::string& columnName);
-        void SetBooleanValue(int32_t columnIndex, const GSF::Nullable<bool>& value);
-        void SetBooleanValue(const std::string& columnName, const GSF::Nullable<bool>& value);
+        sttp::Nullable<bool> ValueAsBoolean(int32_t columnIndex);
+        sttp::Nullable<bool> ValueAsBoolean(const std::string& columnName);
+        void SetBooleanValue(int32_t columnIndex, const sttp::Nullable<bool>& value);
+        void SetBooleanValue(const std::string& columnName, const sttp::Nullable<bool>& value);
 
-        GSF::Nullable<GSF::datetime_t> ValueAsDateTime(int32_t columnIndex);
-        GSF::Nullable<GSF::datetime_t> ValueAsDateTime(const std::string& columnName);
-        void SetDateTimeValue(int32_t columnIndex, const GSF::Nullable<GSF::datetime_t>& value);
-        void SetDateTimeValue(const std::string& columnName, const GSF::Nullable<GSF::datetime_t>& value);
+        sttp::Nullable<sttp::datetime_t> ValueAsDateTime(int32_t columnIndex);
+        sttp::Nullable<sttp::datetime_t> ValueAsDateTime(const std::string& columnName);
+        void SetDateTimeValue(int32_t columnIndex, const sttp::Nullable<sttp::datetime_t>& value);
+        void SetDateTimeValue(const std::string& columnName, const sttp::Nullable<sttp::datetime_t>& value);
 
-        GSF::Nullable<GSF::float32_t> ValueAsSingle(int32_t columnIndex);
-        GSF::Nullable<GSF::float32_t> ValueAsSingle(const std::string& columnName);
-        void SetSingleValue(int32_t columnIndex, const GSF::Nullable<GSF::float32_t>& value);
-        void SetSingleValue(const std::string& columnName, const GSF::Nullable<GSF::float32_t>& value);
+        sttp::Nullable<sttp::float32_t> ValueAsSingle(int32_t columnIndex);
+        sttp::Nullable<sttp::float32_t> ValueAsSingle(const std::string& columnName);
+        void SetSingleValue(int32_t columnIndex, const sttp::Nullable<sttp::float32_t>& value);
+        void SetSingleValue(const std::string& columnName, const sttp::Nullable<sttp::float32_t>& value);
 
-        GSF::Nullable<GSF::float64_t> ValueAsDouble(int32_t columnIndex);
-        GSF::Nullable<GSF::float64_t> ValueAsDouble(const std::string& columnName);
-        void SetDoubleValue(int32_t columnIndex, const GSF::Nullable<GSF::float64_t>& value);
-        void SetDoubleValue(const std::string& columnName, const GSF::Nullable<GSF::float64_t>& value);
+        sttp::Nullable<sttp::float64_t> ValueAsDouble(int32_t columnIndex);
+        sttp::Nullable<sttp::float64_t> ValueAsDouble(const std::string& columnName);
+        void SetDoubleValue(int32_t columnIndex, const sttp::Nullable<sttp::float64_t>& value);
+        void SetDoubleValue(const std::string& columnName, const sttp::Nullable<sttp::float64_t>& value);
 
-        GSF::Nullable<GSF::decimal_t> ValueAsDecimal(int32_t columnIndex);
-        GSF::Nullable<GSF::decimal_t> ValueAsDecimal(const std::string& columnName);
-        void SetDecimalValue(int32_t columnIndex, const GSF::Nullable<GSF::decimal_t>& value);
-        void SetDecimalValue(const std::string& columnName, const GSF::Nullable<GSF::decimal_t>& value);
+        sttp::Nullable<sttp::decimal_t> ValueAsDecimal(int32_t columnIndex);
+        sttp::Nullable<sttp::decimal_t> ValueAsDecimal(const std::string& columnName);
+        void SetDecimalValue(int32_t columnIndex, const sttp::Nullable<sttp::decimal_t>& value);
+        void SetDecimalValue(const std::string& columnName, const sttp::Nullable<sttp::decimal_t>& value);
 
-        GSF::Nullable<GSF::Guid> ValueAsGuid(int32_t columnIndex);
-        GSF::Nullable<GSF::Guid> ValueAsGuid(const std::string& columnName);
-        void SetGuidValue(int32_t columnIndex, const GSF::Nullable<GSF::Guid>& value);
-        void SetGuidValue(const std::string& columnName, const GSF::Nullable<GSF::Guid>& value);
+        sttp::Nullable<sttp::Guid> ValueAsGuid(int32_t columnIndex);
+        sttp::Nullable<sttp::Guid> ValueAsGuid(const std::string& columnName);
+        void SetGuidValue(int32_t columnIndex, const sttp::Nullable<sttp::Guid>& value);
+        void SetGuidValue(const std::string& columnName, const sttp::Nullable<sttp::Guid>& value);
 
-        GSF::Nullable<int8_t> ValueAsInt8(int32_t columnIndex);
-        GSF::Nullable<int8_t> ValueAsInt8(const std::string& columnName);
-        void SetInt8Value(int32_t columnIndex, const GSF::Nullable<int8_t>& value);
-        void SetInt8Value(const std::string& columnName, const GSF::Nullable<int8_t>& value);
+        sttp::Nullable<int8_t> ValueAsInt8(int32_t columnIndex);
+        sttp::Nullable<int8_t> ValueAsInt8(const std::string& columnName);
+        void SetInt8Value(int32_t columnIndex, const sttp::Nullable<int8_t>& value);
+        void SetInt8Value(const std::string& columnName, const sttp::Nullable<int8_t>& value);
 
-        GSF::Nullable<int16_t> ValueAsInt16(int32_t columnIndex);
-        GSF::Nullable<int16_t> ValueAsInt16(const std::string& columnName);
-        void SetInt16Value(int32_t columnIndex, const GSF::Nullable<int16_t>& value);
-        void SetInt16Value(const std::string& columnName, const GSF::Nullable<int16_t>& value);
+        sttp::Nullable<int16_t> ValueAsInt16(int32_t columnIndex);
+        sttp::Nullable<int16_t> ValueAsInt16(const std::string& columnName);
+        void SetInt16Value(int32_t columnIndex, const sttp::Nullable<int16_t>& value);
+        void SetInt16Value(const std::string& columnName, const sttp::Nullable<int16_t>& value);
 
-        GSF::Nullable<int32_t> ValueAsInt32(int32_t columnIndex);
-        GSF::Nullable<int32_t> ValueAsInt32(const std::string& columnName);
-        void SetInt32Value(int32_t columnIndex, const GSF::Nullable<int32_t>& value);
-        void SetInt32Value(const std::string& columnName, const GSF::Nullable<int32_t>& value);
+        sttp::Nullable<int32_t> ValueAsInt32(int32_t columnIndex);
+        sttp::Nullable<int32_t> ValueAsInt32(const std::string& columnName);
+        void SetInt32Value(int32_t columnIndex, const sttp::Nullable<int32_t>& value);
+        void SetInt32Value(const std::string& columnName, const sttp::Nullable<int32_t>& value);
 
-        GSF::Nullable<int64_t> ValueAsInt64(int32_t columnIndex);
-        GSF::Nullable<int64_t> ValueAsInt64(const std::string& columnName);
-        void SetInt64Value(int32_t columnIndex, const GSF::Nullable<int64_t>& value);
-        void SetInt64Value(const std::string& columnName, const GSF::Nullable<int64_t>& value);
+        sttp::Nullable<int64_t> ValueAsInt64(int32_t columnIndex);
+        sttp::Nullable<int64_t> ValueAsInt64(const std::string& columnName);
+        void SetInt64Value(int32_t columnIndex, const sttp::Nullable<int64_t>& value);
+        void SetInt64Value(const std::string& columnName, const sttp::Nullable<int64_t>& value);
 
-        GSF::Nullable<uint8_t> ValueAsUInt8(int32_t columnIndex);
-        GSF::Nullable<uint8_t> ValueAsUInt8(const std::string& columnName);
-        void SetUInt8Value(int32_t columnIndex, const GSF::Nullable<uint8_t>& value);
-        void SetUInt8Value(const std::string& columnName, const GSF::Nullable<uint8_t>& value);
+        sttp::Nullable<uint8_t> ValueAsUInt8(int32_t columnIndex);
+        sttp::Nullable<uint8_t> ValueAsUInt8(const std::string& columnName);
+        void SetUInt8Value(int32_t columnIndex, const sttp::Nullable<uint8_t>& value);
+        void SetUInt8Value(const std::string& columnName, const sttp::Nullable<uint8_t>& value);
 
-        GSF::Nullable<uint16_t> ValueAsUInt16(int32_t columnIndex);
-        GSF::Nullable<uint16_t> ValueAsUInt16(const std::string& columnName);
-        void SetUInt16Value(int32_t columnIndex, const GSF::Nullable<uint16_t>& value);
-        void SetUInt16Value(const std::string& columnName, const GSF::Nullable<uint16_t>& value);
+        sttp::Nullable<uint16_t> ValueAsUInt16(int32_t columnIndex);
+        sttp::Nullable<uint16_t> ValueAsUInt16(const std::string& columnName);
+        void SetUInt16Value(int32_t columnIndex, const sttp::Nullable<uint16_t>& value);
+        void SetUInt16Value(const std::string& columnName, const sttp::Nullable<uint16_t>& value);
 
-        GSF::Nullable<uint32_t> ValueAsUInt32(int32_t columnIndex);
-        GSF::Nullable<uint32_t> ValueAsUInt32(const std::string& columnName);
-        void SetUInt32Value(int32_t columnIndex, const GSF::Nullable<uint32_t>& value);
-        void SetUInt32Value(const std::string& columnName, const GSF::Nullable<uint32_t>& value);
+        sttp::Nullable<uint32_t> ValueAsUInt32(int32_t columnIndex);
+        sttp::Nullable<uint32_t> ValueAsUInt32(const std::string& columnName);
+        void SetUInt32Value(int32_t columnIndex, const sttp::Nullable<uint32_t>& value);
+        void SetUInt32Value(const std::string& columnName, const sttp::Nullable<uint32_t>& value);
 
-        GSF::Nullable<uint64_t> ValueAsUInt64(int32_t columnIndex);
-        GSF::Nullable<uint64_t> ValueAsUInt64(const std::string& columnName);
-        void SetUInt64Value(int32_t columnIndex, const GSF::Nullable<uint64_t>& value);
-        void SetUInt64Value(const std::string& columnName, const GSF::Nullable<uint64_t>& value);
+        sttp::Nullable<uint64_t> ValueAsUInt64(int32_t columnIndex);
+        sttp::Nullable<uint64_t> ValueAsUInt64(const std::string& columnName);
+        void SetUInt64Value(int32_t columnIndex, const sttp::Nullable<uint64_t>& value);
+        void SetUInt64Value(const std::string& columnName, const sttp::Nullable<uint64_t>& value);
 
         static const DataRowPtr NullPtr;
 
@@ -162,11 +162,11 @@ namespace Data
 namespace std  // NOLINT
 {
     template<>
-    struct hash<GSF::Data::DataRowPtr>
+    struct hash<sttp::data::DataRowPtr>
     {
-        size_t operator () (const GSF::Data::DataRowPtr& dataRow) const
+        size_t operator () (const sttp::data::DataRowPtr& dataRow) const
         {
-            return boost::hash<GSF::Data::DataRowPtr>()(dataRow);
+            return boost::hash<sttp::data::DataRowPtr>()(dataRow);
         }
     };
 }

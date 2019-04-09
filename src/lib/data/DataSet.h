@@ -24,7 +24,7 @@
 #ifndef __DATA_SET_H
 #define __DATA_SET_H
 
-#include "../Common/CommonTypes.h"
+#include "../common/CommonTypes.h"
 #include "DataTable.h"
 
 namespace pugi
@@ -32,11 +32,11 @@ namespace pugi
     class xml_document;
 }
 
-namespace GSF {
-namespace Data
+namespace sttp {
+namespace data
 {
     // Simple exception type thrown by data set operations
-    class DataSetException : public GSF::Exception
+    class DataSetException : public sttp::Exception
     {
     private:
         std::string m_message;
@@ -47,12 +47,12 @@ namespace Data
     };
 
     class DataSet;
-    typedef GSF::SharedPtr<DataSet> DataSetPtr;
+    typedef sttp::SharedPtr<DataSet> DataSetPtr;
 
-    class DataSet : public GSF::EnableSharedThisPtr<DataSet> // NOLINT
+    class DataSet : public sttp::EnableSharedThisPtr<DataSet> // NOLINT
     {
     private:
-        GSF::SortedStringMap<DataTablePtr> m_tables;
+        sttp::SortedStringMap<DataTablePtr> m_tables;
 
         void ParseXml(const pugi::xml_document& document);
         void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;

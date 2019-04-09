@@ -26,9 +26,8 @@
 
 #include "DataPublisher.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class PublisherInstance // NOLINT
     {
@@ -73,16 +72,16 @@ namespace Transport
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0) const;
 
         // Define metadata from existing dataset
-        void DefineMetadata(const GSF::Data::DataSetPtr& metadata) const;
+        void DefineMetadata(const sttp::data::DataSetPtr& metadata) const;
 
         // Gets primary metadata. This dataset contains all the normalized metadata tables that define
         // the available detail about the data points that can be subscribed to by clients.
-        const GSF::Data::DataSetPtr& GetMetadata() const;
+        const sttp::data::DataSetPtr& GetMetadata() const;
 
         // Gets filtering metadata. This dataset, derived from primary metadata, contains a flattened
         // table used to subscribe to a filtered set of points with an expression, e.g.:
         // FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA'
-        const GSF::Data::DataSetPtr& GetFilteringMetadata() const;
+        const sttp::data::DataSetPtr& GetFilteringMetadata() const;
 
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
@@ -93,8 +92,8 @@ namespace Transport
         // Node ID defines a unique identification for the DataPublisher
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
-        const GSF::Guid& GetNodeID() const;
-        void SetNodeID(const GSF::Guid& nodeID) const;
+        const sttp::Guid& GetNodeID() const;
+        void SetNodeID(const sttp::Guid& nodeID) const;
 
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode securityMode) const;
@@ -135,6 +134,6 @@ namespace Transport
         // returns true if any connections were added
         bool TryGetSubscriberConnections(std::vector<SubscriberConnectionPtr>& subscriberConnections) const;
     };
-}}}
+}}
 
 #endif

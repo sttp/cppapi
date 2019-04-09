@@ -22,15 +22,14 @@
 //******************************************************************************************************
 
 #include "PublisherInstance.h"
-#include "../Common/Convert.h"
+#include "../common/Convert.h"
 #include <iostream>
 
 using namespace std;
 using namespace pugi;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::transport;
 
 PublisherInstance::PublisherInstance(uint16_t port, bool ipV6) :
     m_port(port),
@@ -189,12 +188,12 @@ void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measur
     m_publisher->PublishMeasurements(measurements);
 }
 
-const GSF::Guid& PublisherInstance::GetNodeID() const
+const sttp::Guid& PublisherInstance::GetNodeID() const
 {
     return m_publisher->GetNodeID();
 }
 
-void PublisherInstance::SetNodeID(const GSF::Guid& nodeID) const
+void PublisherInstance::SetNodeID(const sttp::Guid& nodeID) const
 {
     m_publisher->SetNodeID(nodeID);
 }

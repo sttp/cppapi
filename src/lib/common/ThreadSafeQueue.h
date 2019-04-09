@@ -27,7 +27,7 @@
 #include "CommonTypes.h"
 #include <queue>
 
-namespace GSF
+namespace sttp
 {
     // Simple queue with locking mechanisms to make its operations thread-safe.
     //

@@ -24,11 +24,12 @@
 #ifndef __TSSC_DECODER_H
 #define __TSSC_DECODER_H
 
-#include "TransportTypes.h"
+#include "../TransportTypes.h"
+#include "TSSCPointMetadata.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport {
+namespace tssc
 {
     // Decoder for the compact measurement format of the Gateway Exchange Protocol.
     class TSSCDecoder

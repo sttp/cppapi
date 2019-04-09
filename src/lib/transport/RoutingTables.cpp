@@ -24,9 +24,8 @@
 #include "RoutingTables.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 RoutingTables::RoutingTables() :
     m_activeRoutes(NewSharedPtr<RoutingTable>()),
@@ -67,7 +66,7 @@ void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const De
     const RoutingTablePtr activeRoutesPtr = routingTables.CloneActiveRoutes();
     RoutingTable& activeRoutes = *activeRoutesPtr;
     const SubscriberConnectionPtr& destination = destinationRoutes.first;
-    const unordered_set<GSF::Guid>& routes = destinationRoutes.second;
+    const unordered_set<sttp::Guid>& routes = destinationRoutes.second;
 
     // Remove subscriber connection from undesired measurement route destinations
     for (auto& pair : activeRoutes)

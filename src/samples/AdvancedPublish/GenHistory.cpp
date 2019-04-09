@@ -22,14 +22,13 @@
 //******************************************************************************************************
 
 #include "GenHistory.h"
-#include "../../lib/Transport/SubscriberInstance.h"
+#include "../../lib/transport/SubscriberInstance.h"
 #include <iostream>
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::transport;
 
 GenHistory::GenHistory(uint16_t port) :
     m_history(nullptr),

@@ -26,9 +26,8 @@
 
 #include "DataSubscriber.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class SubscriberInstance  // NOLINT
     {
@@ -49,15 +48,15 @@ namespace Transport
         std::string m_stopTime;
 
         std::unordered_map<Guid, MeasurementMetadataPtr> m_measurements;
-        GSF::StringMap<DeviceMetadataPtr> m_devices;
-        GSF::StringMap<ConfigurationFramePtr> m_configurationFrames;
+        sttp::StringMap<DeviceMetadataPtr> m_devices;
+        sttp::StringMap<ConfigurationFramePtr> m_configurationFrames;
 
         Mutex m_configurationUpdateLock;
         void* m_userData;
 
         void SendMetadataRefreshCommand();
 
-        static void ConstructConfigurationFrames(const GSF::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, GSF::StringMap<ConfigurationFramePtr>& configurationFrames);
+        static void ConstructConfigurationFrames(const sttp::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, sttp::StringMap<ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
         static uint16_t GetSignalKindCount(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
@@ -232,6 +231,6 @@ namespace Transport
         // faster than executing a lookup in the full measurement map cache.
         static bool TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata);
     };
-}}}
+}}
 
 #endif

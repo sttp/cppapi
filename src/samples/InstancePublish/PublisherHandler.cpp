@@ -24,9 +24,8 @@
 #include "PublisherHandler.h"
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 Mutex PublisherHandler::s_coutLock {};
 

@@ -23,16 +23,15 @@
 
 #include "SubscriberInstance.h"
 #include "Constants.h"
-#include "../Common/Convert.h"
-#include "../Common/EndianConverter.h"
-#include "../Common/pugixml.hpp"
+#include "../common/Convert.h"
+#include "../common/EndianConverter.h"
+#include "../common/pugixml.hpp"
 #include <iostream>
 
 using namespace std;
 using namespace pugi;
-using namespace GSF;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
+using namespace sttp;
+using namespace sttp::transport;
 
 SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),

@@ -29,9 +29,8 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     // Parser for the compact measurement format of the Gateway Exchange Protocol.
     class CompactMeasurement
@@ -58,6 +57,6 @@ namespace Transport
         // Serializes a measurement into a buffer
         uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer, uint16_t runtimeID) const;
     };
-}}}
+}}
 
 #endif

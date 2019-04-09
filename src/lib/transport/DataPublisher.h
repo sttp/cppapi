@@ -24,24 +24,23 @@
 #ifndef __DATA_PUBLISHER_H
 #define __DATA_PUBLISHER_H
 
-#include "../Common/CommonTypes.h"
-#include "../Common/ThreadSafeQueue.h"
-#include "../Data/DataSet.h"
+#include "../common/CommonTypes.h"
+#include "../common/ThreadSafeQueue.h"
+#include "../data/DataSet.h"
 #include "SubscriberConnection.h"
 #include "RoutingTables.h"
 #include "TransportTypes.h"
 #include "Constants.h"
 
-namespace GSF {
-namespace FilterExpressions
+namespace sttp {
+namespace filterexpressions
 {
     class ExpressionTree;
-    typedef GSF::SharedPtr<ExpressionTree> ExpressionTreePtr;
+    typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
 
-namespace GSF {
-namespace TimeSeries {
-namespace Transport
+namespace sttp {
+namespace transport
 {
     class DataPublisher : public EnableSharedThisPtr<DataPublisher> // NOLINT
     {
@@ -64,12 +63,12 @@ namespace Transport
             CallbackDispatcher();
         };
 
-        GSF::Guid m_nodeID;
-        GSF::Data::DataSetPtr m_metadata;
-        GSF::Data::DataSetPtr m_filteringMetadata;
+        sttp::Guid m_nodeID;
+        sttp::data::DataSetPtr m_metadata;
+        sttp::data::DataSetPtr m_filteringMetadata;
         RoutingTables m_routingTables;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
-        GSF::SharedMutex m_subscriberConnectionsLock;
+        sttp::SharedMutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
         int32_t m_maximumAllowedConnections;
         bool m_isMetadataRefreshAllowed;
@@ -85,8 +84,8 @@ namespace Transport
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
 
         // Command channel
-        GSF::IOContext m_commandChannelService;
-        GSF::TcpAcceptor m_clientAcceptor;
+        sttp::IOContext m_commandChannelService;
+        sttp::TcpAcceptor m_clientAcceptor;
 
         // Command channel handlers
         void StartAccept();
@@ -124,10 +123,10 @@ namespace Transport
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static int32_t GetColumnIndex(const GSF::Data::DataTablePtr& table, const std::string& columnName);
+        static int32_t GetColumnIndex(const sttp::data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
-        DataPublisher(const GSF::TcpEndPoint& endpoint);
+        DataPublisher(const sttp::TcpEndPoint& endpoint);
         DataPublisher(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
         DataPublisher(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
 
@@ -142,16 +141,16 @@ namespace Transport
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
 
         // Defines metadata from an existing dataset
-        void DefineMetadata(const GSF::Data::DataSetPtr& metadata);
+        void DefineMetadata(const sttp::data::DataSetPtr& metadata);
 
         // Gets primary metadata. This dataset contains all the normalized metadata tables that define
         // the available detail about the data points that can be subscribed to by clients.
-        const GSF::Data::DataSetPtr& GetMetadata() const;
+        const sttp::data::DataSetPtr& GetMetadata() const;
 
         // Gets filtering metadata. This dataset, derived from primary metadata, contains a flattened
         // table used to subscribe to a filtered set of points with an expression, e.g.:
         // FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA'
-        const GSF::Data::DataSetPtr& GetFilteringMetadata() const;
+        const sttp::data::DataSetPtr& GetFilteringMetadata() const;
 
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
@@ -162,8 +161,8 @@ namespace Transport
         // Node ID defines a unique identification for the DataPublisher
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
-        const GSF::Guid& GetNodeID() const;
-        void SetNodeID(const GSF::Guid& value);
+        const sttp::Guid& GetNodeID() const;
+        void SetNodeID(const sttp::Guid& value);
 
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode value);
@@ -232,6 +231,6 @@ namespace Transport
     };
 
     typedef SharedPtr<DataPublisher> DataPublisherPtr;
-}}}
+}}
 
 #endif

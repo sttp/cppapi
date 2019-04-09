@@ -62,7 +62,7 @@
 #endif
 #endif
 
-namespace GSF
+namespace sttp
 {
     static_assert(sizeof(float) * CHAR_BIT == 32, "float not defined as 32-bits");
     static_assert(sizeof(double) * CHAR_BIT == 64, "double not defined as 64-bits");
@@ -255,10 +255,10 @@ namespace GSF
     struct Empty
     {
         static const std::string String;
-        static const GSF::datetime_t DateTime;
-        static const GSF::Guid Guid;
-        static const GSF::Object Object;
-        static const GSF::IPAddress IPAddress;
+        static const sttp::datetime_t DateTime;
+        static const sttp::Guid Guid;
+        static const sttp::Object Object;
+        static const sttp::IPAddress IPAddress;
     };
 
     // std::unordered_map string hasher
@@ -274,7 +274,7 @@ namespace GSF
     };
 
     template<class T>
-    using StringMap = std::unordered_map<std::string, T, GSF::StringHash, GSF::StringEqual>;
+    using StringMap = std::unordered_map<std::string, T, sttp::StringHash, sttp::StringEqual>;
 
     // std::map string comparer
     struct StringComparer : std::binary_function<std::string, std::string, bool>
@@ -283,7 +283,7 @@ namespace GSF
     };
 
     template<class T>
-    using SortedStringMap = std::map<std::string, T, GSF::StringComparer>;
+    using SortedStringMap = std::map<std::string, T, sttp::StringComparer>;
 
     template<class TKey, class TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
@@ -444,11 +444,11 @@ namespace GSF
 namespace std  // NOLINT
 {
     template<>
-    struct hash<GSF::Guid>
+    struct hash<sttp::Guid>
     {
-        size_t operator () (const GSF::Guid& uid) const
+        size_t operator () (const sttp::Guid& uid) const
         {
-            return boost::hash<GSF::Guid>()(uid);
+            return boost::hash<sttp::Guid>()(uid);
         }
     };
 }

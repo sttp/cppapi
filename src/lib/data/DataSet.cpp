@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 #include "DataSet.h"
-#include "../Common/pugixml.hpp"
+#include "../common/pugixml.hpp"
 
 using namespace std;
 using namespace pugi;
-using namespace GSF;
-using namespace GSF::Data;
+using namespace sttp;
+using namespace sttp::data;
 
 class XMLVectorWriter: public xml_writer
 {

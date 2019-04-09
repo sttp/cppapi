@@ -38,7 +38,7 @@ using namespace std::chrono;
 using namespace boost::uuids;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
-using namespace GSF;
+using namespace sttp;
 
 const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
 const auto DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
@@ -150,7 +150,7 @@ string PreparseTimestamp(const string& timestamp, TimeSpan& utcOffset)
     return updatedTimestamp;
 }
 
-void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
+void sttp::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
     // Unix dates are measured as the number of seconds since 1/1/1970
     unixSOC = (ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond;
@@ -161,12 +161,12 @@ void GSF::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& millisecond
     milliseconds = static_cast<uint16_t>(ticks / 10000 % 1000);
 }
 
-datetime_t GSF::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
+datetime_t sttp::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
 {
     return from_time_t(unixSOC) + Milliseconds(milliseconds);
 }
 
-datetime_t GSF::FromTicks(const int64_t ticks)
+datetime_t sttp::FromTicks(const int64_t ticks)
 {
     static float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
@@ -174,7 +174,7 @@ datetime_t GSF::FromTicks(const int64_t ticks)
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
-int64_t GSF::ToTicks(const datetime_t& time)
+int64_t sttp::ToTicks(const datetime_t& time)
 {
     static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
     const TimeSpan offset = time - DateTimeEpoch;
@@ -182,7 +182,7 @@ int64_t GSF::ToTicks(const datetime_t& time)
         int64_t(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
 }
 
-bool GSF::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
+bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
 {
     static const float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
 
@@ -197,12 +197,12 @@ bool GSF::TimestampIsReasonable(const int64_t value, const float64_t lagTime, co
     return distance >= -leadTime && distance <= lagTime;
 }
 
-bool GSF::TimestampIsReasonable(const datetime_t& value, const float64_t lagTime, const float64_t leadTime, const bool utc)
+bool sttp::TimestampIsReasonable(const datetime_t& value, const float64_t lagTime, const float64_t leadTime, const bool utc)
 {
     return TimestampIsReasonable(ToTicks(value), lagTime, leadTime);
 }
 
-uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
+uint32_t sttp::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
 {
     time_t fromSeconds;
     uint16_t milliseconds;
@@ -260,17 +260,17 @@ uint32_t GSF::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t 
     return ConvertUInt32(strftime(ptr, maxsize, formatStream.str().data(), &timeinfo));
 }
 
-datetime_t GSF::LocalFromUtc(const datetime_t& timestamp)
+datetime_t sttp::LocalFromUtc(const datetime_t& timestamp)
 {
     return boost::date_time::c_local_adjustor<datetime_t>::utc_to_local(timestamp);
 }
 
-string GSF::ToString(const Guid& value)
+string sttp::ToString(const Guid& value)
 {
     return boost::uuids::to_string(value);
 }
 
-string GSF::ToString(const datetime_t& value, const char* format)
+string sttp::ToString(const datetime_t& value, const char* format)
 {
     stringstream stream;
     time_facet* facet = new time_facet(format);
@@ -281,26 +281,26 @@ string GSF::ToString(const datetime_t& value, const char* format)
     return stream.str();
 }
 
-string GSF::ToString(const TimeSpan& value)
+string sttp::ToString(const TimeSpan& value)
 {
     // TODO: Consider improving elapsed time string with hours, minutes, etc.
     const float64_t seconds = value.total_milliseconds() / 1000.0;
     return ToString(seconds) + " seconds";
 }
 
-wstring GSF::ToUTF16(const string& value)
+wstring sttp::ToUTF16(const string& value)
 {
     wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
     return converter.from_bytes(value);
 }
 
-string GSF::ToUTF8(const wstring& value)
+string sttp::ToUTF8(const wstring& value)
 {
     wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
     return converter.to_bytes(value);
 }
 
-bool GSF::ParseBoolean(const string& value)
+bool sttp::ParseBoolean(const string& value)
 {
     if (value.empty())
         return false;
@@ -329,7 +329,7 @@ bool GSF::ParseBoolean(const string& value)
     return false;
 }
 
-bool GSF::TryParseUInt16(const string& value, uint16_t& result, const uint16_t defaultValue)
+bool sttp::TryParseUInt16(const string& value, uint16_t& result, const uint16_t defaultValue)
 {
     try
     {
@@ -351,7 +351,7 @@ bool GSF::TryParseUInt16(const string& value, uint16_t& result, const uint16_t d
     }
 }
 
-bool GSF::TryParseInt32(const string& value, int32_t& result, const int32_t defaultValue)
+bool sttp::TryParseInt32(const string& value, int32_t& result, const int32_t defaultValue)
 {
     try
     {
@@ -365,7 +365,7 @@ bool GSF::TryParseInt32(const string& value, int32_t& result, const int32_t defa
     }
 }
 
-bool GSF::TryParseInt64(const string& value, int64_t& result, const int64_t defaultValue)
+bool sttp::TryParseInt64(const string& value, int64_t& result, const int64_t defaultValue)
 {
     try
     {
@@ -379,7 +379,7 @@ bool GSF::TryParseInt64(const string& value, int64_t& result, const int64_t defa
     }
 }
 
-bool GSF::TryParseDouble(const string& value, float64_t& result, const float64_t defaultValue)
+bool sttp::TryParseDouble(const string& value, float64_t& result, const float64_t defaultValue)
 {
     try
     {
@@ -393,14 +393,14 @@ bool GSF::TryParseDouble(const string& value, float64_t& result, const float64_t
     }
 }
 
-string GSF::RegExEncode(const char value)
+string sttp::RegExEncode(const char value)
 {
     stringstream stream;
     stream << std::hex << static_cast<int>(value);
     return "\\u" + PadLeft(stream.str(), 4, '0');
 }
 
-Guid GSF::ParseGuid(const uint8_t* data, bool swapEndianness, bool useGEPEncoding)
+Guid sttp::ParseGuid(const uint8_t* data, bool swapEndianness, bool useGEPEncoding)
 {
     Guid id;
     uint8_t swappedBytes[16];
@@ -446,13 +446,13 @@ Guid GSF::ParseGuid(const uint8_t* data, bool swapEndianness, bool useGEPEncodin
     return id;
 }
 
-Guid GSF::ParseGuid(const char* data)
+Guid sttp::ParseGuid(const char* data)
 {
     const string_generator generator;
     return generator(data);
 }
 
-void GSF::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
+void sttp::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
 {
     // Convert RFC encoding to Microsoft or vice versa
     uint8_t* data = value.data;
@@ -488,7 +488,7 @@ void GSF::SwapGuidEndianness(Guid& value, bool useGEPEncoding)
     }
 }
 
-const char* GSF::Coalesce(const char* data, const char* nonEmptyValue)
+const char* sttp::Coalesce(const char* data, const char* nonEmptyValue)
 {
     if (data == nullptr)
         return nonEmptyValue;
@@ -500,7 +500,7 @@ const char* GSF::Coalesce(const char* data, const char* nonEmptyValue)
 }
 
 // Attempt to parse a timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
-bool GSF::TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue, bool parseAsUTC)
+bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue, bool parseAsUTC)
 {
     static const locale formats[] = {
         locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
@@ -532,7 +532,7 @@ bool GSF::TryParseTimestamp(const char* time, datetime_t& timestamp, const datet
     return false;
 }
 
-datetime_t GSF::ParseTimestamp(const char* time, bool parseAsUTC)
+datetime_t sttp::ParseTimestamp(const char* time, bool parseAsUTC)
 {
     datetime_t timestamp;
 
@@ -542,7 +542,7 @@ datetime_t GSF::ParseTimestamp(const char* time, bool parseAsUTC)
     throw runtime_error("Failed to parse timestamp \"" + string(time) + "\"");
 }
 
-datetime_t GSF::ParseRelativeTimestamp(const char* time, const datetime_t& defaultValue)
+datetime_t sttp::ParseRelativeTimestamp(const char* time, const datetime_t& defaultValue)
 {
     static const regex expression("\\*\\s*([+-]?\\d+)\\s*(\\w+)");
     datetime_t timestamp;
@@ -589,7 +589,7 @@ datetime_t GSF::ParseRelativeTimestamp(const char* time, const datetime_t& defau
     return timestamp;
 }
 
-StringMap<string> GSF::ParseKeyValuePairs(const string& value, const char parameterDelimiter, const char keyValueDelimiter, const char startValueDelimiter, const char endValueDelimiter)
+StringMap<string> sttp::ParseKeyValuePairs(const string& value, const char parameterDelimiter, const char keyValueDelimiter, const char startValueDelimiter, const char endValueDelimiter)
 {
     if (parameterDelimiter == keyValueDelimiter ||
         parameterDelimiter == startValueDelimiter ||

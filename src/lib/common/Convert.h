@@ -26,7 +26,7 @@
 
 #include "CommonTypes.h"
 
-namespace GSF
+namespace sttp
 {
     // Converts a timestamp, in Ticks, to Unix second of century and milliseconds
     void ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds);

@@ -28,7 +28,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp> 
 
-namespace GSF
+namespace sttp
 {
     class Timer;
     typedef std::function<void(Timer* timer, void* userData)> TimerElapsedCallback;
@@ -36,7 +36,7 @@ namespace GSF
     class Timer // NOLINT
     {
     private:
-        SharedPtr<GSF::Thread> m_timerThread;
+        SharedPtr<sttp::Thread> m_timerThread;
         int32_t m_interval;
         TimerElapsedCallback m_callback;
         void* m_userData;
@@ -136,7 +136,7 @@ namespace GSF
             if (m_running)
                 Stop();
 
-            m_timerThread = NewSharedPtr<GSF::Thread>(boost::bind(&Timer::TimerThread, this));
+            m_timerThread = NewSharedPtr<sttp::Thread>(boost::bind(&Timer::TimerThread, this));
         }
 
         void Stop()
@@ -150,7 +150,7 @@ namespace GSF
         }
     };
 
-    typedef GSF::SharedPtr<Timer> TimerPtr;
+    typedef sttp::SharedPtr<Timer> TimerPtr;
 }
 
 #endif

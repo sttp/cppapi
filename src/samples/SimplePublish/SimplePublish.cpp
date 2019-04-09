@@ -21,15 +21,14 @@
 //
 //******************************************************************************************************
 
-#include "../../lib/Transport/DataPublisher.h"
+#include "../../lib/transport/DataPublisher.h"
 #include <iostream>
 
 using namespace std;
-using namespace GSF;
-using namespace GSF::Data;
-using namespace GSF::TimeSeries;
-using namespace GSF::TimeSeries::Transport;
-using namespace GSF::FilterExpressions;
+using namespace sttp;
+using namespace sttp::data;
+using namespace sttp::transport;
+using namespace sttp::filterexpressions;
 
 DataPublisherPtr Publisher;
 TimerPtr PublishTimer;
