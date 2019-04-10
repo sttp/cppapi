@@ -112,7 +112,7 @@ CompactMeasurement::CompactMeasurement(SignalIndexCachePtr signalIndexCache, int
 // Gets the byte length of measurements parsed by this parser.
 uint32_t CompactMeasurement::GetBinaryLength(const bool usingBaseTimeOffset) const
 {
-    uint32_t byteLength = 7;
+    uint32_t byteLength = 9;
 
     if (m_includeTime)
     {
@@ -157,7 +157,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
         return false;
 
     // Read the signal index from the buffer
-    const uint16_t signalIndex = EndianConverter::ToBigEndian<uint16_t>(data, offset + 1);
+    const int32_t signalIndex = EndianConverter::ToBigEndian<int32_t>(data, offset + 1);
 
     // If the signal index is not found in the cache, we cannot parse the measurement
     if (!m_signalIndexCache->Contains(signalIndex))
@@ -170,7 +170,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
 
     // Now that we've validated our failure conditions we can safely start advancing the offset
     m_signalIndexCache->GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
-    offset += 3;
+    offset += 5;
 
     // Read the measurement value from the buffer
     const float32_t measurementValue = EndianConverter::ToBigEndian<float32_t>(data, offset);
@@ -212,7 +212,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     return true;
 }
 
-uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer, const uint16_t runtimeID) const
+uint32_t CompactMeasurement::SerializeMeasurement(const Measurement& measurement, vector<uint8_t>& buffer, const int32_t runtimeID) const
 {
     // Define the compact state flags
     uint8_t compactFlags = MapToCompactFlags(static_cast<uint32_t>(measurement.Flags));

@@ -16,8 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/11/2018 - J. Ritchie Carroll
+//  12/02/2016 - Steven E. Chisholm
 //       Generated original version of source code.
+//  04/10/2019 - J. Ritchie Carroll
+//       Migrated code to C++.
 //
 //******************************************************************************************************
 
@@ -77,7 +79,7 @@ void TSSCDecoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
     m_lastPosition = length;
 }
 
-bool TSSCDecoder::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
+bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value)
 {
     if (m_position == m_lastPosition && BitStreamIsEmpty())
     {
@@ -107,7 +109,7 @@ bool TSSCDecoder::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& 
         return false;
     }
 
-    if (code <= TSSCCodeWords::PointIDXOR16)
+    if (code <= TSSCCodeWords::PointIDXOR32)
     {
         DecodePointID(code, m_lastPoint);
         code = m_lastPoint->ReadCode();
@@ -129,19 +131,21 @@ bool TSSCDecoder::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& 
         }
     }
 
-    id = m_lastPoint->PrevNextPointId1;    
-    TSSCPointMetadataPtr nextPoint = id >= m_points.size() ? nullptr : m_points[id];
+    id = m_lastPoint->PrevNextPointID1;
+
+    const int32_t pointCount = ConvertInt32(m_points.size());
+    TSSCPointMetadataPtr nextPoint = id >= pointCount ? nullptr : m_points[id];
     
     if (nextPoint == nullptr)
     {
         nextPoint = NewTSSCPointMetadata();
 
-        if (id >= m_points.size())
+        if (id >= pointCount)
             m_points.resize(id + 1, nullptr);
 
         m_points[id] = nextPoint;
         
-        nextPoint->PrevNextPointId1 = static_cast<uint16_t>(id + 1);
+        nextPoint->PrevNextPointID1 = id + 1;
     }
 
     if (code <= TSSCCodeWords::TimeXOR7Bit)
@@ -285,23 +289,46 @@ bool TSSCDecoder::TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& 
 
 void TSSCDecoder::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint)
 {
-    if (code == TSSCCodeWords::PointIDXOR4)
+    switch (code)
     {
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(ReadBits4());
-    }
-    else if (code == TSSCCodeWords::PointIDXOR8)
-    {
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(m_data[m_position++]);
-    }
-    else if (code == TSSCCodeWords::PointIDXOR12)
-    {
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(ReadBits4());
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(m_data[m_position++] << 4);
-    }
-    else
-    {
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(m_data[m_position++]);
-        lastPoint->PrevNextPointId1 ^= static_cast<uint16_t>(m_data[m_position++] << 8);
+        case TSSCCodeWords::PointIDXOR4:
+            lastPoint->PrevNextPointID1 = ReadBits4() ^ lastPoint->PrevNextPointID1;
+            break;
+        case TSSCCodeWords::PointIDXOR8:
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ lastPoint->PrevNextPointID1;
+            m_position += 1;
+            break;
+        case TSSCCodeWords::PointIDXOR12:
+            lastPoint->PrevNextPointID1 = ReadBits4() ^ (m_data[m_position] << 4) ^ lastPoint->PrevNextPointID1;
+            m_position += 1;
+            break;
+        case TSSCCodeWords::PointIDXOR16:
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ lastPoint->PrevNextPointID1;
+            m_position += 2;
+            break;
+        case TSSCCodeWords::PointIDXOR20:
+            lastPoint->PrevNextPointID1 = ReadBits4() ^ (m_data[m_position] << 4) ^ (m_data[m_position + 1] << 12) ^ lastPoint->PrevNextPointID1;
+            m_position += 2;
+            break;
+        case TSSCCodeWords::PointIDXOR24:
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ (m_data[m_position + 2] << 16) ^ lastPoint->PrevNextPointID1;
+            m_position += 3;
+            break;
+        case TSSCCodeWords::PointIDXOR32:
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ (m_data[m_position + 2] << 16) ^ (m_data[m_position + 3] << 24) ^ lastPoint->PrevNextPointID1;
+            m_position += 4;
+            break;
+        default:
+            stringstream errorMessageStream;
+
+            errorMessageStream << "Invalid code received ";
+            errorMessageStream << static_cast<int>(code);
+            errorMessageStream << " at position ";
+            errorMessageStream << static_cast<int>(m_position);
+            errorMessageStream << " with last position ";
+            errorMessageStream << static_cast<int>(m_lastPosition);
+
+            throw SubscriberException(errorMessageStream.str());
     }
 }
 

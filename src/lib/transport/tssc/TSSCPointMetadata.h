@@ -41,33 +41,36 @@ namespace tssc
         static const uint8_t PointIDXOR8 = 2;
         static const uint8_t PointIDXOR12 = 3;
         static const uint8_t PointIDXOR16 = 4;
+        static const uint8_t PointIDXOR20 = 5;
+        static const uint8_t PointIDXOR24 = 6;
+        static const uint8_t PointIDXOR32 = 7;
 
-        static const uint8_t TimeDelta1Forward = 5;
-        static const uint8_t TimeDelta2Forward = 6;
-        static const uint8_t TimeDelta3Forward = 7;
-        static const uint8_t TimeDelta4Forward = 8;
-        static const uint8_t TimeDelta1Reverse = 9;
-        static const uint8_t TimeDelta2Reverse = 10;
-        static const uint8_t TimeDelta3Reverse = 11;
-        static const uint8_t TimeDelta4Reverse = 12;
-        static const uint8_t Timestamp2 = 13;
-        static const uint8_t TimeXOR7Bit = 14;
+        static const uint8_t TimeDelta1Forward = 8;
+        static const uint8_t TimeDelta2Forward = 9;
+        static const uint8_t TimeDelta3Forward = 10;
+        static const uint8_t TimeDelta4Forward = 11;
+        static const uint8_t TimeDelta1Reverse = 12;
+        static const uint8_t TimeDelta2Reverse = 13;
+        static const uint8_t TimeDelta3Reverse = 14;
+        static const uint8_t TimeDelta4Reverse = 15;
+        static const uint8_t Timestamp2 = 16;
+        static const uint8_t TimeXOR7Bit = 17;
 
-        static const uint8_t Quality2 = 15;
-        static const uint8_t Quality7Bit32 = 16;
+        static const uint8_t Quality2 = 18;
+        static const uint8_t Quality7Bit32 = 19;
 
-        static const uint8_t Value1 = 17;
-        static const uint8_t Value2 = 18;
-        static const uint8_t Value3 = 19;
-        static const uint8_t ValueZero = 20;
-        static const uint8_t ValueXOR4 = 21;
-        static const uint8_t ValueXOR8 = 22;
-        static const uint8_t ValueXOR12 = 23;
-        static const uint8_t ValueXOR16 = 24;
-        static const uint8_t ValueXOR20 = 25;
-        static const uint8_t ValueXOR24 = 26;
-        static const uint8_t ValueXOR28 = 27;
-        static const uint8_t ValueXOR32 = 28;
+        static const uint8_t Value1 = 20;
+        static const uint8_t Value2 = 21;
+        static const uint8_t Value3 = 22;
+        static const uint8_t ValueZero = 23;
+        static const uint8_t ValueXOR4 = 24;
+        static const uint8_t ValueXOR8 = 25;
+        static const uint8_t ValueXOR12 = 26;
+        static const uint8_t ValueXOR16 = 27;
+        static const uint8_t ValueXOR20 = 28;
+        static const uint8_t ValueXOR24 = 29;
+        static const uint8_t ValueXOR28 = 30;
+        static const uint8_t ValueXOR32 = 31;
     };
 
     // The metadata kept for each pointID.
@@ -117,7 +120,7 @@ namespace tssc
             std::function<int32_t()> readBits5
         );
 
-        uint16_t PrevNextPointId1;
+        int32_t PrevNextPointID1;
 
         uint32_t PrevQuality1;
         uint32_t PrevQuality2;

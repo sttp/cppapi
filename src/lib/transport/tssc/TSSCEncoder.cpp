@@ -16,8 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/11/2018 - J. Ritchie Carroll
+//  12/02/2016 - Steven E. Chisholm
 //       Generated original version of source code.
+//  04/10/2019 - J. Ritchie Carroll
+//       Migrated code to C++.
 //
 //******************************************************************************************************
 
@@ -79,23 +81,24 @@ uint32_t TSSCEncoder::FinishBlock()
     return m_position;
 }
 
-bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t quality, float32_t value)
+bool TSSCEncoder::TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t quality, float32_t value)
 {
     //if there are fewer than 100 bytes available on the buffer
     //assume that we cannot add any more.
     if (m_lastPosition - m_position < 100)
         return false;
 
-    TSSCPointMetadataPtr point = id >= m_points.size() ? nullptr : m_points[id];
+    const int32_t pointCount = ConvertInt32(m_points.size());
+    TSSCPointMetadataPtr point = id >= pointCount ? nullptr : m_points[id];
     
     if (point == nullptr)
     {
         point = NewTSSCPointMetadata();
 
-        if (id >= m_points.size())
+        if (id >= pointCount)
             m_points.resize(id + 1, nullptr);
 
-        point->PrevNextPointId1 = static_cast<uint16_t>(id + 1);
+        point->PrevNextPointID1 = id + 1;
         
         m_points[id] = point;
     }
@@ -106,8 +109,8 @@ bool TSSCEncoder::TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t qua
     //      measurements generally have some sort of sequence to them, 
     //      this still ends up being a good enough assumption.
 
-    if (m_lastPoint->PrevNextPointId1 != id)
-        WritePointIdChange(id);
+    if (m_lastPoint->PrevNextPointID1 != id)
+        WritePointIDChange(id);
 
     if (m_prevTimestamp1 != timestamp)
         WriteTimestampChange(timestamp);
@@ -226,9 +229,9 @@ TSSCPointMetadataPtr TSSCEncoder::NewTSSCPointMetadata()
     return NewSharedPtr<TSSCPointMetadata>([&,this](int32_t code, int32_t length) { return WriteBits(code, length); });
 }
 
-void TSSCEncoder::WritePointIdChange(uint16_t id)
+void TSSCEncoder::WritePointIDChange(int32_t id)
 {
-    const uint32_t bitsChanged = static_cast<uint32_t>(id ^ m_lastPoint->PrevNextPointId1);
+    const uint32_t bitsChanged = static_cast<uint32_t>(id ^ m_lastPoint->PrevNextPointID1);
 
     if (bitsChanged <= Bits4)
     {
@@ -249,15 +252,41 @@ void TSSCEncoder::WritePointIdChange(uint16_t id)
         m_data[m_position] = static_cast<uint8_t>(bitsChanged >> 4);
         m_position++;
     }
-    else
+    else if (bitsChanged <= Bits16)
     {
         m_lastPoint->WriteCode(TSSCCodeWords::PointIDXOR16);
         m_data[m_position] = static_cast<uint8_t>(bitsChanged);
         m_data[m_position + 1] = static_cast<uint8_t>(bitsChanged >> 8);
         m_position += 2;
     }
+    else if (bitsChanged <= Bits20)
+    {
+        m_lastPoint->WriteCode(TSSCCodeWords::PointIDXOR20);
+        WriteBits(static_cast<uint8_t>(bitsChanged) & 15, 4);
 
-    m_lastPoint->PrevNextPointId1 = id;
+        m_data[m_position] = static_cast<uint8_t>(bitsChanged >> 4);
+        m_data[m_position + 1] = static_cast<uint8_t>(bitsChanged >> 12);
+        m_position += 2;
+    }
+    else if (bitsChanged <= Bits24)
+    {
+        m_lastPoint->WriteCode(TSSCCodeWords::PointIDXOR24);
+        m_data[m_position] = static_cast<uint8_t>(bitsChanged);
+        m_data[m_position + 1] = static_cast<uint8_t>(bitsChanged >> 8);
+        m_data[m_position + 2] = static_cast<uint8_t>(bitsChanged >> 16);
+        m_position += 3;
+    }
+    else
+    {
+        m_lastPoint->WriteCode(TSSCCodeWords::PointIDXOR32);
+        m_data[m_position] = static_cast<uint8_t>(bitsChanged);
+        m_data[m_position + 1] = static_cast<uint8_t>(bitsChanged >> 8);
+        m_data[m_position + 2] = static_cast<uint8_t>(bitsChanged >> 16);
+        m_data[m_position + 3] = static_cast<uint8_t>(bitsChanged >> 24);
+        m_position += 4;
+    }
+
+    m_lastPoint->PrevNextPointID1 = id;
 }
 
 void TSSCEncoder::WriteTimestampChange(int64_t timestamp)

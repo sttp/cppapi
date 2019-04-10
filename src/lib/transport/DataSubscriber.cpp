@@ -688,7 +688,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
         Guid signalID;
         string measurementSource;
         uint32_t measurementID;
-        uint16_t id;
+        int32_t id;
         int64_t time;
         uint32_t quality;
         float32_t value;

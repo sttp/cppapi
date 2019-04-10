@@ -41,45 +41,45 @@ namespace transport
     class SignalIndexCache
     {
     private:
-        std::unordered_map<uint16_t, uint32_t> m_reference;
+        std::unordered_map<int32_t, uint32_t> m_reference;
         std::vector<sttp::Guid> m_signalIDList;
         std::vector<std::string> m_sourceList;
         std::vector<uint32_t> m_idList;
-        std::unordered_map<sttp::Guid, uint16_t> m_signalIDCache;
+        std::unordered_map<sttp::Guid, int32_t> m_signalIDCache;
         uint32_t m_binaryLength;
 
     public:
         SignalIndexCache();
 
         // Adds a measurement key to the cache.
-        void AddMeasurementKey(uint16_t signalIndex, const sttp::Guid& signalID, const std::string& source, uint32_t id, uint32_t charSizeEstimate = 1U);
+        void AddMeasurementKey(int32_t signalIndex, const sttp::Guid& signalID, const std::string& source, uint32_t id, uint32_t charSizeEstimate = 1U);
 
         // Empties the cache.
         void Clear();
 
         // Determines whether an element with the given runtime ID exists in the signal index cache.
-        bool Contains(uint16_t signalIndex) const;
+        bool Contains(int32_t signalIndex) const;
 
         // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-        sttp::Guid GetSignalID(uint16_t signalIndex) const;
+        sttp::Guid GetSignalID(int32_t signalIndex) const;
 
         //Gets the full list of signal IDs as an unordered set
         std::unordered_set<sttp::Guid> GetSignalIDs() const;
 
         // Gets the first half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
-        const std::string& GetSource(uint16_t signalIndex) const;
+        const std::string& GetSource(int32_t signalIndex) const;
 
         // Gets the second half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
-        uint32_t GetID(uint16_t signalIndex) const;
+        uint32_t GetID(int32_t signalIndex) const;
 
         // Gets the globally unique signal ID as well as the human-readable
         // measurement key associated with the given 16-bit runtime ID.
-        bool GetMeasurementKey(uint16_t signalIndex, sttp::Guid& signalID, std::string& source, uint32_t& id) const;
+        bool GetMeasurementKey(int32_t signalIndex, sttp::Guid& signalID, std::string& source, uint32_t& id) const;
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-        uint16_t GetSignalIndex(const sttp::Guid& signalID) const;
+        int32_t GetSignalIndex(const sttp::Guid& signalID) const;
 
         // Gets the mapped signal count
         uint32_t Count() const;

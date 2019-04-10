@@ -38,7 +38,7 @@ SignalIndexCache::SignalIndexCache() :
 }
 
 // Adds a measurement key to the cache.
-void SignalIndexCache::AddMeasurementKey(const uint16_t signalIndex, const Guid& signalID, const string& source, const uint32_t id, const uint32_t charSizeEstimate)
+void SignalIndexCache::AddMeasurementKey(const int32_t signalIndex, const Guid& signalID, const string& source, const uint32_t id, const uint32_t charSizeEstimate)
 {
     m_reference.insert_or_assign(signalIndex, ConvertUInt32(m_signalIDList.size()));
     m_signalIDList.push_back(signalID);
@@ -48,7 +48,7 @@ void SignalIndexCache::AddMeasurementKey(const uint16_t signalIndex, const Guid&
 
     // Char size here helps provide a rough-estimate on binary length used to reserve
     // bytes for a vector, if exact size is needed call RecalculateBinaryLength first
-    m_binaryLength += ConvertUInt32(26 + source.size() * charSizeEstimate);
+    m_binaryLength += ConvertUInt32(32 + source.size() * charSizeEstimate);
 }
 
 // Empties the cache.
@@ -62,13 +62,13 @@ void SignalIndexCache::Clear()
 }
 
 // Determines whether an element with the given runtime ID exists in the signal index cache.
-bool SignalIndexCache::Contains(const uint16_t signalIndex) const
+bool SignalIndexCache::Contains(const int32_t signalIndex) const
 {
     return m_reference.find(signalIndex) != m_reference.end();
 }
 
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-Guid SignalIndexCache::GetSignalID(uint16_t signalIndex) const
+Guid SignalIndexCache::GetSignalID(int32_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -87,8 +87,8 @@ unordered_set<Guid> SignalIndexCache::GetSignalIDs() const
 }
 
 // Gets the first half of the human-readable measurement
-// key associated with the given 16-bit runtime ID.
-const string& SignalIndexCache::GetSource(const uint16_t signalIndex) const
+// key associated with the given 32-bit runtime ID.
+const string& SignalIndexCache::GetSource(const int32_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -102,8 +102,8 @@ const string& SignalIndexCache::GetSource(const uint16_t signalIndex) const
 }
 
 // Gets the second half of the human-readable measurement
-// key associated with the given 16-bit runtime ID.
-uint32_t SignalIndexCache::GetID(const uint16_t signalIndex) const
+// key associated with the given 32-bit runtime ID.
+uint32_t SignalIndexCache::GetID(const int32_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -117,8 +117,8 @@ uint32_t SignalIndexCache::GetID(const uint16_t signalIndex) const
 }
 
 // Gets the globally unique signal ID as well as the human-readable
-// measurement key associated with the given 16-bit runtime ID.
-bool SignalIndexCache::GetMeasurementKey(const uint16_t signalIndex, Guid& signalID, string& source, uint32_t& id) const
+// measurement key associated with the given 32-bit runtime ID.
+bool SignalIndexCache::GetMeasurementKey(const int32_t signalIndex, Guid& signalID, string& source, uint32_t& id) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -137,10 +137,10 @@ bool SignalIndexCache::GetMeasurementKey(const uint16_t signalIndex, Guid& signa
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-uint16_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
+int32_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
 {
     const auto result = m_signalIDCache.find(signalID);
-    uint16_t signalIndex = UInt16::MaxValue;
+    int32_t signalIndex = Int32::MaxValue;
 
     if (result != m_signalIDCache.end())
         signalIndex = result->second;
@@ -163,7 +163,7 @@ void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnection& conne
     uint32_t binaryLength = 28;
 
     for (size_t i = 0; i < m_signalIDList.size(); i++)
-        binaryLength += ConvertUInt32(26 + connection.EncodeString(m_sourceList[i]).size()); //-V127
+        binaryLength += ConvertUInt32(32 + connection.EncodeString(m_sourceList[i]).size()); //-V127
 
     m_binaryLength = binaryLength;
 }
@@ -180,7 +180,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
     const uint32_t referenceCount = EndianConverter::Default.ConvertBigEndian(*referenceCountPtr);
 
     // Set up signalIndexPtr before entering the loop
-    const uint16_t* signalIndexPtr = reinterpret_cast<const uint16_t*>(referenceCountPtr + 1);
+    const int32_t* signalIndexPtr = reinterpret_cast<const int32_t*>(referenceCountPtr + 1);
 
     for (uint32_t i = 0; i < referenceCount; ++i)
     {
@@ -200,7 +200,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
             sourceStream << *sourceIter;
 
         // Set values for measurement key
-        const uint16_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
+        const int32_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
         const Guid signalID = ParseGuid(signalIDPtr);
         const string source = sourceStream.str();
         const uint32_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
@@ -210,7 +210,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
 
         // Advance signalIndexPtr to the next signal
         // index and clear out the string stream
-        signalIndexPtr = reinterpret_cast<const uint16_t*>(idPtr + 1);
+        signalIndexPtr = reinterpret_cast<const int32_t*>(idPtr + 1);
         sourceStream.str("");
     }
 
@@ -221,7 +221,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
 void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<uint8_t>& buffer)
 {
     const uint32_t binaryLengthLocation = ConvertUInt32(buffer.size());
-    uint32_t binaryLength = 28;
+    uint32_t binaryLength = 28; // cache size + subscriber ID + ref count + unauthorized count
 
     // Reserve space for binary byte length of cache
     WriteBytes(buffer, uint32_t(0));
@@ -251,7 +251,7 @@ void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<
         EndianConverter::WriteBigEndianBytes(buffer, m_idList[i]);
 
         // Update binary length
-        binaryLength += ConvertUInt32(26 + sourceBytes.size()); //-V127
+        binaryLength += ConvertUInt32(32 + sourceBytes.size()); //-V127
     }
 
     // For now, not reporting unauthorized IDs, may need to add in the future

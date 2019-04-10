@@ -1124,9 +1124,9 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
     {
         const Measurement& measurement = *measurements[i];
         const int64_t timestamp = measurement.Timestamp;
-        const uint16_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
+        const int32_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
 
-        if (runtimeID == UInt16::MaxValue)
+        if (runtimeID == Int32::MaxValue)
             continue;
 
         if (m_isNaNFiltered && isnan(measurement.Value))
@@ -1203,7 +1203,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
     for (const auto& measurement : measurements)
     {
-        const uint16_t index = m_signalIndexCache->GetSignalIndex(measurement->SignalID);
+        const int32_t index = m_signalIndexCache->GetSignalIndex(measurement->SignalID);
 
         if (!m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue())))
         {

@@ -32,10 +32,15 @@ using namespace sttp::transport::tssc;
 
 // Define "instances" of all static constants so values can be passed by reference and found by linker
 const uint8_t TSSCCodeWords::EndOfStream;
+
 const uint8_t TSSCCodeWords::PointIDXOR4;
 const uint8_t TSSCCodeWords::PointIDXOR8;
 const uint8_t TSSCCodeWords::PointIDXOR12;
 const uint8_t TSSCCodeWords::PointIDXOR16;
+const uint8_t TSSCCodeWords::PointIDXOR20;
+const uint8_t TSSCCodeWords::PointIDXOR24;
+const uint8_t TSSCCodeWords::PointIDXOR32;
+
 const uint8_t TSSCCodeWords::TimeDelta1Forward;
 const uint8_t TSSCCodeWords::TimeDelta2Forward;
 const uint8_t TSSCCodeWords::TimeDelta3Forward;
@@ -46,8 +51,10 @@ const uint8_t TSSCCodeWords::TimeDelta3Reverse;
 const uint8_t TSSCCodeWords::TimeDelta4Reverse;
 const uint8_t TSSCCodeWords::Timestamp2;
 const uint8_t TSSCCodeWords::TimeXOR7Bit;
+
 const uint8_t TSSCCodeWords::Quality2;
 const uint8_t TSSCCodeWords::Quality7Bit32;
+
 const uint8_t TSSCCodeWords::Value1;
 const uint8_t TSSCCodeWords::Value2;
 const uint8_t TSSCCodeWords::Value3;
@@ -93,7 +100,7 @@ TSSCPointMetadata::TSSCPointMetadata(
     m_writeBits(std::move(writeBits)),
     m_readBit(std::move(readBit)),
     m_readBits5(std::move(readBits5)),
-    PrevNextPointId1(0),
+    PrevNextPointID1(0),
     PrevQuality1(0),
     PrevQuality2(0),
     PrevValue1(0),

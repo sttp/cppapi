@@ -16,8 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/11/2018 - J. Ritchie Carroll
+//  12/02/2016 - Steven E. Chisholm
 //       Generated original version of source code.
+//  04/10/2019 - J. Ritchie Carroll
+//       Migrated code to C++.
 //
 //******************************************************************************************************
 
@@ -76,7 +78,7 @@ namespace tssc
         void SetBuffer(uint8_t* data, uint32_t offset, uint32_t length);
 
         // Reads the next measurement from the stream. If the end of the stream has been encountered, return false.
-        bool TryGetMeasurement(uint16_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);
+        bool TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& quality, float32_t& value);
 
         int32_t ReadBit();
         int32_t ReadBits4();

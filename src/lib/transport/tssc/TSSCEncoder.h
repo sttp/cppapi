@@ -16,8 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/11/2018 - J. Ritchie Carroll
+//  12/02/2016 - Steven E. Chisholm
 //       Generated original version of source code.
+//  04/10/2019 - J. Ritchie Carroll
+//       Migrated code to C++.
 //
 //******************************************************************************************************
 
@@ -68,7 +70,7 @@ namespace tssc
         // A cache of bits that need to be flushed to m_buffer when full. Bits filled starting from the right moving left.
         int32_t m_bitStreamCache;
 
-        void WritePointIdChange(uint16_t id);
+        void WritePointIDChange(int32_t id);
         void WriteTimestampChange(int64_t timestamp);
         void WriteQualityChange(uint32_t quality, const TSSCPointMetadataPtr& point);
 
@@ -94,7 +96,7 @@ namespace tssc
         uint32_t FinishBlock();
 
         // Adds the supplied measurement to the stream. If the stream is full, this method returns false.
-        bool TryAddMeasurement(uint16_t id, int64_t timestamp, uint32_t quality, float32_t value);
+        bool TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t quality, float32_t value);
     };
 }}}
 
