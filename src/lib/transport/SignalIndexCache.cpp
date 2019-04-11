@@ -25,8 +25,8 @@
 
 #include "SignalIndexCache.h"
 #include "DataPublisher.h"
-#include "../common/Convert.h"
-#include "../common/EndianConverter.h"
+#include "../Convert.h"
+#include "../EndianConverter.h"
 
 using namespace std;
 using namespace sttp;

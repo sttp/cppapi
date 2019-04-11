@@ -24,8 +24,8 @@
 #ifndef __DATA_ROW_H
 #define __DATA_ROW_H
 
-#include "../common/CommonTypes.h"
-#include "../common/Nullable.h"
+#include "../CommonTypes.h"
+#include "../Nullable.h"
 #include "DataColumn.h"
 
 namespace sttp {

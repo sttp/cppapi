@@ -24,7 +24,7 @@
 #ifndef __DATA_COLUMN_H
 #define __DATA_COLUMN_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 
 namespace sttp {
 namespace data

@@ -1,18 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="common\CommonTypes.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Convert.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\EndianConverter.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\pugixml.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="data\DataColumn.cpp">
       <Filter>data</Filter>
     </ClCompile>
@@ -532,32 +520,12 @@
     <ClCompile Include="transport\tssc\TSSCPointMetadata.cpp">
       <Filter>transport\tssc</Filter>
     </ClCompile>
+    <ClCompile Include="CommonTypes.cpp" />
+    <ClCompile Include="Convert.cpp" />
+    <ClCompile Include="EndianConverter.cpp" />
+    <ClCompile Include="pugixml.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common\CommonTypes.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Convert.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\EndianConverter.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Nullable.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\pugiconfig.hpp">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\pugixml.hpp">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\ThreadSafeQueue.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\Timer.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="data\DataColumn.h">
       <Filter>data</Filter>
     </ClInclude>
@@ -1110,11 +1078,16 @@
     <ClInclude Include="transport\tssc\TSSCPointMetadata.h">
       <Filter>transport\tssc</Filter>
     </ClInclude>
+    <ClInclude Include="CommonTypes.h" />
+    <ClInclude Include="Convert.h" />
+    <ClInclude Include="EndianConverter.h" />
+    <ClInclude Include="Nullable.h" />
+    <ClInclude Include="pugiconfig.hpp" />
+    <ClInclude Include="pugixml.hpp" />
+    <ClInclude Include="ThreadSafeQueue.h" />
+    <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="common">
-      <UniqueIdentifier>{e88bc1e0-d6ef-458b-8c07-4ca6aa8f916c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="data">
       <UniqueIdentifier>{85f66a16-6e8c-4e92-bcd6-b3ad8e32bf06}</UniqueIdentifier>
     </Filter>

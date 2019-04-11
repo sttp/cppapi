@@ -23,7 +23,7 @@
 
 #include "FilterExpressionParser.h"
 #include "tree/ParseTreeWalker.h"
-#include "../common/Nullable.h"
+#include "../Nullable.h"
 
 using namespace std;
 using namespace sttp;

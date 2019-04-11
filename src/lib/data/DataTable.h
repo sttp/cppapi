@@ -24,7 +24,7 @@
 #ifndef __DATA_TABLE_H
 #define __DATA_TABLE_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 #include "DataColumn.h"
 #include "DataRow.h"
 

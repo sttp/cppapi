@@ -24,8 +24,8 @@
 #ifndef __ROUTING_TABLES_H
 #define __ROUTING_TABLES_H
 
-#include "../common/CommonTypes.h"
-#include "../common/ThreadSafeQueue.h"
+#include "../CommonTypes.h"
+#include "../ThreadSafeQueue.h"
 #include "SubscriberConnection.h"
 
 namespace sttp {

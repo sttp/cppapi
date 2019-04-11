@@ -24,7 +24,7 @@
 #ifndef __TRANSPORT_TYPES_H
 #define __TRANSPORT_TYPES_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 #include "Constants.h"
 #include <unordered_set>
 

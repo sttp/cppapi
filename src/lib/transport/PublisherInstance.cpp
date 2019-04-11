@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 #include "PublisherInstance.h"
-#include "../common/Convert.h"
+#include "../Convert.h"
 #include <iostream>
 
 using namespace std;

@@ -24,7 +24,7 @@
 #ifndef __DATA_SET_H
 #define __DATA_SET_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 #include "DataTable.h"
 
 namespace pugi

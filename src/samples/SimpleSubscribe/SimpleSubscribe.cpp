@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-#include "../../lib/common/CommonTypes.h"
-#include "../../lib/common/Convert.h"
+#include "../../lib/CommonTypes.h"
+#include "../../lib/Convert.h"
 #include "../../lib/transport/DataSubscriber.h"
 #include <iostream>
 

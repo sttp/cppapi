@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include "PublisherHandler.h"
-#include "../../lib/common/Convert.h"
+#include "../../lib/Convert.h"
 
 using namespace std;
 using namespace sttp;

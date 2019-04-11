@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 #include "CompactMeasurement.h"
-#include "../common/EndianConverter.h"
+#include "../EndianConverter.h"
 
 using namespace std;
 using namespace sttp;

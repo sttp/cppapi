@@ -30,13 +30,13 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY Libraries)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY Libraries)
 
 set (STTP_HEADER_FILES
-    "lib/common/CommonTypes.h"
-    "lib/common/Convert.h"
-    "lib/common/EndianConverter.h"
-    "lib/common/Nullable.h"
-    "lib/common/pugixml.hpp"
-    "lib/common/ThreadSafeQueue.h"
-    "lib/common/Timer.h"
+    "lib/CommonTypes.h"
+    "lib/Convert.h"
+    "lib/EndianConverter.h"
+    "lib/Nullable.h"
+    "lib/pugixml.hpp"
+    "lib/ThreadSafeQueue.h"
+    "lib/Timer.h"
     "lib/data/DataColumn.h"
     "lib/data/DataRow.h"
     "lib/data/DataSet.h"
@@ -214,10 +214,10 @@ set (STTP_HEADER_FILES
 )
 
 set (STTP_SOURCE_FILES
-    "lib/common/CommonTypes.cpp"
-    "lib/common/Convert.cpp"
-    "lib/common/EndianConverter.cpp"
-    "lib/common/pugixml.cpp"
+    "lib/CommonTypes.cpp"
+    "lib/Convert.cpp"
+    "lib/EndianConverter.cpp"
+    "lib/pugixml.cpp"
     "lib/data/DataColumn.cpp"
     "lib/data/DataRow.cpp"
     "lib/data/DataSet.cpp"

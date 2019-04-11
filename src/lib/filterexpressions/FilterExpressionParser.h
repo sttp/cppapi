@@ -26,7 +26,7 @@
 
 #include "FilterExpressions.h"
 #include "FilterExpressionSyntaxLexer.h"
-#include "../../common/CommonTypes.h"
+#include "../../CommonTypes.h"
 #include "../../data/DataSet.h"
 #include "ExpressionTree.h"
 

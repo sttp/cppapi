@@ -29,7 +29,7 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "tssc/TSSCDecoder.h"
-#include "../common/ThreadSafeQueue.h"
+#include "../ThreadSafeQueue.h"
 
 namespace sttp {
 namespace transport

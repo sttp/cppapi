@@ -26,7 +26,7 @@
 #ifndef __SIGNAL_INDEX_CACHE_H
 #define __SIGNAL_INDEX_CACHE_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 #include <unordered_set>
 
 namespace sttp {

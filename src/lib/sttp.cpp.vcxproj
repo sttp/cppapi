@@ -19,18 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common\CommonTypes.h" />
-    <ClCompile Include="common\CommonTypes.cpp" />
-    <ClInclude Include="common\Convert.h" />
-    <ClCompile Include="common\Convert.cpp" />
-    <ClInclude Include="common\EndianConverter.h" />
-    <ClCompile Include="common\EndianConverter.cpp" />
-    <ClInclude Include="common\Nullable.h" />
-    <ClInclude Include="common\pugiconfig.hpp" />
-    <ClInclude Include="common\pugixml.hpp" />
-    <ClCompile Include="common\pugixml.cpp" />
-    <ClInclude Include="common\ThreadSafeQueue.h" />
-    <ClInclude Include="common\Timer.h" />
+    <ClInclude Include="CommonTypes.h" />
+    <ClCompile Include="CommonTypes.cpp" />
+    <ClInclude Include="Convert.h" />
+    <ClCompile Include="Convert.cpp" />
+    <ClInclude Include="EndianConverter.h" />
+    <ClCompile Include="EndianConverter.cpp" />
+    <ClInclude Include="Nullable.h" />
+    <ClInclude Include="pugiconfig.hpp" />
+    <ClInclude Include="pugixml.hpp" />
+    <ClCompile Include="pugixml.cpp" />
+    <ClInclude Include="ThreadSafeQueue.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="filterexpressions\antlr4-runtime\atn\AbstractPredicateTransition.h" />
     <ClInclude Include="filterexpressions\antlr4-runtime\atn\ActionTransition.h" />
     <ClInclude Include="filterexpressions\antlr4-runtime\atn\AmbiguityInfo.h" />

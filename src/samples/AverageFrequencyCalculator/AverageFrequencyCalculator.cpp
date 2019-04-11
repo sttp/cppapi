@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 #include "../../lib/transport/DataSubscriber.h"
-#include "../../lib/common/Convert.h"
+#include "../../lib/Convert.h"
 #include <iostream>
 
 using namespace std;

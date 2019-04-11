@@ -24,8 +24,8 @@
 #ifndef __DATA_PUBLISHER_H
 #define __DATA_PUBLISHER_H
 
-#include "../common/CommonTypes.h"
-#include "../common/ThreadSafeQueue.h"
+#include "../CommonTypes.h"
+#include "../ThreadSafeQueue.h"
 #include "../data/DataSet.h"
 #include "SubscriberConnection.h"
 #include "RoutingTables.h"

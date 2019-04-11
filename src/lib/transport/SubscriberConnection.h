@@ -24,8 +24,8 @@
 #ifndef __SUBSCRIBER_CONNECTION_H
 #define __SUBSCRIBER_CONNECTION_H
 
-#include "../common/CommonTypes.h"
-#include "../common/Timer.h"
+#include "../CommonTypes.h"
+#include "../Timer.h"
 #include "../data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"

@@ -24,7 +24,7 @@
 #ifndef __SUBSCRIBER_HANDLER_H
 #define __SUBSCRIBER_HANDLER_H
 
-#include "../../lib/common/CommonTypes.h"
+#include "../../lib/CommonTypes.h"
 #include "../../lib/transport/SubscriberInstance.h"
 
 class SubscriberHandler : public sttp::transport::SubscriberInstance

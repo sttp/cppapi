@@ -24,7 +24,7 @@
 #ifndef __EXPRESSION_TREE_H
 #define __EXPRESSION_TREE_H
 
-#include "../../common/CommonTypes.h"
+#include "../../CommonTypes.h"
 #include "../../data/DataSet.h"
 
 namespace sttp {

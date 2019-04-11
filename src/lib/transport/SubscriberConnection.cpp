@@ -27,7 +27,7 @@
 #include "DataPublisher.h"
 #include "CompactMeasurement.h"
 #include "ActiveMeasurementsSchema.h"
-#include "../common/EndianConverter.h"
+#include "../EndianConverter.h"
 #include "../data/DataSet.h"
 #include "../filterexpressions/FilterExpressionParser.h"
 

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "../../lib/common/CommonTypes.h"
+#include "../../lib/CommonTypes.h"
 #include "../../lib/transport/SubscriberConnection.h"
 
 using namespace sttp::transport;

@@ -24,7 +24,7 @@
 #ifndef __PUBLISHER_HANDLER_H
 #define __PUBLISHER_HANDLER_H
 
-#include "../../lib/common/CommonTypes.h"
+#include "../../lib/CommonTypes.h"
 #include "../../lib/transport/PublisherInstance.h"
 
 class PublisherHandler : public sttp::transport::PublisherInstance

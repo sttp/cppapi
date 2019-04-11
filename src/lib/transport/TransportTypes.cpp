@@ -23,7 +23,7 @@
 
 #include "TransportTypes.h"
 #include "Constants.h"
-#include "../common/Convert.h"
+#include "../Convert.h"
 
 using namespace std;
 using namespace sttp;

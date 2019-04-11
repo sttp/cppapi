@@ -24,7 +24,7 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
-#include "../common/CommonTypes.h"
+#include "../CommonTypes.h"
 
 namespace sttp {
 namespace transport

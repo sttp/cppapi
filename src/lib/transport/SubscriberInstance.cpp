@@ -23,9 +23,9 @@
 
 #include "SubscriberInstance.h"
 #include "Constants.h"
-#include "../common/Convert.h"
-#include "../common/EndianConverter.h"
-#include "../common/pugixml.hpp"
+#include "../Convert.h"
+#include "../EndianConverter.h"
+#include "../pugixml.hpp"
 #include <iostream>
 
 using namespace std;

@@ -27,8 +27,8 @@
 #include "Version.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
-#include "../common/Convert.h"
-#include "../common/EndianConverter.h"
+#include "../Convert.h"
+#include "../EndianConverter.h"
 #include <sstream>
 #include <boost/bind.hpp>
 
