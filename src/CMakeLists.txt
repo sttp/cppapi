@@ -480,6 +480,7 @@ add_custom_target (samples DEPENDS
     AdvancedSubscribe
     AverageFrequencyCalculator
     InstanceSubscribe
+    InstancePublish
     FilterExpressionTests
     SimplePublish
     AdvancedPublish
