@@ -125,6 +125,7 @@ bool RunPublisher(uint16_t port)
         // send random values every 33 milliseconds
         PublishTimer = NewSharedPtr<Timer>(33, [](Timer*, void*)
         {
+            // If metadata can change, the following integer should not be static:
             static uint32_t count = ConvertUInt32(MeasurementsToPublish.size());
             const int64_t timestamp = ToTicks(UtcNow());
             vector<MeasurementPtr> measurements;
