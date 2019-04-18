@@ -462,6 +462,10 @@ target_link_libraries (InstanceSubscribe sttp)
 add_executable (InstancePublish EXCLUDE_FROM_ALL samples/InstancePublish/InstancePublish.cpp samples/InstancePublish/PublisherHandler.cpp)
 target_link_libraries (InstancePublish sttp)
 
+# DynamicMetadataPublish sample
+add_executable (DynamicMetadataPublish EXCLUDE_FROM_ALL samples/DynamicMetadataPublish/DynamicMetadataPublish.cpp samples/DynamicMetadataPublish/PublisherHandler.cpp)
+target_link_libraries (DynamicMetadataPublish sttp)
+
 # FilterExpressionTests sample
 add_executable (FilterExpressionTests EXCLUDE_FROM_ALL samples/FilterExpressionTests/FilterExpressionTests.cpp)
 target_link_libraries (FilterExpressionTests sttp boost_filesystem)
@@ -481,6 +485,7 @@ add_custom_target (samples DEPENDS
     AverageFrequencyCalculator
     InstanceSubscribe
     InstancePublish
+    DynamicMetadataPublish
     FilterExpressionTests
     SimplePublish
     AdvancedPublish

@@ -144,6 +144,7 @@ Individual sample applications can be built as follows:
     make AverageFrequencyCalculator
     make InstanceSubscribe
     make InstancePublish
+    make DynamicMetadataPublish
     make FilterExpressionTests
     make SimplePublish
     make AdvancedPublish
