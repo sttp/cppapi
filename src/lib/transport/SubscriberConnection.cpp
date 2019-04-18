@@ -1667,35 +1667,35 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
 
             // Write data buffer
             WriteBytes(buffer, data);
-
-            // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-            if (useDataChannel)
-            {
-                m_totalDataChannelBytesSent += buffer.size();
-
-                post(m_udpWriteStrand, [this, bufferPtr] {
-                    m_udpWriteBuffers.push_back(bufferPtr);
-
-                    if (m_udpWriteBuffers.size() == 1)
-                        DataChannelSendAsync();
-                });
-
-                m_dataChannelWaitHandle.notify_all();
-            }
-            else
-            {
-                m_totalCommandChannelBytesSent += buffer.size();
-
-                post(m_tcpWriteStrand, [this, bufferPtr] {
-                    m_tcpWriteBuffers.push_back(bufferPtr);
-
-                    if (m_tcpWriteBuffers.size() == 1)
-                        CommandChannelSendAsync();
-                });
-            }
-
-            success = true;
         }
+
+        // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+        if (useDataChannel)
+        {
+            m_totalDataChannelBytesSent += buffer.size();
+
+            post(m_udpWriteStrand, [this, bufferPtr] {
+                m_udpWriteBuffers.push_back(bufferPtr);
+
+                if (m_udpWriteBuffers.size() == 1)
+                    DataChannelSendAsync();
+            });
+
+            m_dataChannelWaitHandle.notify_all();
+        }
+        else
+        {
+            m_totalCommandChannelBytesSent += buffer.size();
+
+            post(m_tcpWriteStrand, [this, bufferPtr] {
+                m_tcpWriteBuffers.push_back(bufferPtr);
+
+                if (m_tcpWriteBuffers.size() == 1)
+                    CommandChannelSendAsync();
+            });
+        }
+
+        success = true;
     }
     catch (...)
     {
