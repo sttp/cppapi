@@ -144,7 +144,10 @@ namespace sttp
             m_running = false;
 
             if (m_timerThread != nullptr)
+            {
                 m_timerThread->interrupt();
+                m_timerThread->join();
+            }
 
             m_timerThread.reset();
         }
