@@ -146,7 +146,9 @@ namespace sttp
             if (m_timerThread != nullptr)
             {
                 m_timerThread->interrupt();
-                m_timerThread->join();
+
+                if (boost::this_thread::get_id() != m_timerThread->get_id())
+                    m_timerThread->join();
             }
 
             m_timerThread.reset();
