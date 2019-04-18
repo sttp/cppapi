@@ -1,14 +1,14 @@
 //******************************************************************************************************
 //  AverageFrequencyCalculator.cpp - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/eclipse-1.0.php
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -24,6 +24,7 @@
 #include "../../lib/transport/DataSubscriber.h"
 #include "../../lib/Convert.h"
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace sttp;
@@ -39,6 +40,7 @@ SubscriptionInfo CreateSubscriptionInfo();
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
+void ConfigurationChanged(DataSubscriber* source);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
@@ -100,6 +102,7 @@ void RunSubscriber(const string& hostname, uint16_t port)
     Subscriber->RegisterStatusMessageCallback(&DisplayStatusMessage);
     Subscriber->RegisterErrorMessageCallback(&DisplayErrorMessage);
     Subscriber->RegisterNewMeasurementsCallback(&ProcessMeasurements);
+    Subscriber->RegisterConfigurationChangedCallback(&ConfigurationChanged);
 
     cout << endl << "Connecting to " << hostname << ":" << port << "..." << endl << endl;
 
@@ -244,6 +247,12 @@ void Resubscribe(DataSubscriber* source)
         source->Disconnect();
         cout << "Connection retry attempts exceeded. Press enter to exit." << endl;
     }
+}
+
+void ConfigurationChanged(DataSubscriber* source)
+{
+    // Resubscribe since new metadata is available - filter expression will be reapplied...
+    Subscriber->Subscribe();
 }
 
 // Callback which is called to display status messages from the subscriber.
