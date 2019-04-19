@@ -55,6 +55,7 @@ namespace transport
         float64_t LeadTime;
         bool UseLocalClockAsRealTime;
         bool UseMillisecondResolution;
+        bool RequestNaNValueFilter;
 
         // Temporal playback properties
         std::string StartTime;

@@ -51,6 +51,7 @@ SubscriptionInfo::SubscriptionInfo() :
     LeadTime(5.0),
     UseLocalClockAsRealTime(false),
     UseMillisecondResolution(false),
+    RequestNaNValueFilter(false),
     ProcessingInterval(-1)
 {
 }
@@ -1144,7 +1145,7 @@ void DataSubscriber::Subscribe()
 
     m_totalMeasurementsReceived = 0UL;
 
-    connectionStream << "trackLatestMeasurements=" << m_subscriptionInfo.Throttled << ";";
+    connectionStream << "throttled=" << m_subscriptionInfo.Throttled << ";";
     connectionStream << "publishInterval" << m_subscriptionInfo.PublishInterval << ";";
     connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";
     connectionStream << "lagTime=" << m_subscriptionInfo.LagTime << ";";
@@ -1152,10 +1153,11 @@ void DataSubscriber::Subscribe()
     connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
-    connectionStream << "assemblyInfo={source=STTP C++ Library; version=" STTP_VERSION "; buildDate=" STTP_BUILD_DATE "};";
+    connectionStream << "requestNaNValueFilter" << m_subscriptionInfo.RequestNaNValueFilter << ";";
+    connectionStream << "assemblyInfo={source=STTP C++ Library; version=" STTP_VERSION "; updatedOn=" STTP_UPDATEDON "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
-        connectionStream << "inputMeasurementKeys={" << m_subscriptionInfo.FilterExpression << "};";
+        connectionStream << "filterExpression={" << m_subscriptionInfo.FilterExpression << "};";
 
     if (m_subscriptionInfo.UdpDataChannel)
     {

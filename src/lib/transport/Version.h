@@ -24,7 +24,7 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define STTP_VERSION "1.0.1"
-#define STTP_BUILD_DATE "April 2019"
+#define STTP_VERSION "1.0.2"
+#define STTP_UPDATEDON "April 2019"
 
 #endif

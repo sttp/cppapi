@@ -324,11 +324,11 @@ void SubscriberConnection::SetSubscriptionInfo(const string& value)
     }
 
     const StringMap<string> settings = ParseKeyValuePairs(value);
-    string source, version, buildDate;
+    string source, version, updatedOn;
 
     TryGetValue(settings, "source", source);
     TryGetValue(settings, "version", version);
-    TryGetValue(settings, "buildDate", buildDate);
+    TryGetValue(settings, "updatedOn", updatedOn);
 
     if (source.empty())
         source = "unknown source";
@@ -336,10 +336,10 @@ void SubscriberConnection::SetSubscriptionInfo(const string& value)
     if (version.empty())
         version = "?.?.?.?";
 
-    if (buildDate.empty())
-        buildDate = "undefined date";
+    if (updatedOn.empty())
+        updatedOn = "undefined date";
 
-    m_subscriptionInfo = source + " version " + version + " built on " + buildDate;
+    m_subscriptionInfo = source + " version " + version + " updated on " + updatedOn;
 }
 
 const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache() const
@@ -607,7 +607,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     else
                         m_useMillisecondResolution = false;
 
-                    if (TryGetValue(settings, "trackLatestMeasurements", setting))
+                    if (TryGetValue(settings, "throttled", setting))
                         m_trackLatestMeasurements = ParseBoolean(setting);
                     else
                         m_trackLatestMeasurements = false;
@@ -659,7 +659,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     SignalIndexCachePtr signalIndexCache = nullptr;
 
                     // Apply subscriber filter expression and build signal index cache
-                    if (TryGetValue(settings, "inputMeasurementKeys", setting))
+                    if (TryGetValue(settings, "filterExpression", setting))
                     {
                         bool success;
                         
