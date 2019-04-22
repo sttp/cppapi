@@ -191,14 +191,14 @@ namespace transport
 
         // Command channel
         Thread m_commandChannelResponseThread;
-        boost::asio::io_context m_commandChannelService;
+		sttp::IOContext m_commandChannelService;
         TcpSocket m_commandChannelSocket;
         std::vector<uint8_t> m_readBuffer;
         std::vector<uint8_t> m_writeBuffer;
 
         // Data channel
         Thread m_dataChannelResponseThread;
-        boost::asio::io_context m_dataChannelService;
+		sttp::IOContext m_dataChannelService;
         UdpSocket m_dataChannelSocket;
 
         // Callbacks

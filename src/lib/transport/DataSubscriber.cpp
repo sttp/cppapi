@@ -1052,7 +1052,12 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port)
 
     m_hostAddress = hostEndpoint->endpoint().address();
 
+#if BOOST_LEGACY
+    m_commandChannelService.reset();
+#else
     m_commandChannelService.restart();
+#endif
+
     m_callbackThread = Thread(bind(&DataSubscriber::RunCallbackThread, this));
     m_commandChannelResponseThread = Thread(bind(&DataSubscriber::RunCommandChannelResponseThread, this));
 

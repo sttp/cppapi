@@ -726,7 +726,11 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                                     while (m_dataChannelActive)
                                     {
+                                    #if BOOST_LEGACY
+                                        m_dataChannelService.reset();
+                                    #else
                                         m_dataChannelService.restart();
+                                    #endif
                                         m_dataChannelService.run();                                        
                                         m_dataChannelWaitHandle.wait(lock);
                                     }

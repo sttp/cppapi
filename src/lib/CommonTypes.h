@@ -62,6 +62,8 @@
 #endif
 #endif
 
+#define BOOST_LEGACY (BOOST_VERSION < 106600)
+
 namespace sttp
 {
     static_assert(sizeof(float) * CHAR_BIT == 32, "float not defined as 32-bits");
@@ -238,8 +240,13 @@ namespace sttp
     typedef boost::unique_lock<Mutex> UniqueLock;
     typedef boost::unique_lock<SharedMutex> WriterLock;
     typedef boost::shared_lock<SharedMutex> ReaderLock;
+    #if BOOST_LEGACY
+    typedef boost::asio::io_service IOContext;
+    typedef boost::asio::io_service::strand Strand;
+    #else
     typedef boost::asio::io_context IOContext;
     typedef boost::asio::io_context::strand Strand;
+    #endif
     typedef boost::asio::deadline_timer DeadlineTimer;
     typedef boost::asio::ip::address IPAddress;
     typedef boost::asio::ip::tcp::socket TcpSocket;
@@ -250,6 +257,11 @@ namespace sttp
     typedef boost::iostreams::filtering_streambuf<boost::iostreams::input> StreamBuffer;
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;
     typedef boost::iostreams::gzip_compressor GZipCompressor;
+
+    #if BOOST_LEGACY
+    #define bind_executor(ex, ...) ex.wrap(__VA_ARGS__)
+    #define post(ex, ...) ex.post(__VA_ARGS__)
+    #endif
 
     // Empty types
     struct Empty
