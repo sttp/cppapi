@@ -77,13 +77,16 @@ namespace transport
         bool m_supportsTemporalSubscriptions;
         bool m_useBaseTimeOffsets;
         uint32_t m_cipherKeyRotationPeriod;
+        bool m_started;
+        volatile bool m_shuttingDown;
         void* m_userData;
-        bool m_disposing;
 
         // Callback queue
+        Thread m_callbackThread;
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
 
         // Command channel
+        Thread m_commandChannelAcceptThread;
         sttp::IOContext m_commandChannelService;
         sttp::TcpAcceptor m_clientAcceptor;
 
@@ -126,6 +129,9 @@ namespace transport
         static int32_t GetColumnIndex(const sttp::data::DataTablePtr& table, const std::string& columnName);
     public:
         // Creates a new instance of the data publisher.
+        DataPublisher();
+
+        // The following constructors will auto-start DataPublisher using specified connection info
         DataPublisher(const sttp::TcpEndPoint& endpoint);
         DataPublisher(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
         DataPublisher(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
@@ -154,6 +160,17 @@ namespace transport
 
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
+
+        // Starts or restarts DataPublisher using specified connection info
+        void Start(const sttp::TcpEndPoint& endpoint);
+        void Start(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
+        void Start(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
+        
+        // Shuts down DataPublisher
+        //
+        // The method does not return until all connections have been closed
+        // and all threads spawned by the publisher have shut down gracefully
+        void Stop();
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);

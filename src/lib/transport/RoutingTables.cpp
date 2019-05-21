@@ -163,3 +163,10 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
             destination.PublishMeasurements(*pair.second);
     }
 }
+
+void RoutingTables::Clear()
+{
+    m_routingTableOperations.Clear();
+    WriterLock writeLock(m_activeRoutesLock);
+    m_activeRoutes.reset();
+}

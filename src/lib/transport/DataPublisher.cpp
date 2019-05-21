@@ -42,7 +42,7 @@ struct UserCommandData
     vector<uint8_t> data;
 };
 
-DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
+DataPublisher::DataPublisher() :
     m_nodeID(NewGuid()),
     m_securityMode(SecurityMode::None),
     m_maximumAllowedConnections(-1),
@@ -52,46 +52,34 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     m_supportsTemporalSubscriptions(false),
     m_useBaseTimeOffsets(true),
     m_cipherKeyRotationPeriod(60000),
+    m_started(false),
+    m_shuttingDown(false),
     m_userData(nullptr),
-    m_disposing(false),
-    m_clientAcceptor(m_commandChannelService, endpoint)
+    m_clientAcceptor(m_commandChannelService)
 {
-    // Run call-back thread
-    Thread([&,this]
-    {
-        while (true)
-        {
-            m_callbackQueue.WaitForData();
+}
 
-            if (m_disposing)
-                break;
-
-            const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
-            dispatcher.Function(dispatcher.Source, *dispatcher.Data);
-        }
-    });
-
-    // Run command channel accept thread
-    Thread([&,this]
-    {
-        StartAccept();
-        m_commandChannelService.run();
-    });
+DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
+    DataPublisher()
+{
+    Start(endpoint);
 }
 
 DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
-    DataPublisher(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port))
+    DataPublisher()
 {
+    Start(port, ipV6);
 }
 
 DataPublisher::DataPublisher(const string& networkInterface, uint16_t port) :
-    DataPublisher(TcpEndPoint(address::from_string(networkInterface), port))
+    DataPublisher()
 {
+    Start(networkInterface, port);
 }
 
 DataPublisher::~DataPublisher()
 {
-    m_disposing = true;
+    Stop();
 }
 
 DataPublisher::CallbackDispatcher::CallbackDispatcher() :
@@ -109,6 +97,9 @@ void DataPublisher::StartAccept()
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
 {
+    if (m_shuttingDown)
+        return;
+
     if (!error)
     {
         WriterLock writeLock(m_subscriberConnectionsLock);
@@ -783,6 +774,92 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
     }
 
     return measurementMetadata;
+}
+
+void DataPublisher::Start(const TcpEndPoint& endpoint)
+{
+    if (m_started)
+        Stop();
+
+#if BOOST_LEGACY
+    m_commandChannelService.reset();
+#else
+    m_commandChannelService.restart();
+#endif
+
+    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint);
+    
+    // Run call-back thread
+    m_commandChannelAcceptThread = Thread([&,this]
+    {
+        while (true)
+        {
+            m_callbackQueue.WaitForData();
+
+            if (m_shuttingDown)
+                break;
+
+            const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
+            dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+        }
+    });
+
+    // Run command channel accept thread
+    m_callbackThread = Thread([&,this]
+    {
+        StartAccept();
+        m_commandChannelService.run();
+    });
+
+}
+
+void DataPublisher::Start(uint16_t port, bool ipV6)
+{
+    Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
+}
+
+void DataPublisher::Start(const string& networkInterface, uint16_t port)
+{
+    Start(TcpEndPoint(address::from_string(networkInterface), port));
+}
+
+void DataPublisher::Stop()
+{
+    // Notify running threads that the
+    // publisher is shutting down
+    m_shuttingDown = true;
+    m_started = false;
+
+    // Stop accepting new connections
+    m_clientAcceptor.close();
+
+    // Release all client connections
+    WriterLock writeLock(m_subscriberConnectionsLock);
+
+    for (const auto& connection : m_subscriberConnections)
+        m_routingTables.RemoveRoutes(connection);
+
+    m_subscriberConnections.clear();
+
+    // Release queues and close sockets so
+    // that threads can shut down gracefully
+    m_callbackQueue.Release();
+
+    // Join with all threads to guarantee their completion
+    // before returning control to the caller
+    m_callbackThread.join();
+    m_commandChannelAcceptThread.join();
+
+    // Empty queues and reset them so they can be used
+    // again later if the user decides to reconnect
+    m_callbackQueue.Clear();
+    m_callbackQueue.Reset();
+    m_routingTables.Clear();
+
+    m_commandChannelService.stop();
+
+    // Shutdown complete
+    m_shuttingDown = false;
 }
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)

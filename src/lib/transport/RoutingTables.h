@@ -59,6 +59,8 @@ namespace transport
         void UpdateRoutes(const SubscriberConnectionPtr& destination, const std::unordered_set<sttp::Guid>& routes);
         void RemoveRoutes(const SubscriberConnectionPtr& destination);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
+
+        void Clear();
     };
 }}
 
