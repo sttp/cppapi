@@ -811,6 +811,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
         m_commandChannelService.run();
     });
 
+    m_started = true;
 }
 
 void DataPublisher::Start(uint16_t port, bool ipV6)
@@ -876,6 +877,9 @@ void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
 
 void DataPublisher::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
+    if (!m_started)
+        return;
+
     m_routingTables.PublishMeasurements(measurements);
 }
 

@@ -77,7 +77,7 @@ namespace transport
         bool m_supportsTemporalSubscriptions;
         bool m_useBaseTimeOffsets;
         uint32_t m_cipherKeyRotationPeriod;
-        bool m_started;
+        volatile bool m_started;
         volatile bool m_shuttingDown;
         void* m_userData;
 
