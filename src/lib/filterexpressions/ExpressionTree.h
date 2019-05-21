@@ -380,7 +380,7 @@ namespace filterexpressions
 
         const sttp::data::DataTablePtr& Table() const;
         int32_t TopLimit;
-        std::vector<std::tuple<sttp::data::DataColumnPtr, bool, bool>> OrderByTerms;
+        std::vector<std::tuple<sttp::data::DataColumnPtr, bool /* ascending */, bool /* exactMatch */>> OrderByTerms;
 
         ExpressionPtr Root = nullptr;
 
