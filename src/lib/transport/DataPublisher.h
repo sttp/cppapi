@@ -133,8 +133,8 @@ namespace transport
 
         // The following constructors will auto-start DataPublisher using specified connection info
         DataPublisher(const sttp::TcpEndPoint& endpoint);
-        DataPublisher(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
-        DataPublisher(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
+        DataPublisher(uint16_t port, bool ipV6 = false);                        // Bind to default NIC
+        DataPublisher(const std::string& networkInterfaceIP, uint16_t port);    // Bind to specified NIC IP, format determines IP version
 
         // Releases all threads and sockets
         // tied up by the publisher.
@@ -163,14 +163,17 @@ namespace transport
 
         // Starts or restarts DataPublisher using specified connection info
         void Start(const sttp::TcpEndPoint& endpoint);
-        void Start(uint16_t port, bool ipV6 = false);                    // Bind to default NIC
-        void Start(const std::string& networkInterface, uint16_t port);  // Bind to specified NIC IP, format determines IP version
+        void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
         
         // Shuts down DataPublisher
         //
         // The method does not return until all connections have been closed
         // and all threads spawned by the publisher have shut down gracefully
         void Stop();
+
+        // Determines if DataPublisher has been started
+        bool IsStarted() const;
 
         void PublishMeasurements(const std::vector<Measurement>& measurements);
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
@@ -209,6 +212,9 @@ namespace transport
         // Gets or sets flag that determines if base time offsets should be used in compact format
         bool GetUseBaseTimeOffsets() const;
         void SetUseBaseTimeOffsets(bool value);
+
+        uint16_t GetPort() const;
+        bool IsIPv6() const;
 
         // Gets or sets user defined data reference
         void* GetUserData() const;

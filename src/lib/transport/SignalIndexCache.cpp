@@ -38,7 +38,7 @@ SignalIndexCache::SignalIndexCache() :
 }
 
 // Adds a measurement key to the cache.
-void SignalIndexCache::AddMeasurementKey(const int32_t signalIndex, const Guid& signalID, const string& source, const uint32_t id, const uint32_t charSizeEstimate)
+void SignalIndexCache::AddMeasurementKey(const int32_t signalIndex, const Guid& signalID, const string& source, const uint64_t id, const uint32_t charSizeEstimate)
 {
     m_reference.insert_or_assign(signalIndex, ConvertUInt32(m_signalIDList.size()));
     m_signalIDList.push_back(signalID);
@@ -103,7 +103,7 @@ const string& SignalIndexCache::GetSource(const int32_t signalIndex) const
 
 // Gets the second half of the human-readable measurement
 // key associated with the given 32-bit runtime ID.
-uint32_t SignalIndexCache::GetID(const int32_t signalIndex) const
+uint64_t SignalIndexCache::GetID(const int32_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -113,12 +113,12 @@ uint32_t SignalIndexCache::GetID(const int32_t signalIndex) const
         return m_idList[vectorIndex];
     }
 
-    return UInt32::MaxValue;
+    return UInt64::MaxValue;
 }
 
 // Gets the globally unique signal ID as well as the human-readable
 // measurement key associated with the given 32-bit runtime ID.
-bool SignalIndexCache::GetMeasurementKey(const int32_t signalIndex, Guid& signalID, string& source, uint32_t& id) const
+bool SignalIndexCache::GetMeasurementKey(const int32_t signalIndex, Guid& signalID, string& source, uint64_t& id) const
 {
     const auto result = m_reference.find(signalIndex);
 
@@ -193,7 +193,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
 
         // Continue setting up pointers
         const char* sourcePtr = reinterpret_cast<const char*>(sourceSizePtr + 1);
-        const uint32_t* idPtr = reinterpret_cast<const uint32_t*>(sourcePtr + sourceSize);
+        const uint64_t* idPtr = reinterpret_cast<const uint64_t*>(sourcePtr + sourceSize);
 
         // Build string from binary data -- NOTE: this presumes subscriber code is always UTF8
         for (const char* sourceIter = sourcePtr; sourceIter < sourcePtr + sourceSize; ++sourceIter)
@@ -203,7 +203,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
         const int32_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
         const Guid signalID = ParseGuid(signalIDPtr);
         const string source = sourceStream.str();
-        const uint32_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
+        const uint64_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
 
         // Add measurement key to the cache
         AddMeasurementKey(signalIndex, signalID, source, id);

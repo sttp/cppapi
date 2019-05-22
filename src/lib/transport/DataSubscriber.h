@@ -83,6 +83,7 @@ namespace transport
 
         int32_t m_maxRetries;
         int32_t m_retryInterval;
+        int32_t m_maxRetryInterval;
         bool m_autoReconnect;
 
         bool m_cancel;
@@ -121,8 +122,12 @@ namespace transport
         // Set the maximum number of retries during a connection sequence.
         void SetMaxRetries(int32_t maxRetries);
 
-        // Sets the interval of idle time (in milliseconds) between connection attempts.
+        // Sets the initial interval of idle time (in milliseconds) between connection attempts.
         void SetRetryInterval(int32_t retryInterval);
+
+        // Sets maximum retry interval - connection retry attempts use exponential back-off algorithm
+        // up to this defined maximum.
+        void SetMaxRetryInterval(int32_t maxRetryInterval);
 
         // Sets flag that determines whether the subscriber should
         // automatically attempt to reconnect when the connection is terminated.
@@ -133,6 +138,7 @@ namespace transport
         uint16_t GetPort() const;
         int32_t GetMaxRetries() const;
         int32_t GetRetryInterval() const;
+        int32_t GetMaxRetryInterval() const;
         bool GetAutoReconnect() const;
     };
 
@@ -174,8 +180,8 @@ namespace transport
         uint64_t m_totalCommandChannelBytesReceived;
         uint64_t m_totalDataChannelBytesReceived;
         uint64_t m_totalMeasurementsReceived;
-        bool m_connected;
-        bool m_subscribed;
+        volatile bool m_connected;
+        volatile bool m_subscribed;
 
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;

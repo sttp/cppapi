@@ -71,10 +71,10 @@ DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
     Start(port, ipV6);
 }
 
-DataPublisher::DataPublisher(const string& networkInterface, uint16_t port) :
+DataPublisher::DataPublisher(const string& networkInterfaceIP, uint16_t port) :
     DataPublisher()
 {
-    Start(networkInterface, port);
+    Start(networkInterfaceIP, port);
 }
 
 DataPublisher::~DataPublisher()
@@ -138,6 +138,7 @@ void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connecti
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 {
     m_routingTables.RemoveRoutes(connection);
+    connection->Stop();
 
     WriterLock writeLock(m_subscriberConnectionsLock);
     m_subscriberConnections.erase(connection);
@@ -819,9 +820,9 @@ void DataPublisher::Start(uint16_t port, bool ipV6)
     Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
 
-void DataPublisher::Start(const string& networkInterface, uint16_t port)
+void DataPublisher::Start(const string& networkInterfaceIP, uint16_t port)
 {
-    Start(TcpEndPoint(address::from_string(networkInterface), port));
+    Start(TcpEndPoint(make_address(networkInterfaceIP), port));
 }
 
 void DataPublisher::Stop()
@@ -834,13 +835,24 @@ void DataPublisher::Stop()
     // Stop accepting new connections
     m_clientAcceptor.close();
 
-    // Release all client connections
-    WriterLock writeLock(m_subscriberConnectionsLock);
+    // Clear routing tables to cease any queued publication
+    m_routingTables.Clear();
 
-    for (const auto& connection : m_subscriberConnections)
-        m_routingTables.RemoveRoutes(connection);
+    // Release client connections - execute on a separate thread to more safely handle callbacks
+    Thread releaseClientConnections([&,this]
+    {
+        WriterLock writeLock(m_subscriberConnectionsLock);
 
-    m_subscriberConnections.clear();
+        for (const auto& connection : m_subscriberConnections)
+        {
+            connection->Stop();
+
+            if (m_clientDisconnectedCallback != nullptr)
+                m_clientDisconnectedCallback(this, connection);
+        }
+
+        m_subscriberConnections.clear();
+    });
 
     // Release queues and close sockets so
     // that threads can shut down gracefully
@@ -848,19 +860,24 @@ void DataPublisher::Stop()
 
     // Join with all threads to guarantee their completion
     // before returning control to the caller
+    releaseClientConnections.join();
     m_callbackThread.join();
     m_commandChannelAcceptThread.join();
 
     // Empty queues and reset them so they can be used
-    // again later if the user decides to reconnect
+    // again later if the user decides to restart
     m_callbackQueue.Clear();
     m_callbackQueue.Reset();
-    m_routingTables.Clear();
 
     m_commandChannelService.stop();
 
     // Shutdown complete
     m_shuttingDown = false;
+}
+
+bool DataPublisher::IsStarted() const
+{
+    return m_started;
 }
 
 void DataPublisher::PublishMeasurements(const vector<Measurement>& measurements)
@@ -971,6 +988,16 @@ bool DataPublisher::GetUseBaseTimeOffsets() const
 void DataPublisher::SetUseBaseTimeOffsets(bool value)
 {
     m_useBaseTimeOffsets = value;
+}
+
+uint16_t DataPublisher::GetPort() const
+{
+    return m_clientAcceptor.local_endpoint().port();
+}
+
+bool DataPublisher::IsIPv6() const
+{
+    return m_clientAcceptor.local_endpoint().protocol() == tcp::v6();
 }
 
 void* DataPublisher::GetUserData() const

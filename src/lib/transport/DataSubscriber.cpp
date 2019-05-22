@@ -62,6 +62,7 @@ SubscriberConnector::SubscriberConnector() :
     m_port(0),
     m_maxRetries(-1),
     m_retryInterval(2000),
+    m_maxRetryInterval(60000),
     m_autoReconnect(true),
     m_cancel(false)
 {
@@ -110,7 +111,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 
     m_cancel = false;
 
-    for (int i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); i++)
+    for (int32_t i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); i++)
     {
         string errorMessage;
         bool connected = false;
@@ -136,15 +137,21 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
 
         if (!connected)
         {
+
+            int32_t retryInterval = m_retryInterval * (i + 1);
+
+            if (retryInterval > m_maxRetryInterval)
+                retryInterval = m_maxRetryInterval;
+
             if (m_errorMessageCallback != nullptr)
             {
                 stringstream errorMessageStream;
-                errorMessageStream << "Failed to connect to \"" << m_hostname << ":" << m_port << "\": " << errorMessage;
+                errorMessageStream << "Failed to connect to \"" << m_hostname << ":" << m_port << "\": " << errorMessage << " - retrying in " << retryInterval * 1000.0 << " seconds...";
                 Thread(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
             }
 
             IOContext io;
-            DeadlineTimer timer(io, Milliseconds(m_retryInterval));
+            DeadlineTimer timer(io, Milliseconds(retryInterval));
             timer.wait();
         }
     }
@@ -183,6 +190,12 @@ void SubscriberConnector::SetRetryInterval(int32_t retryInterval)
     m_retryInterval = retryInterval;
 }
 
+// Sets maximum retry interval - connection retry attempts use exponential back-off algorithm up to this defined maximum.
+void SubscriberConnector::SetMaxRetryInterval(int32_t maxRetryInterval)
+{
+    m_maxRetryInterval = maxRetryInterval;
+}
+
 // Set the flag that determines whether the subscriber should
 // automatically attempt to reconnect when the connection is terminated.
 void SubscriberConnector::SetAutoReconnect(bool autoReconnect)
@@ -212,6 +225,11 @@ int32_t SubscriberConnector::GetMaxRetries() const
 int32_t SubscriberConnector::GetRetryInterval() const
 {
     return m_retryInterval;
+}
+
+int32_t SubscriberConnector::GetMaxRetryInterval() const
+{
+    return m_maxRetryInterval;
 }
 
 // Gets the flag that determines whether the subscriber should
@@ -286,8 +304,6 @@ void DataSubscriber::RunCommandChannelResponseThread()
 // Callback for async read of the payload header.
 void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
 {
-    const uint32_t PacketSizeOffset = 4;
-
     if (m_disconnecting)
         return;
 
@@ -312,7 +328,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     // Gather statistics
     m_totalCommandChannelBytesReceived += Common::PayloadHeaderSize;
 
-    const uint32_t packetSize = EndianConverter::ToLittleEndian<uint32_t>(m_readBuffer.data(), PacketSizeOffset);
+    const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(m_readBuffer.data(), 0);
 
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
         m_readBuffer.resize(packetSize);
@@ -393,10 +409,8 @@ void DataSubscriber::RunDataChannelResponseThread()
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
 void DataSubscriber::ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length)
 {
-    const uint32_t PacketHeaderSize = 6;
-
-    uint8_t* packetBodyStart = buffer + PacketHeaderSize;
-    const uint32_t packetBodyLength = length - PacketHeaderSize;
+    uint8_t* packetBodyStart = buffer + Common::ResponseHeaderSize;
+    const uint32_t packetBodyLength = length - Common::ResponseHeaderSize;
 
     const uint8_t responseCode = buffer[0];
     const uint8_t commandCode = buffer[1];
@@ -688,7 +702,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
 
         Guid signalID;
         string measurementSource;
-        uint32_t measurementID;
+        uint64_t measurementID;
         int32_t id;
         int64_t time;
         uint32_t quality;
@@ -1060,9 +1074,9 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port)
 
     m_callbackThread = Thread(bind(&DataSubscriber::RunCallbackThread, this));
     m_commandChannelResponseThread = Thread(bind(&DataSubscriber::RunCommandChannelResponseThread, this));
+    m_connected = true;
 
     SendOperationalModes();
-    m_connected = true;
 }
 
 void DataSubscriber::Disconnect(bool autoReconnect)
@@ -1271,33 +1285,30 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
 // Sends a command along with the given data to the server.
 void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length)
 {
+    if (!m_connected)
+        return;
+
     const uint32_t packetSize = length + 1;
-    uint32_t littleEndianPacketSize = EndianConverter::Default.ConvertLittleEndian(packetSize);
-    uint8_t* littleEndianPacketSizePtr = reinterpret_cast<uint8_t*>(&littleEndianPacketSize);
-    const uint32_t commandBufferSize = packetSize + 8U;
+    uint32_t bigEndianPacketSize = EndianConverter::Default.ConvertBigEndian(packetSize);
+    uint8_t* bigEndianPacketSizePtr = reinterpret_cast<uint8_t*>(&bigEndianPacketSize);
+    const uint32_t commandBufferSize = packetSize + Common::PayloadHeaderSize;
 
     if (commandBufferSize > ConvertUInt32(m_writeBuffer.size()))
         m_writeBuffer.resize(commandBufferSize);
 
-    // Insert payload marker
-    m_writeBuffer[0] = 0xAA;
-    m_writeBuffer[1] = 0xBB;
-    m_writeBuffer[2] = 0xCC;
-    m_writeBuffer[3] = 0xDD;
-
     // Insert packet size
-    m_writeBuffer[4] = littleEndianPacketSizePtr[0];
-    m_writeBuffer[5] = littleEndianPacketSizePtr[1];
-    m_writeBuffer[6] = littleEndianPacketSizePtr[2];
-    m_writeBuffer[7] = littleEndianPacketSizePtr[3];
+    m_writeBuffer[0] = bigEndianPacketSizePtr[0];
+    m_writeBuffer[1] = bigEndianPacketSizePtr[1];
+    m_writeBuffer[2] = bigEndianPacketSizePtr[2];
+    m_writeBuffer[3] = bigEndianPacketSizePtr[3];
 
     // Insert command code
-    m_writeBuffer[8] = commandCode;
+    m_writeBuffer[4] = commandCode;
 
     if (data != nullptr)
     {
         for (uint32_t i = 0; i < length; ++i)
-            m_writeBuffer[9 + i] = data[offset + i];
+            m_writeBuffer[5 + i] = data[offset + i];
     }
 
     async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), bind(&DataSubscriber::WriteHandler, this, _1, _2));
@@ -1335,7 +1346,6 @@ void DataSubscriber::SendOperationalModes()
 
     operationalModes |= OperationalModes::VersionMask & 1U;
     operationalModes |= OperationalEncoding::UTF8;
-    operationalModes |= OperationalModes::UseCommonSerializationFormat;
 
     // TSSC compression only works with stateful connections
     if (m_compressPayloadData && !m_subscriptionInfo.UdpDataChannel)

@@ -46,13 +46,13 @@ protected:
     void ClientDisconnected(const sttp::transport::SubscriberConnectionPtr& connection) override;
 
 public:
-    PublisherHandler(std::string name, uint16_t port, bool ipV6);
+    PublisherHandler(std::string name);
 
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
 
-    void Start();
-    void Stop() const;
+    void Start(uint16_t port, bool ipV6) override;
+    void Stop() override;
 
     void DefineMetadata(int32_t devices = 1);
 

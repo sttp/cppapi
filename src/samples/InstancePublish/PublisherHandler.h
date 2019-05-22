@@ -49,10 +49,10 @@ protected:
     void ClientDisconnected(const sttp::transport::SubscriberConnectionPtr& connection) override;
 
 public:
-    PublisherHandler(std::string name, uint16_t port, bool ipV6);
+    PublisherHandler(std::string name);
 
-    void Start();
-    void Stop() const;
+    void Start(uint16_t port, bool ipV6) override;
+    void Stop() override;
 };
 
 typedef sttp::SharedPtr<PublisherHandler> PublisherHandlerPtr;

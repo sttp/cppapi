@@ -58,7 +58,7 @@ namespace transport
     {
         // Identification number used in
         // human-readable measurement key.
-        uint32_t ID;
+        uint64_t ID;
 
         // Source used in human-
         // readable measurement key.

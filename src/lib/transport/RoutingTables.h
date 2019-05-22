@@ -42,6 +42,7 @@ namespace transport
         typedef std::function<void(RoutingTables&, const DestinationRoutes&)> RoutingTableOperationHandler;
         typedef std::pair<RoutingTableOperationHandler, DestinationRoutes> RoutingTableOperation;
 
+        sttp::Thread m_routingTablesThread;
         sttp::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
         RoutingTablePtr m_activeRoutes;
         sttp::SharedMutex m_activeRoutesLock;

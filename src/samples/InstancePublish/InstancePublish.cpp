@@ -52,13 +52,13 @@ int main(int argc, char* argv[])
     for (uint32_t i = 0; i < TotalInstances; i++)
     {
         // Maintain the life-time of PublisherHandler instances within main
-        PublisherHandler* publisher = new PublisherHandler("Publisher " + ToString(i + 1), port + i, false);
+        PublisherHandler* publisher = new PublisherHandler("Publisher " + ToString(i + 1));
 
         // Set second publisher to only allow one connection
         if (i == 1)
             publisher->SetMaximumAllowedConnections(1);
 
-        publisher->Start();
+        publisher->Start(port + i, false);
         Publisher[i] = publisher;
     }
 

@@ -148,7 +148,6 @@ const uint8_t ServerResponse::NoOP;
 const uint32_t OperationalModes::VersionMask;
 const uint32_t OperationalModes::CompressionModeMask;
 const uint32_t OperationalModes::EncodingMask;
-const uint32_t OperationalModes::UseCommonSerializationFormat;
 const uint32_t OperationalModes::ReceiveExternalMetadata;
 const uint32_t OperationalModes::ReceiveInternalMetadata;
 const uint32_t OperationalModes::CompressPayloadData;

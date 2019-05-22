@@ -111,7 +111,7 @@ namespace transport
     struct Common
     {
         static const size_t MaxPacketSize = 32768U;
-        static const uint32_t PayloadHeaderSize = 8U;
+        static const uint32_t PayloadHeaderSize = 4U;
         static const uint32_t ResponseHeaderSize = 6U;
     };
 
@@ -241,8 +241,6 @@ namespace transport
         static const uint32_t CompressionModeMask = 0x000000E0;
         // Mask to get character encoding used when exchanging messages between publisher and subscriber.
         static const uint32_t EncodingMask = 0x00000300;
-        // Determines type of serialization to use when exchanging signal index cache and metadata. Bit set = common serialization format, bit clear is deprecated.
-        static const uint32_t UseCommonSerializationFormat = 0x01000000;
         // Determines whether external measurements are exchanged during metadata synchronization. Bit set = external measurements are exchanged, bit clear = no external measurements are exchanged.
         static const uint32_t ReceiveExternalMetadata = 0x02000000;
         // Determines whether internal measurements are exchanged during metadata synchronization. Bit set = internal measurements are exchanged, bit clear = no internal measurements are exchanged.

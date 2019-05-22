@@ -33,10 +33,7 @@ namespace transport
     {
     private:
         // Publication members
-        uint16_t m_port;
-        bool m_isIPV6;
         DataPublisherPtr m_publisher;
-        bool m_initialized;
         void* m_userData;
 
         // Internal subscription event handlers
@@ -60,13 +57,8 @@ namespace transport
         virtual void HandleUserCommand(const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
 
     public:
-        PublisherInstance(uint16_t port, bool ipV6);
+        PublisherInstance();
         virtual ~PublisherInstance();
-
-        // Publisher functions
-
-        // Initialize connection, i.e., indicate readiness for clients
-        void Initialize();
 
         // Define metadata from existing metadata tables
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0) const;
@@ -86,10 +78,21 @@ namespace transport
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
+        // Starts or restarts publisher using specified connection info
+        virtual void Start(const sttp::TcpEndPoint& endpoint);
+        virtual void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        virtual void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
+        
+        // Shuts down publisher
+        virtual void Stop();
+
+        // Determines if publisher has been started
+        bool IsStarted() const;
+
         void PublishMeasurements(const std::vector<Measurement>& measurements) const;
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements) const;
 
-        // Node ID defines a unique identification for the DataPublisher
+        // Node ID defines a unique identification for the publisher
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
         const sttp::Guid& GetNodeID() const;
@@ -127,8 +130,6 @@ namespace transport
         uint64_t GetTotalCommandChannelBytesSent() const;
         uint64_t GetTotalDataChannelBytesSent() const;
         uint64_t GetTotalMeasurementsSent() const;
-
-        bool IsInitialized() const;
 
         // Safely get list of subscriber connections. Vector will be cleared then appended to,
         // returns true if any connections were added

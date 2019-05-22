@@ -31,11 +31,15 @@ RoutingTables::RoutingTables() :
     m_activeRoutes(NewSharedPtr<RoutingTable>()),
     m_enabled(true)
 {
-    Thread([&,this]()
+    m_routingTablesThread = Thread([&,this]()
     {
-        while (m_enabled)
+        while (true)
         {
             m_routingTableOperations.WaitForData();
+
+            if (!m_enabled)
+                break;
+
             const auto operation = m_routingTableOperations.Dequeue();
             operation.first(*this, operation.second);
         }
@@ -46,6 +50,7 @@ RoutingTables::~RoutingTables()
 {
     m_enabled = false;
     m_routingTableOperations.Release();
+    m_routingTablesThread.join();
 }
 
 RoutingTables::RoutingTablePtr RoutingTables::CloneActiveRoutes()

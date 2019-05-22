@@ -55,8 +55,8 @@ int main(int argc, char* argv[])
     else
         autoUpdateMetadata = true;
 
-    PublisherHandler* publisher = new PublisherHandler("Publisher", port, false);
-    publisher->Start();
+    PublisherHandler* publisher = new PublisherHandler("Publisher");
+    publisher->Start(port, false);
 
     if (autoUpdateMetadata)
     {

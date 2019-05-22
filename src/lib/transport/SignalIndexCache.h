@@ -44,7 +44,7 @@ namespace transport
         std::unordered_map<int32_t, uint32_t> m_reference;
         std::vector<sttp::Guid> m_signalIDList;
         std::vector<std::string> m_sourceList;
-        std::vector<uint32_t> m_idList;
+        std::vector<uint64_t> m_idList;
         std::unordered_map<sttp::Guid, int32_t> m_signalIDCache;
         uint32_t m_binaryLength;
 
@@ -52,7 +52,7 @@ namespace transport
         SignalIndexCache();
 
         // Adds a measurement key to the cache.
-        void AddMeasurementKey(int32_t signalIndex, const sttp::Guid& signalID, const std::string& source, uint32_t id, uint32_t charSizeEstimate = 1U);
+        void AddMeasurementKey(int32_t signalIndex, const sttp::Guid& signalID, const std::string& source, uint64_t id, uint32_t charSizeEstimate = 1U);
 
         // Empties the cache.
         void Clear();
@@ -72,11 +72,11 @@ namespace transport
 
         // Gets the second half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
-        uint32_t GetID(int32_t signalIndex) const;
+        uint64_t GetID(int32_t signalIndex) const;
 
         // Gets the globally unique signal ID as well as the human-readable
         // measurement key associated with the given 16-bit runtime ID.
-        bool GetMeasurementKey(int32_t signalIndex, sttp::Guid& signalID, std::string& source, uint32_t& id) const;
+        bool GetMeasurementKey(int32_t signalIndex, sttp::Guid& signalID, std::string& source, uint64_t& id) const;
 
         // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
         int32_t GetSignalIndex(const sttp::Guid& signalID) const;

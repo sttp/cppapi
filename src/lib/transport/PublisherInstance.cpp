@@ -31,15 +31,22 @@ using namespace sttp;
 using namespace sttp::data;
 using namespace sttp::transport;
 
-PublisherInstance::PublisherInstance(uint16_t port, bool ipV6) :
-    m_port(port),
-    m_isIPV6(ipV6),
-    m_initialized(false),
+PublisherInstance::PublisherInstance() :
     m_userData(nullptr)
 {
     // Reference this PublisherInstance in DataPublisher user data
-    m_publisher = NewSharedPtr<DataPublisher>(port, ipV6);
+    m_publisher = NewSharedPtr<DataPublisher>();
     m_publisher->SetUserData(this);
+
+    // Register callbacks
+    m_publisher->RegisterStatusMessageCallback(&HandleStatusMessage);
+    m_publisher->RegisterErrorMessageCallback(&HandleErrorMessage);
+    m_publisher->RegisterClientConnectedCallback(&HandleClientConnected);
+    m_publisher->RegisterClientDisconnectedCallback(&HandleClientDisconnected);
+    m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
+    m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
+    m_publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
+    m_publisher->RegisterUserCommandCallback(&HandleReceivedUserCommand);
 }
 
 PublisherInstance::~PublisherInstance() = default;
@@ -132,21 +139,6 @@ void PublisherInstance::HandleUserCommand(const SubscriberConnectionPtr& connect
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ToHex(command) << "\" with " << buffer.size() << " bytes of payload" << endl << endl;
 }
 
-void PublisherInstance::Initialize()
-{
-    // Register callbacks
-    m_publisher->RegisterStatusMessageCallback(&HandleStatusMessage);
-    m_publisher->RegisterErrorMessageCallback(&HandleErrorMessage);
-    m_publisher->RegisterClientConnectedCallback(&HandleClientConnected);
-    m_publisher->RegisterClientDisconnectedCallback(&HandleClientDisconnected);
-    m_publisher->RegisterProcessingIntervalChangeRequestedCallback(&HandleProcessingIntervalChangeRequested);
-    m_publisher->RegisterTemporalSubscriptionRequestedCallback(&HandleTemporalSubscriptionRequested);
-    m_publisher->RegisterTemporalSubscriptionCanceledCallback(&HandleTemporalSubscriptionCanceled);
-    m_publisher->RegisterUserCommandCallback(&HandleReceivedUserCommand);
-
-    m_initialized = true;
-}
-
 void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber) const
 {
     m_publisher->DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
@@ -172,19 +164,38 @@ vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& f
     return m_publisher->FilterMetadata(filterExpression);
 }
 
+void PublisherInstance::Start(const TcpEndPoint& endpoint)
+{
+    m_publisher->Start(endpoint);
+}
+
+void PublisherInstance::Start(uint16_t port, bool ipV6)
+{
+    m_publisher->Start(port, ipV6);
+}
+
+void PublisherInstance::Start(const string& networkInterfaceIP, uint16_t port)
+{
+    m_publisher->Start(networkInterfaceIP, port);
+}
+
+void PublisherInstance::Stop()
+{
+    m_publisher->Stop();
+}
+
+bool PublisherInstance::IsStarted() const
+{
+    return m_publisher->IsStarted();
+}
+
 void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements) const
 {
-    if (!m_initialized)
-        throw PublisherException("Operation failed, publisher is not initialized.");
-
     m_publisher->PublishMeasurements(measurements);
 }
 
 void PublisherInstance::PublishMeasurements(const vector<MeasurementPtr>& measurements) const
 {
-    if (!m_initialized)
-        throw PublisherException("Operation failed, publisher is not initialized.");
-
     m_publisher->PublishMeasurements(measurements);
 }
 
@@ -270,12 +281,12 @@ void PublisherInstance::SetCipherKeyRotationPeriod(uint32_t period) const
 
 uint16_t PublisherInstance::GetPort() const
 {
-    return m_port;
+    return m_publisher->GetPort();
 }
 
 bool PublisherInstance::IsIPv6() const
 {
-    return m_isIPV6;
+    return m_publisher->IsIPv6();
 }
 
 void* PublisherInstance::GetUserData() const
@@ -301,11 +312,6 @@ uint64_t PublisherInstance::GetTotalDataChannelBytesSent() const
 uint64_t PublisherInstance::GetTotalMeasurementsSent() const
 {
     return m_publisher->GetTotalMeasurementsSent();
-}
-
-bool PublisherInstance::IsInitialized() const
-{
-    return m_initialized;
 }
 
 bool PublisherInstance::TryGetSubscriberConnections(vector<SubscriberConnectionPtr>& subscriberConnections) const

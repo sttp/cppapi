@@ -1281,8 +1281,6 @@ void SubscriberConnection::ReadCommandChannel()
 
 void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
 {
-    const uint32_t PacketSizeOffset = 4;
-
     if (m_stopped)
         return;
 
@@ -1308,7 +1306,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t byte
         return;
     }
 
-    const uint32_t packetSize = EndianConverter::ToLittleEndian<uint32_t>(&m_readBuffer[0], PacketSizeOffset);
+    const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(&m_readBuffer[0], 0);
 
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
@@ -1436,12 +1434,8 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndex
     vector<uint8_t> serializationBuffer;
 
     const uint32_t operationalModes = GetOperationalModes();
-    const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
     const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
     const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
-
-    if (!useCommonSerializationFormat)
-        throw PublisherException("DataPublisher only supports common serialization format");
 
     serializationBuffer.reserve(uint32_t(signalIndexCache.GetBinaryLength() * 0.02));
     signalIndexCache.Serialize(*this, serializationBuffer);
@@ -1467,12 +1461,8 @@ std::vector<uint8_t> SubscriberConnection::SerializeMetadata(const sttp::data::D
     vector<uint8_t> serializationBuffer;
 
     const uint32_t operationalModes = GetOperationalModes();
-    const bool useCommonSerializationFormat = (operationalModes & OperationalModes::UseCommonSerializationFormat) > 0;
     const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
     const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
-
-    if (!useCommonSerializationFormat)
-        throw PublisherException("DataPublisher only supports common serialization format");
 
     metadata->WriteXml(serializationBuffer);
 
@@ -1629,25 +1619,19 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
     try
     {
         const bool useDataChannel = m_dataChannelActive && (responseCode == ServerResponse::DataPacket || responseCode == ServerResponse::BufferBlock);
-        const uint32_t packetSize = ConvertUInt32(data.size() + 6);
+        const uint32_t packetSize = ConvertUInt32(data.size() + Common::ResponseHeaderSize);
         SharedPtr<vector<uint8_t>> bufferPtr = NewSharedPtr<vector<uint8_t>>();
         vector<uint8_t>& buffer = *bufferPtr;
         
         if (useDataChannel)
         {
-            buffer.reserve(packetSize + 4);
+            buffer.reserve(packetSize);
         }
         else
         {
-            // Add command payload alignment header (deprecated)
+            // Add response payload size for TCP channels to handle interleaved data reception
             buffer.reserve(packetSize + Common::PayloadHeaderSize);
-
-            buffer.push_back(0xAA);
-            buffer.push_back(0xBB);
-            buffer.push_back(0xCC);
-            buffer.push_back(0xDD);
-
-            EndianConverter::WriteLittleEndianBytes(buffer, packetSize);
+            EndianConverter::WriteBigEndianBytes(buffer, packetSize);
         }
 
         // Add response code

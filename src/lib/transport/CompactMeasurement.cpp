@@ -165,7 +165,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
 
     Guid signalID;
     string measurementSource;
-    uint32_t measurementID;
+    uint64_t measurementID;
     int64_t timestamp = 0;
 
     // Now that we've validated our failure conditions we can safely start advancing the offset

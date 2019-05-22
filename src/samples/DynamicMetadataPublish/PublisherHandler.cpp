@@ -29,13 +29,11 @@ using namespace sttp::transport;
 
 Mutex PublisherHandler::s_coutLock{};
 
-PublisherHandler::PublisherHandler(string name, uint16_t port, bool ipV6) :
-    PublisherInstance(port, ipV6),
+PublisherHandler::PublisherHandler(string name) :
     m_name(std::move(name)),
     m_processCount(0L),
     m_metadataVersion(0)
 {
-    Initialize();
 }
 
 void PublisherHandler::StatusMessage(const string& message)
@@ -177,8 +175,10 @@ void PublisherHandler::DefineMetadata(int32_t devices)
     PublisherInstance::DefineMetadata(m_deviceMetadata, m_measurementMetadata, m_phasorMetadata, m_metadataVersion);
 }
 
-void PublisherHandler::Start()
+void PublisherHandler::Start(uint16_t port, bool ipV6)
 {
+    PublisherInstance::Start(port, ipV6);
+
     static float64_t randMax = float64_t(RAND_MAX);
     static const uint64_t interval = 1000;
 
@@ -254,7 +254,9 @@ void PublisherHandler::Start()
     m_publishTimer->Start();
 }
 
-void PublisherHandler::Stop() const
+void PublisherHandler::Stop()
 {
+    PublisherInstance::Stop();
+
     m_publishTimer->Stop();
 }
