@@ -146,7 +146,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber)
             if (m_errorMessageCallback != nullptr)
             {
                 stringstream errorMessageStream;
-                errorMessageStream << "Failed to connect to \"" << m_hostname << ":" << m_port << "\": " << errorMessage << " - retrying in " << retryInterval * 1000.0 << " seconds...";
+                errorMessageStream << "Failed to connect to \"" << m_hostname << ":" << m_port << "\": " << errorMessage << " - retrying in " << retryInterval / 1000.0 << " seconds...";
                 Thread(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
             }
 

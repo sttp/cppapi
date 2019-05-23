@@ -173,5 +173,5 @@ void RoutingTables::Clear()
 {
     m_routingTableOperations.Clear();
     WriterLock writeLock(m_activeRoutesLock);
-    m_activeRoutes.reset();
+    m_activeRoutes->clear();
 }
