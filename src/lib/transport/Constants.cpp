@@ -90,7 +90,7 @@ const uint8_t DataPacketFlags::Compressed;
 const uint8_t DataPacketFlags::LittleEndianCompression;
 const uint8_t DataPacketFlags::NoFlags;
 
-const uint8_t ServerCommand::Authenticate;
+const uint8_t ServerCommand::Connect;
 const uint8_t ServerCommand::MetadataRefresh;
 const uint8_t ServerCommand::Subscribe;
 const uint8_t ServerCommand::Unsubscribe;

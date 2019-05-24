@@ -120,7 +120,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
             Thread([connection]
             {
                 boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
-                connection->SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: too many active connections.");
+                connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
                 boost::this_thread::sleep(boost::posix_time::milliseconds(500));
                 connection->Stop();
             });

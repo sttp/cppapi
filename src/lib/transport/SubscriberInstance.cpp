@@ -1027,7 +1027,6 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 
     if (source->IsConnected())
     {
-        instance->StatusMessage("Reconnected. Subscribing to data...");
         instance->ConnectionEstablished();
 
         // If automatically parsing metadata, request metadata upon successful connection,

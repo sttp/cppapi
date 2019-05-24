@@ -141,8 +141,8 @@ namespace transport
         // will return a serialized DataSet of the available server metadata. Message type for failed responses
         // will always be a string of text representing the error message.
 
-        // Authenticate command. Deprecated - use TLS instead.
-        static const uint8_t Authenticate = 0x00;
+        // Connect command. Only used as part of connection refused response.
+        static const uint8_t Connect = 0x00;
         // Meta data refresh command. Requests that server send an updated set of metadata so client can refresh its point list.
         static const uint8_t MetadataRefresh = 0x01;
         // Subscribe command. Requests a subscription of streaming data from server based on connection string that follows.

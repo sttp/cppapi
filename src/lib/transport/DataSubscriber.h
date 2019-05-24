@@ -84,14 +84,15 @@ namespace transport
         int32_t m_maxRetries;
         int32_t m_retryInterval;
         int32_t m_maxRetryInterval;
+        int32_t m_connectAttempt;
+        bool m_connectionRefused;
         bool m_autoReconnect;
-
         bool m_cancel;
 
         // Auto-reconnect handler.
         static void AutoReconnect(DataSubscriber* subscriber);
 
-        bool Connect(DataSubscriber& subscriber);
+        bool Connect(DataSubscriber& subscriber, bool autoReconnecting);
 
     public:
         // Creates a new instance.
@@ -113,25 +114,31 @@ namespace transport
         // future connection sequences.
         void Cancel();
 
-        // Set the hostname of the publisher to connect to.
+        // Sets the hostname of the publisher to connect to.
         void SetHostname(const std::string& hostname);
 
-        // Set the port that the publisher is listening on.
+        // Sets the port that the publisher is listening on.
         void SetPort(uint16_t port);
 
-        // Set the maximum number of retries during a connection sequence.
+        // Sets the maximum number of retries during a connection sequence.
         void SetMaxRetries(int32_t maxRetries);
 
         // Sets the initial interval of idle time (in milliseconds) between connection attempts.
         void SetRetryInterval(int32_t retryInterval);
 
-        // Sets maximum retry interval - connection retry attempts use exponential back-off algorithm
-        // up to this defined maximum.
+        // Sets maximum retry interval - connection retry attempts use exponential back-off
+        // algorithm up to this defined maximum.
         void SetMaxRetryInterval(int32_t maxRetryInterval);
 
         // Sets flag that determines whether the subscriber should
         // automatically attempt to reconnect when the connection is terminated.
         void SetAutoReconnect(bool autoReconnect);
+
+        // Sets flag indicating connection was refused.
+        void SetConnectionRefused(bool connectionRefused);
+
+        // Resets connector for a new connection
+        void ResetConnection();
 
         // Getters for configurable settings.
         std::string GetHostname() const;
@@ -140,6 +147,7 @@ namespace transport
         int32_t GetRetryInterval() const;
         int32_t GetMaxRetryInterval() const;
         bool GetAutoReconnect() const;
+        bool GetConnectionRefused() const;
     };
 
     class DataSubscriber // NOLINT
@@ -260,8 +268,9 @@ namespace transport
         // safely close all sockets and stop all subscriber threads
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
-        
-        void Disconnect(bool autoReconnect);
+
+        void Connect(const std::string& hostname, const uint16_t port, bool autoReconnecting);
+        void Disconnect(bool autoReconnecting);
 
     public:
         // Creates a new instance of the data subscriber.
@@ -343,7 +352,7 @@ namespace transport
         //
         // Command codes can be found in the "Constants.h" header file.
         // They are defined as:
-        //   ServerCommand::Authenticate
+        //   ServerCommand::Connect
         //   ServerCommand::MetadataRefresh
         //   ServerCommand::Subscribe
         //   ServerCommand::Unsubscribe
@@ -368,6 +377,8 @@ namespace transport
         uint64_t GetTotalMeasurementsReceived() const;
         bool IsConnected() const;
         bool IsSubscribed() const;
+
+        friend class SubscriberConnector;
     };
 
     typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
