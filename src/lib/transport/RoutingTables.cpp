@@ -144,6 +144,9 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
 
                 for (auto& destination : destinations)
                 {
+                    if (destination == nullptr)
+                        continue;
+
                     MeasurementsPtr routedMeasurements;
 
                     if (!TryGetValue(routedMeasurementMap, destination, routedMeasurements, routedMeasurements))
