@@ -396,7 +396,7 @@ namespace sttp
         return length;
     }
 
-    uint32_t WriteBytes(std::vector<uint8_t>& buffer, const uint8_t* source, const uint32_t offset, const uint32_t length);
+    uint32_t WriteBytes(std::vector<uint8_t>& buffer, const uint8_t* source, uint32_t offset, uint32_t length);
     uint32_t WriteBytes(std::vector<uint8_t>& buffer, const std::vector<uint8_t>& source);
     uint32_t WriteBytes(std::vector<uint8_t>& buffer, const Guid& value);
 
@@ -453,7 +453,7 @@ namespace sttp
 }
 
 // Setup standard hash code for Guid
-namespace std  // NOLINT
+namespace std // NOLINT
 {
     template<>
     struct hash<sttp::Guid>
