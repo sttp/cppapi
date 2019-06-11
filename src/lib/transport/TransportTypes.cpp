@@ -227,7 +227,9 @@ std::string sttp::transport::GetEngineeringUnits(const std::string& signalType)
 
 std::string sttp::transport::GetProtocolType(const std::string& protocolName)
 {
-    if (StartsWith(protocolName, "Gateway") ||
+    if (IsEqual(protocolName, "Streaming Telemetry Transport Protocol") ||
+        IsEqual(protocolName, "STTP") ||
+        StartsWith(protocolName, "Gateway") ||
         StartsWith(protocolName, "Modbus") ||
         StartsWith(protocolName, "DNP"))
             return "Measurement";

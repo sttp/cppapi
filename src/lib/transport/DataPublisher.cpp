@@ -35,7 +35,7 @@ using namespace sttp::data;
 using namespace sttp::filterexpressions;
 using namespace sttp::transport;
 
-struct UserCommandData
+struct UserCommandData // NOLINT
 {
     SubscriberConnection* connection;
     uint32_t command;

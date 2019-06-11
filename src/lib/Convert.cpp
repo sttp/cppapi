@@ -333,7 +333,7 @@ bool sttp::TryParseUInt16(const string& value, uint16_t& result, const uint16_t 
 {
     try
     {
-        auto conversion = stoul(value);
+        const auto conversion = stoul(value);
 
         if (conversion > UInt16::MaxValue)
         {
