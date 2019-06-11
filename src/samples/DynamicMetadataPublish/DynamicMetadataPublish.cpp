@@ -56,44 +56,46 @@ int main(int argc, char* argv[])
         autoUpdateMetadata = true;
 
     PublisherHandler* publisher = new PublisherHandler("Publisher");
-    publisher->Start(port, false);
-
-    if (autoUpdateMetadata)
+    
+    if (publisher->Start(port, false))
     {
-        // Setup thread to continually update meta-data
-        Timer metadataUpdate(UpdateInterval, [publisher](Timer* timer, void*)
+        if (autoUpdateMetadata)
         {
-            publisher->DefineMetadata(++deviceCount);
-
-            if (deviceCount >= MaxDeviceCount)
-            {
-                timer->Stop();
-                publisher->StatusMessage("Metadata update timer stopped: reached configured device limit of " + ToString(MaxDeviceCount) + ".");
-            }
-        },
-        true);
-
-        metadataUpdate.Start();
-
-        string line;
-        getline(cin, line);
-
-        metadataUpdate.Stop();
-    }
-    else
-    {
-        int key = 0;
-
-        while (key != 10)
-        {
-            // Space bar then Enter will update metadata
-            if (key == 32)
+            // Setup thread to continually update meta-data
+            Timer metadataUpdate(UpdateInterval, [publisher](Timer* timer, void*)
             {
                 publisher->DefineMetadata(++deviceCount);
-                getchar();
-            }
 
-            key = getchar();
+                if (deviceCount >= MaxDeviceCount)
+                {
+                    timer->Stop();
+                    publisher->StatusMessage("Metadata update timer stopped: reached configured device limit of " + ToString(MaxDeviceCount) + ".");
+                }
+            },
+                true);
+
+            metadataUpdate.Start();
+
+            string line;
+            getline(cin, line);
+
+            metadataUpdate.Stop();
+        }
+        else
+        {
+            int key = 0;
+
+            while (key != 10)
+            {
+                // Space bar then Enter will update metadata
+                if (key == 32)
+                {
+                    publisher->DefineMetadata(++deviceCount);
+                    getchar();
+                }
+
+                key = getchar();
+            }
         }
     }
 

@@ -79,9 +79,9 @@ namespace transport
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
         // Starts or restarts publisher using specified connection info
-        virtual void Start(const sttp::TcpEndPoint& endpoint);
-        virtual void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
-        virtual void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
+        virtual bool Start(const sttp::TcpEndPoint& endpoint);
+        virtual bool Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        virtual bool Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
         
         // Shuts down publisher
         virtual void Stop();

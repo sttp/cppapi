@@ -51,7 +51,7 @@ protected:
 public:
     PublisherHandler(std::string name);
 
-    void Start(uint16_t port, bool ipV6) override;
+    bool Start(uint16_t port, bool ipV6) override;
     void Stop() override;
 };
 

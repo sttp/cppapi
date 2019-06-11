@@ -32,6 +32,7 @@ Mutex PublisherHandler::s_coutLock {};
 PublisherHandler::PublisherHandler(string name) : 
     m_name(std::move(name)),
     m_processCount(0L),
+    m_publishTimer(nullptr),
     m_metadataVersion(0)
 {
 }
@@ -163,9 +164,10 @@ void PublisherHandler::DefineMetadata()
     PublisherInstance::DefineMetadata(m_deviceMetadata, m_measurementMetadata, m_phasorMetadata, m_metadataVersion);
 }
 
-void PublisherHandler::Start(uint16_t port, bool ipV6)
+bool PublisherHandler::Start(uint16_t port, bool ipV6)
 {
-    PublisherInstance::Start(port, ipV6);
+    if (!PublisherInstance::Start(port, ipV6))
+        return false;
 
     static float64_t randMax = float64_t(RAND_MAX);
     static const uint64_t interval = 1000;
@@ -238,11 +240,14 @@ void PublisherHandler::Start(uint16_t port, bool ipV6)
 
     // Start data publication
     m_publishTimer->Start();
+
+    return true;
 }
 
 void PublisherHandler::Stop()
 {
     PublisherInstance::Stop();
 
-    m_publishTimer->Stop();
+    if (m_publishTimer != nullptr)
+        m_publishTimer->Stop();
 }

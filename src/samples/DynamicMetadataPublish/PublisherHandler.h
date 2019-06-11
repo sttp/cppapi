@@ -51,7 +51,7 @@ public:
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
 
-    void Start(uint16_t port, bool ipV6) override;
+    bool Start(uint16_t port, bool ipV6) override;
     void Stop() override;
 
     void DefineMetadata(int32_t devices = 1);

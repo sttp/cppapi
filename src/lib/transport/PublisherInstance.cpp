@@ -30,6 +30,7 @@ using namespace pugi;
 using namespace sttp;
 using namespace sttp::data;
 using namespace sttp::transport;
+using namespace boost::asio::ip;
 
 PublisherInstance::PublisherInstance() :
     m_userData(nullptr)
@@ -164,19 +165,41 @@ vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& f
     return m_publisher->FilterMetadata(filterExpression);
 }
 
-void PublisherInstance::Start(const TcpEndPoint& endpoint)
+bool PublisherInstance::Start(const TcpEndPoint& endpoint)
 {
-    m_publisher->Start(endpoint);
+    string errorMessage{};
+
+    try
+    {
+        m_publisher->Start(endpoint);
+    }
+    catch (PublisherException& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (SystemError& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (...)
+    {
+        errorMessage = boost::current_exception_diagnostic_information(true);
+    }
+
+    if (!errorMessage.empty())
+        ErrorMessage("Failed to listen on port " + ToString(endpoint.port()) + ": " + errorMessage);
+
+    return m_publisher->IsStarted();
 }
 
-void PublisherInstance::Start(uint16_t port, bool ipV6)
+bool PublisherInstance::Start(uint16_t port, bool ipV6)
 {
-    m_publisher->Start(port, ipV6);
+    return Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
 
-void PublisherInstance::Start(const string& networkInterfaceIP, uint16_t port)
+bool PublisherInstance::Start(const string& networkInterfaceIP, uint16_t port)
 {
-    m_publisher->Start(networkInterfaceIP, port);
+    return Start(TcpEndPoint(make_address(networkInterfaceIP), port));
 }
 
 void PublisherInstance::Stop()
