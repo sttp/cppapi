@@ -341,12 +341,21 @@ bool PublisherInstance::TryGetSubscriberConnections(vector<SubscriberConnectionP
 {
     subscriberConnections.clear();
 
-    m_publisher->IterateSubscriberConnections([](const SubscriberConnectionPtr& connection, void* userData)
+    m_publisher->IterateSubscriberConnections([&subscriberConnections](SubscriberConnectionPtr connection, void* userData)
     {
-        auto connections = static_cast<vector<SubscriberConnectionPtr>*>(userData);
-        connections->push_back(connection);
+        subscriberConnections.push_back(connection);
     },
-    &subscriberConnections);
+    nullptr);
 
     return !subscriberConnections.empty();
+}
+
+void PublisherInstance::DisconnectSubscriber(const SubscriberConnectionPtr& connection) const
+{
+    m_publisher->DisconnectSubscriber(connection);
+}
+
+void PublisherInstance::DisconnectSubscriber(const sttp::Guid& instanceID) const
+{
+    m_publisher->DisconnectSubscriber(instanceID);
 }

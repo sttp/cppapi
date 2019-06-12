@@ -141,7 +141,7 @@ namespace transport
         ~DataPublisher();
 
         // Iterator handler delegates
-        typedef std::function<void(const SubscriberConnectionPtr&, void* userData)> SubscriberConnectionIteratorHandlerFunction;
+        typedef std::function<void(SubscriberConnectionPtr, void* userData)> SubscriberConnectionIteratorHandlerFunction;
 
         // Defines metadata from existing metadata records
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
@@ -207,7 +207,7 @@ namespace transport
         void SetSupportsTemporalSubscriptions(bool value);
 
         uint32_t GetCipherKeyRotationPeriod() const;
-        void SetCipherKeyRotationPeriod(uint32_t period);
+        void SetCipherKeyRotationPeriod(uint32_t value);
 
         // Gets or sets flag that determines if base time offsets should be used in compact format
         bool GetUseBaseTimeOffsets() const;
@@ -248,6 +248,9 @@ namespace transport
         // SubscriberConnection iteration function - note that full lock will be maintained on source collection
         // for the entire call, so keep work time minimized or clone collection before work
         void IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData);
+
+        void DisconnectSubscriber(const SubscriberConnectionPtr& connection);
+        void DisconnectSubscriber(const sttp::Guid& instanceID);
 
         friend class SubscriberConnection;
     };

@@ -98,9 +98,9 @@ namespace transport
         static constexpr const char* FilterMetadataStatsExpression = "FILTER MeasurementDetail WHERE SignalAcronym <> 'STAT'";
 
         // Iterator handler delegates
-        typedef std::function<void(const DeviceMetadataPtr&, void* userData)> DeviceMetadataIteratorHandlerFunction;
-        typedef std::function<void(const MeasurementMetadataPtr&, void* userData)> MeasurementMetadataIteratorHandlerFunction;
-        typedef std::function<void(const ConfigurationFramePtr&, void* userData)> ConfigurationFrameIteratorHandlerFunction;
+        typedef std::function<void(DeviceMetadataPtr, void* userData)> DeviceMetadataIteratorHandlerFunction;
+        typedef std::function<void(MeasurementMetadataPtr, void* userData)> MeasurementMetadataIteratorHandlerFunction;
+        typedef std::function<void(ConfigurationFramePtr, void* userData)> ConfigurationFrameIteratorHandlerFunction;
 
         // Subscription functions
 

@@ -1081,9 +1081,9 @@ void DataPublisher::RegisterTemporalSubscriptionCanceledCallback(const Subscribe
     m_temporalSubscriptionCanceledCallback = temporalSubscriptionCanceledCallback;
 }
 
-void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& handleUserCommandCallback)
+void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& userCommandCallback)
 {
-    m_userCommandCallback = handleUserCommandCallback;
+    m_userCommandCallback = userCommandCallback;
 }
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
@@ -1092,4 +1092,24 @@ void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionItera
 
     for (const auto& connection : m_subscriberConnections)
         iteratorHandler(connection, userData);
+}
+
+void DataPublisher::DisconnectSubscriber(const SubscriberConnectionPtr& connection)
+{
+    if (connection != nullptr)
+        RemoveConnection(connection);
+}
+
+void DataPublisher::DisconnectSubscriber(const sttp::Guid& instanceID)
+{
+    SubscriberConnectionPtr targetConnection = nullptr;
+
+    IterateSubscriberConnections([&targetConnection, instanceID](SubscriberConnectionPtr connection, void* userData)
+    {
+        if (connection->GetInstanceID() == instanceID)
+            targetConnection = connection;
+    },
+    nullptr);
+
+    DisconnectSubscriber(targetConnection);
 }

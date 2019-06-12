@@ -301,43 +301,39 @@ void SubscriberInstance::IterateConfigurationFrames(const ConfigurationFrameIter
     m_configurationUpdateLock.unlock();
 }
 
-void IterateDeviceMetadataForAcronyms(const DeviceMetadataPtr& device, void* userData)
-{
-    vector<string>* deviceAcronyms = static_cast<vector<string>*>(userData);
-    deviceAcronyms->push_back(device->Acronym);
-}
-
 bool SubscriberInstance::TryGetDeviceAcronyms(vector<string>& deviceAcronyms)
 {
     deviceAcronyms.clear();
 
-    IterateDeviceMetadata(&IterateDeviceMetadataForAcronyms, &deviceAcronyms);
+    IterateDeviceMetadata([&deviceAcronyms](DeviceMetadataPtr device, void* userData)
+    {
+        deviceAcronyms.push_back(device->Acronym);
+    },
+    nullptr);
 
     return !deviceAcronyms.empty();
-}
-
-void IterateDeviceMetadataForCopy(const DeviceMetadataPtr& device, void* userData)
-{
-    map<string, DeviceMetadataPtr>* devices = static_cast<map<string, DeviceMetadataPtr>*>(userData);
-    devices->insert_or_assign(device->Acronym, device);
 }
 
 void SubscriberInstance::GetParsedDeviceMetadata(map<string, DeviceMetadataPtr>& devices)
 {
     devices.clear();
-    IterateDeviceMetadata(&IterateDeviceMetadataForCopy, &devices);
-}
-
-void IterateMeasurementMetadataForCopy(const MeasurementMetadataPtr& measurement, void* userData)
-{
-    map<Guid, MeasurementMetadataPtr>* measurements = static_cast<map<Guid, MeasurementMetadataPtr>*>(userData);
-    measurements->insert_or_assign(measurement->SignalID, measurement);
+    
+    IterateDeviceMetadata([&devices](DeviceMetadataPtr device, void* userData)
+    {
+        devices.insert_or_assign(device->Acronym, device);
+    },
+    nullptr);
 }
 
 void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetadataPtr>& measurements)
 {
     measurements.clear();
-    IterateMeasurementMetadata(&IterateMeasurementMetadataForCopy, &measurements);
+
+    IterateMeasurementMetadata([&measurements](MeasurementMetadataPtr measurement, void* userData)
+    {
+        measurements.insert_or_assign(measurement->SignalID, measurement);
+    },
+    nullptr);
 }
 
 bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, DeviceMetadataPtr& deviceMetadata)
