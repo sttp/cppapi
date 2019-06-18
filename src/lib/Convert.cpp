@@ -288,6 +288,11 @@ string sttp::ToString(const TimeSpan& value)
     return ToString(seconds) + " seconds";
 }
 
+string sttp::ToString(const decimal_t& value)
+{
+    return value.str();
+}
+
 wstring sttp::ToUTF16(const string& value)
 {
     wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
@@ -391,6 +396,11 @@ bool sttp::TryParseDouble(const string& value, float64_t& result, const float64_
         result = defaultValue;
         return false;
     }
+}
+
+decimal_t sttp::ParseDecimal(const string& value)
+{
+    return decimal_t(value);
 }
 
 string sttp::RegExEncode(const char value)

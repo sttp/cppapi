@@ -68,6 +68,8 @@ namespace sttp
 
     std::string ToString(const TimeSpan& value);
 
+    std::string ToString(const decimal_t& value);
+
     std::wstring ToUTF16(const std::string& value);
 
     std::string ToUTF8(const std::wstring& value);
@@ -90,6 +92,8 @@ namespace sttp
     bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0LL);
 
     bool TryParseDouble(const std::string& value, float64_t& result, float64_t defaultValue = 0.0);
+
+    decimal_t ParseDecimal(const std::string& value);
 
     // Encodes a character value into an escaped RegEx value
     std::string RegExEncode(char value);
