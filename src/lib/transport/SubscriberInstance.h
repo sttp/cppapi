@@ -132,7 +132,7 @@ namespace transport
 
         // Gets or sets delay between connection retries
         int16_t GetRetryInterval() const;
-        void SetRetyInterval(int16_t retryInterval);
+        void SetRetryInterval(int16_t retryInterval);
 
         // The following are example filter expression formats:
         //

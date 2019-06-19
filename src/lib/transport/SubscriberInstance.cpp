@@ -100,7 +100,7 @@ int16_t SubscriberInstance::GetRetryInterval() const
     return m_retryInterval;
 }
 
-void SubscriberInstance::SetRetyInterval(int16_t retryInterval)
+void SubscriberInstance::SetRetryInterval(int16_t retryInterval)
 {
     m_retryInterval = retryInterval;
 }
