@@ -72,7 +72,11 @@ namespace transport
         static void HandleConfigurationChanged(DataSubscriber* source);
         static void HandleConnectionTerminated(DataSubscriber* source);
 
+#ifdef SWIG
+    public:
+#else
     protected:
+#endif
         virtual void SetupSubscriberConnector(SubscriberConnector& connector);
         virtual SubscriptionInfo CreateSubscriptionInfo();
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout

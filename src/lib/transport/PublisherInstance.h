@@ -46,7 +46,11 @@ namespace transport
         static void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
 
+#ifdef SWIG
+    public:
+#else
     protected:
+#endif
         virtual void StatusMessage(const std::string& message);	// Defaults output to cout
         virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
         virtual void ClientConnected(const SubscriberConnectionPtr& connection);
