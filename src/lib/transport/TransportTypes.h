@@ -54,7 +54,7 @@ namespace transport
     };
 
     // Fundamental data type representing a measurement in STTP
-    struct Measurement
+    struct SimpleMeasurement
     {
         // Identification number used in
         // human-readable measurement key.
@@ -89,9 +89,17 @@ namespace transport
         // Flags indicating the state of the measurement
         // as reported by the device that took it.
         MeasurementStateFlags Flags;
+    };
 
+
+    // Extended data type representing a measurement in STTP
+    struct Measurement : SimpleMeasurement
+    {
         // Creates a new instance.
         Measurement();
+
+        // Create instance from existing simple measurement
+        Measurement(SimpleMeasurement source);
 
         // Returns the value after applying the
         // multiplicative and additive value modifiers.

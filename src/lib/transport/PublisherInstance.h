@@ -93,6 +93,7 @@ namespace transport
         // Determines if publisher has been started
         bool IsStarted() const;
 
+        void PublishMeasurements(const SimpleMeasurement* measurements, int32_t count) const;
         void PublishMeasurements(const std::vector<Measurement>& measurements) const;
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements) const;
 

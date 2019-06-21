@@ -46,6 +46,7 @@ namespace transport
         std::string m_metadataFilters;
         std::string m_startTime;
         std::string m_stopTime;
+        bool m_receiveSimpleMeasurements;
 
         std::unordered_map<Guid, MeasurementMetadataPtr> m_measurements;
         sttp::StringMap<DeviceMetadataPtr> m_devices;
@@ -86,6 +87,7 @@ namespace transport
         virtual void ReceivedMetadata(const std::vector<uint8_t>& payload);
         virtual void ParsedMetadata();
         virtual void ReceivedNewMeasurements(const std::vector<MeasurementPtr>& measurements);
+        virtual void ReceivedNewMeasurements(const SimpleMeasurement* measurements, int32_t length);
         virtual void ConfigurationChanged();
         virtual void HistoricalReadComplete();
         virtual void ConnectionEstablished();
@@ -198,6 +200,11 @@ namespace transport
         // signal index cache is compressed using GZip.
         bool IsSignalIndexCacheCompressed() const;
         void SetSignalIndexCacheCompressed(bool compressed) const;
+
+        // Gets or sets flag that determines if received measurements should be exposed
+        // as simple measurements structures (typically used by SWIG wrapper targets)
+        bool GetReceiveSimpleMeasurements() const;
+        void SetReceiveSimpleMeasurements(bool value);
 
         // Statistical functions
         uint64_t GetTotalCommandChannelBytesReceived() const;

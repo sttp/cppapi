@@ -50,15 +50,26 @@ const char* PublisherException::what() const noexcept
     return &m_message[0];
 }
 
-Measurement::Measurement() :
-    ID(0),
-    SignalID(Empty::Guid),
-    Value(NAN),
-    Adder(0),
-    Multiplier(1),
-    Timestamp(0),
-    Flags(MeasurementStateFlags::Normal)
+Measurement::Measurement()
 {
+    ID = 0;
+    SignalID = Empty::Guid;
+    Value = NAN;
+    Adder = 0;
+    Multiplier = 1;
+    Timestamp = 0;
+    Flags = MeasurementStateFlags::Normal;
+}
+
+Measurement::Measurement(SimpleMeasurement source)
+{
+    ID = source.ID;
+    SignalID = source.SignalID;
+    Value = source.Value;
+    Adder = source.Adder;
+    Multiplier = source.Multiplier;
+    Timestamp = source.Timestamp;
+    Flags = source.Flags;
 }
 
 float64_t Measurement::AdjustedValue() const

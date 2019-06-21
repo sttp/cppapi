@@ -212,6 +212,16 @@ bool PublisherInstance::IsStarted() const
     return m_publisher->IsStarted();
 }
 
+void PublisherInstance::PublishMeasurements(const SimpleMeasurement* measurements, int32_t count) const
+{
+    vector<Measurement> derivedMeasurements(count);
+
+    for (int32_t i = 0; i < count; i++)
+        derivedMeasurements[i] = Measurement(measurements[i]);
+
+    PublishMeasurements(derivedMeasurements);
+}
+
 void PublisherInstance::PublishMeasurements(const vector<Measurement>& measurements) const
 {
     m_publisher->PublishMeasurements(measurements);

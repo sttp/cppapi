@@ -44,6 +44,11 @@ SubscriberInstance::SubscriberInstance() :
     m_filterExpression(SubscribeAllNoStatsExpression),
     m_startTime(""),
     m_stopTime(""),
+#ifdef SWIG
+    m_receiveSimpleMeasurements(true),
+#else
+    m_receiveSimpleMeasurements(false),
+#endif
     m_userData(nullptr)
 {
     // Reference this SubscriberInstance in DataSubsciber user data
@@ -244,6 +249,16 @@ bool SubscriberInstance::IsSignalIndexCacheCompressed() const
 void SubscriberInstance::SetSignalIndexCacheCompressed(bool compressed) const
 {
     m_subscriber->SetSignalIndexCacheCompressed(compressed);
+}
+
+bool SubscriberInstance::GetReceiveSimpleMeasurements() const
+{
+    return m_receiveSimpleMeasurements;
+}
+
+void SubscriberInstance::SetReceiveSimpleMeasurements(bool value)
+{
+    m_receiveSimpleMeasurements = value;
 }
 
 uint64_t SubscriberInstance::GetTotalCommandChannelBytesReceived() const
@@ -987,6 +1002,20 @@ void SubscriberInstance::ParsedMetadata()
 }
 
 void SubscriberInstance::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
+{
+    if (m_receiveSimpleMeasurements)
+    {
+        const int32_t length = ConvertInt32(measurements.size());
+        vector<SimpleMeasurement> simpleMeasurements(length);
+
+        for (int32_t i = 0; i < length; i++)
+            simpleMeasurements[i] = *measurements[i];
+
+        ReceivedNewMeasurements(simpleMeasurements.data(), length);
+    }
+}
+
+void SubscriberInstance::ReceivedNewMeasurements(const SimpleMeasurement* measurements, int32_t length)
 {
 }
 
