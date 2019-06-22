@@ -50,7 +50,7 @@ const char* PublisherException::what() const noexcept
     return &m_message[0];
 }
 
-Measurement::Measurement()
+Measurement::Measurement() : SimpleMeasurement()
 {
     ID = 0;
     SignalID = Empty::Guid;
@@ -61,7 +61,7 @@ Measurement::Measurement()
     Flags = MeasurementStateFlags::Normal;
 }
 
-Measurement::Measurement(SimpleMeasurement source)
+Measurement::Measurement(SimpleMeasurement source) : SimpleMeasurement()
 {
     ID = source.ID;
     SignalID = source.SignalID;

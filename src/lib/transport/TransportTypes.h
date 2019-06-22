@@ -53,27 +53,16 @@ namespace transport
         const char* what() const noexcept;
     };
 
-    // Fundamental data type representing a measurement in STTP
+    // Fundamental POD type representing a measurement in STTP
     struct SimpleMeasurement
     {
-        // Identification number used in
-        // human-readable measurement key.
+        // Identification number used in human-readable measurement key.
         uint64_t ID;
 
-        // Source used in human-
-        // readable measurement key.
-        std::string Source;
-
-        // Measurement's globally
-        // unique identifier.
+        // Measurement's globally unique identifier.
         Guid SignalID;
 
-        // Human-readable tag name to
-        // help describe the measurement.
-        std::string Tag;
-
-        // Instantaneous value
-        // of the measurement.
+        // Instantaneous value of the measurement.
         float64_t Value;
 
         // Additive value modifier.
@@ -82,15 +71,12 @@ namespace transport
         // Multiplicative value modifier.
         float64_t Multiplier;
 
-        // The time, in ticks, that
-        // this measurement was taken.
+        // The time, in ticks, that this measurement was taken.
         int64_t Timestamp;
 
-        // Flags indicating the state of the measurement
-        // as reported by the device that took it.
+        // Flags indicating the state of the measurement as reported by the device that took it.
         MeasurementStateFlags Flags;
     };
-
 
     // Extended data type representing a measurement in STTP
     struct Measurement : SimpleMeasurement
@@ -100,6 +86,12 @@ namespace transport
 
         // Create instance from existing simple measurement
         Measurement(SimpleMeasurement source);
+
+        // Source used in human-readable measurement key.
+        std::string Source;
+
+        // Human-readable tag name to help describe the measurement.
+        std::string Tag;
 
         // Returns the value after applying the
         // multiplicative and additive value modifiers.
