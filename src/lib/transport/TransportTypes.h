@@ -56,8 +56,27 @@ namespace transport
     // Fundamental POD type representing a measurement in STTP
     struct SimpleMeasurement
     {
-        // Identification number used in human-readable measurement key.
-        uint64_t ID;
+        // Measurement's globally unique identifier.
+        Guid SignalID;
+
+        // Instantaneous value of the measurement.
+        float64_t Value;
+
+        // The time, in ticks, that this measurement was taken.
+        int64_t Timestamp;
+
+        // Flags indicating the state of the measurement as reported by the device that took it.
+        MeasurementStateFlags Flags;
+    };
+
+    // Extended data type representing a measurement in STTP
+    struct Measurement
+    {
+        // Creates a new instance.
+        Measurement();
+
+        // Create instance from existing simple measurement
+        Measurement(const SimpleMeasurement& source);
 
         // Measurement's globally unique identifier.
         Guid SignalID;
@@ -76,16 +95,9 @@ namespace transport
 
         // Flags indicating the state of the measurement as reported by the device that took it.
         MeasurementStateFlags Flags;
-    };
 
-    // Extended data type representing a measurement in STTP
-    struct Measurement : SimpleMeasurement
-    {
-        // Creates a new instance.
-        Measurement();
-
-        // Create instance from existing simple measurement
-        Measurement(SimpleMeasurement source);
+        // Identification number used in human-readable measurement key.
+        uint64_t ID;
 
         // Source used in human-readable measurement key.
         std::string Source;
@@ -102,10 +114,15 @@ namespace transport
 
         // Gets Timestamp in Unix second of century and milliseconds
         void GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const;
+
+        // Convert to POD type
+        void GetSimpleMeasurement(SimpleMeasurement& measurement) const;
     };
 
     typedef SharedPtr<Measurement> MeasurementPtr;
+
     MeasurementPtr ToPtr(const Measurement& source);
+    MeasurementPtr ToPtr(const SimpleMeasurement& source);
 
     enum SignalKind : int16_t
     {

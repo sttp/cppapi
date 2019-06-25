@@ -50,26 +50,24 @@ const char* PublisherException::what() const noexcept
     return &m_message[0];
 }
 
-Measurement::Measurement() : SimpleMeasurement()
+Measurement::Measurement() :
+    SignalID(Empty::Guid),
+    Value(NAN),
+    Adder(0.0),
+    Multiplier(1.0),
+    Timestamp(0LL),
+    Flags(MeasurementStateFlags::Normal),
+    ID(0LL)
 {
-    ID = 0;
-    SignalID = Empty::Guid;
-    Value = NAN;
-    Adder = 0;
-    Multiplier = 1;
-    Timestamp = 0;
-    Flags = MeasurementStateFlags::Normal;
 }
 
-Measurement::Measurement(SimpleMeasurement source) : SimpleMeasurement()
+Measurement::Measurement(const SimpleMeasurement& source) :
+    SignalID(source.SignalID),
+    Value(source.Value),
+    Timestamp(source.Timestamp),
+    Flags(source.Flags),
+    ID(0LL)
 {
-    ID = source.ID;
-    SignalID = source.SignalID;
-    Value = source.Value;
-    Adder = source.Adder;
-    Multiplier = source.Multiplier;
-    Timestamp = source.Timestamp;
-    Flags = source.Flags;
 }
 
 float64_t Measurement::AdjustedValue() const
@@ -87,17 +85,39 @@ void Measurement::GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const
     ToUnixTime(Timestamp, unixSOC, milliseconds);
 }
 
+void Measurement::GetSimpleMeasurement(SimpleMeasurement& measurement) const
+{
+    measurement.SignalID = SignalID;
+    measurement.Value = AdjustedValue();
+    measurement.Timestamp = Timestamp;
+    measurement.Flags = Flags;
+}
+
 MeasurementPtr sttp::transport::ToPtr(const Measurement& source)
 {
     MeasurementPtr destination = NewSharedPtr<Measurement>();
 
-    destination->ID = source.ID;
-    destination->Source = source.Source;
     destination->SignalID = source.SignalID;
-    destination->Tag = source.Tag;
     destination->Value = source.Value;
     destination->Adder = source.Adder;
     destination->Multiplier = source.Multiplier;
+    destination->Timestamp = source.Timestamp;
+    destination->Flags = source.Flags;
+    destination->ID = source.ID;
+    destination->Source = source.Source;
+    destination->Tag = source.Tag;
+
+    return destination;
+}
+
+MeasurementPtr sttp::transport::ToPtr(const SimpleMeasurement& source)
+{
+    MeasurementPtr destination = NewSharedPtr<Measurement>();
+
+    destination->SignalID = source.SignalID;
+    destination->Value = source.Value;
+    destination->Adder = 0.0;
+    destination->Multiplier = 1.0;
     destination->Timestamp = source.Timestamp;
     destination->Flags = source.Flags;
 

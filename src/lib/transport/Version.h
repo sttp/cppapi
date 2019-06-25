@@ -24,7 +24,8 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define STTP_VERSION "1.0.5"
+#define STTP_TITLE "STTP C++ Library"
+#define STTP_VERSION "1.0.6"
 #define STTP_UPDATEDON "June 2019"
 
 #endif

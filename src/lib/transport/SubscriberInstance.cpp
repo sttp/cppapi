@@ -1009,7 +1009,7 @@ void SubscriberInstance::ReceivedNewMeasurements(const vector<MeasurementPtr>& m
         vector<SimpleMeasurement> simpleMeasurements(length);
 
         for (int32_t i = 0; i < length; i++)
-            simpleMeasurements[i] = *measurements[i];
+            measurements[i]->GetSimpleMeasurement(simpleMeasurements[i]);
 
         ReceivedNewMeasurements(simpleMeasurements.data(), length);
     }
@@ -1033,6 +1033,16 @@ void SubscriberInstance::ConnectionEstablished()
 
 void SubscriberInstance::ConnectionTerminated()
 {
+}
+
+void SubscriberInstance::GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const
+{
+    m_subscriber->GetAssemblyInfo(source, version, updatedOn);
+}
+
+void SubscriberInstance::SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn) const
+{
+    m_subscriber->SetAssemblyInfo(source, version, updatedOn);
 }
 
 // private functions

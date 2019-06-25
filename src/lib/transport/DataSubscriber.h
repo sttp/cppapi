@@ -191,6 +191,11 @@ namespace transport
         volatile bool m_connected;
         volatile bool m_subscribed;
 
+        // Assembly info
+        std::string m_assemblySource;
+        std::string m_assemblyVersion;
+        std::string m_assemblyUpdatedOn;
+
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
         int32_t m_timeIndex;
@@ -377,6 +382,10 @@ namespace transport
         uint64_t GetTotalMeasurementsReceived() const;
         bool IsConnected() const;
         bool IsSubscribed() const;
+
+        // Version info functions
+        void GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const;
+        void SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn);
 
         friend class SubscriberConnector;
     };

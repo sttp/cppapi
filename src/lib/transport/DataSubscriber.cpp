@@ -330,6 +330,9 @@ DataSubscriber::DataSubscriber() :
     m_totalMeasurementsReceived(0UL),
     m_connected(false),
     m_subscribed(false),
+    m_assemblySource(STTP_TITLE),
+    m_assemblyVersion(STTP_VERSION),
+    m_assemblyUpdatedOn(STTP_UPDATEDON),
     m_signalIndexCache(nullptr),
     m_timeIndex(0),
     m_baseTimeOffsets { 0, 0 },
@@ -1264,7 +1267,7 @@ void DataSubscriber::Subscribe()
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
     connectionStream << "requestNaNValueFilter" << m_subscriptionInfo.RequestNaNValueFilter << ";";
-    connectionStream << "assemblyInfo={source=STTP C++ Library; version=" STTP_VERSION "; updatedOn=" STTP_UPDATEDON "};";
+    connectionStream << "assemblyInfo={source=" << m_assemblySource << "; version="<< m_assemblyVersion <<"; updatedOn=" << m_assemblyUpdatedOn << "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
         connectionStream << "filterExpression={" << m_subscriptionInfo.FilterExpression << "};";
@@ -1483,4 +1486,18 @@ bool DataSubscriber::IsConnected() const
 bool DataSubscriber::IsSubscribed() const
 {
     return m_subscribed;
+}
+
+void DataSubscriber::GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const
+{
+    source = m_assemblySource;
+    version = m_assemblyVersion;
+    updatedOn = m_assemblyUpdatedOn;
+}
+
+void DataSubscriber::SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn)
+{
+    m_assemblySource = source;
+    m_assemblyVersion = version;
+    m_assemblyUpdatedOn = updatedOn;
 }

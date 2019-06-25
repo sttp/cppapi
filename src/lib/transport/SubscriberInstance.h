@@ -93,6 +93,10 @@ namespace transport
         virtual void ConnectionEstablished();
         virtual void ConnectionTerminated();
 
+        // Version info functions
+        void GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const;
+        void SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn) const;
+
         SubscriberInstance();
 
     public:
