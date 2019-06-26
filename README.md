@@ -3,4 +3,4 @@ Native C++ implementation for STTP
 
 Requires [boost](https://www.boost.org/])
 
-See [README](src) for build steps.
+See [build steps](src) for more information.
