@@ -1,5 +1,7 @@
-# cppapi
 <img align="right" src="https://raw.githubusercontent.com/sttp/cppapi/master/src/sttp.png">
+
+# cppapi
+
 Native C++ implementation for STTP
 
 Requires [boost](https://www.boost.org/)
