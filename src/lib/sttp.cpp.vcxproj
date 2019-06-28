@@ -502,7 +502,7 @@
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-SWIG|Win32'">
-    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\Release\lib\</OutDir>
+    <OutDir>$(SolutionDir)..\..\build\output\$(PlatformTarget)\Release\lib\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -510,7 +510,7 @@
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-SWIG|x64'">
-    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\Release\lib\</OutDir>
+    <OutDir>$(SolutionDir)..\..\build\output\$(PlatformTarget)\Release\lib\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -518,7 +518,7 @@
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-SWIG|Win32'">
-    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\Debug\lib\</OutDir>
+    <OutDir>$(SolutionDir)..\..\build\output\$(PlatformTarget)\Debug\lib\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -526,7 +526,7 @@
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-SWIG|x64'">
-    <OutDir>$(SolutionDir)..\build\output\$(PlatformTarget)\Debug\lib\</OutDir>
+    <OutDir>$(SolutionDir)..\..\build\output\$(PlatformTarget)\Debug\lib\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
