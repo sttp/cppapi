@@ -161,6 +161,7 @@ void SubscriberInstance::Connect()
     m_subscriber->RegisterErrorMessageCallback(&HandleErrorMessage);
     m_subscriber->RegisterDataStartTimeCallback(&HandleDataStartTime);
     m_subscriber->RegisterMetadataCallback(&HandleMetadata);
+    m_subscriber->RegisterSubscriptionUpdatedCallback(&HandleSubscriptionUpdated);
     m_subscriber->RegisterNewMeasurementsCallback(&HandleNewMeasurements);
     m_subscriber->RegisterConfigurationChangedCallback(&HandleConfigurationChanged);
     m_subscriber->RegisterConnectionTerminatedCallback(&HandleConnectionTerminated);
