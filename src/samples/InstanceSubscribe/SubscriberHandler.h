@@ -44,6 +44,7 @@ protected:
     void DataStartTime(sttp::datetime_t startTime) override;
     void ReceivedMetadata(const std::vector<uint8_t>& payload) override;
     void ReceivedNewMeasurements(const std::vector<sttp::transport::MeasurementPtr>& measurements) override;
+    void SubscriptionUpdated(const sttp::transport::SignalIndexCachePtr& signalIndexCache) override;
     void ParsedMetadata() override;
     void ConfigurationChanged() override;
     void HistoricalReadComplete() override;

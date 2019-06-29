@@ -1001,6 +1001,10 @@ void SubscriberInstance::ParsedMetadata()
 {
 }
 
+void SubscriberInstance::SubscriptionUpdated(const SignalIndexCachePtr& signalIndexCache)
+{
+}
+
 void SubscriberInstance::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
     if (m_receiveSimpleMeasurements)
@@ -1107,6 +1111,12 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
     // When auto-parsing metadata, start subscription after successful user meta-data handling
     if (instance->m_autoParseMetadata)
         source->Subscribe();
+}
+
+void SubscriberInstance::HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache)
+{
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+    instance->SubscriptionUpdated(signalIndexCache);
 }
 
 void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)

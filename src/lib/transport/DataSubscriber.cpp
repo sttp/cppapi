@@ -664,6 +664,8 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
     SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
     signalIndexCache->Parse(uncompressedBuffer, m_subscriberID);
     m_signalIndexCache.swap(signalIndexCache);
+
+    DispatchSubscriptionUpdated(m_signalIndexCache.get());
 }
 
 // Updates base time offsets.
@@ -888,6 +890,11 @@ void DataSubscriber::Dispatch(const DispatcherFunction& function, const uint8_t*
     m_callbackQueue.Enqueue(dispatcher);
 }
 
+void DataSubscriber::DispatchSubscriptionUpdated(SignalIndexCache* signalIndexCache)
+{
+    Dispatch(&SubscriptionUpdatedDispatcher, reinterpret_cast<uint8_t*>(&signalIndexCache), 0, sizeof(SignalIndexCache**));
+}
+
 // Invokes the status message callback on the callback thread and provides the given message to it.
 void DataSubscriber::DispatchStatusMessage(const string& message)
 {
@@ -953,6 +960,19 @@ void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uin
         metadataCallback(source, buffer);
 }
 
+void DataSubscriber::SubscriptionUpdatedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer)
+{
+    SignalIndexCache* signalIndexCache = *reinterpret_cast<SignalIndexCache**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (source != nullptr)
+    {
+        const SubscriptionUpdatedCallback subscriptionUpdated = source->m_subscriptionUpdatedCallback;
+
+        if (subscriptionUpdated != nullptr)
+            subscriptionUpdated(source, signalIndexCache->GetReference());
+    }
+}
+
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
@@ -1015,6 +1035,12 @@ void DataSubscriber::RegisterDataStartTimeCallback(const DataStartTimeCallback& 
 void DataSubscriber::RegisterMetadataCallback(const MetadataCallback& metadataCallback)
 {
     m_metadataCallback = metadataCallback;
+}
+
+// Registers the subscription updated callback.
+void DataSubscriber::RegisterSubscriptionUpdatedCallback(const SubscriptionUpdatedCallback& subscriptionUpdatedCallback)
+{
+    m_subscriptionUpdatedCallback = subscriptionUpdatedCallback;
 }
 
 // Registers the new measurements callback.

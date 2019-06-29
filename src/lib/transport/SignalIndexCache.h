@@ -33,12 +33,15 @@ namespace sttp {
 namespace transport
 {
     class SubscriberConnection;
-    typedef SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+    typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
+
+    class SignalIndexCache;
+    typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
 
     // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
     // to human-readable measurement keys.
-    class SignalIndexCache
+    class SignalIndexCache : public sttp::EnableSharedThisPtr<SignalIndexCache> // NOLINT
     {
     private:
         std::unordered_map<int32_t, uint32_t> m_reference;
@@ -63,8 +66,11 @@ namespace transport
         // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
         sttp::Guid GetSignalID(int32_t signalIndex) const;
 
-        //Gets the full list of signal IDs as an unordered set
+        // Gets the full list of signal IDs as an unordered set
         std::unordered_set<sttp::Guid> GetSignalIDs() const;
+
+        // Populates given list with a copy of signal IDs
+        bool GetSignalIDs(std::vector<sttp::Guid>& signalIDs) const;
 
         // Gets the first half of the human-readable measurement
         // key associated with the given 16-bit runtime ID.
@@ -88,6 +94,8 @@ namespace transport
         // a vector size, for an exact size call RecalculateBinaryLength first
         uint32_t GetBinaryLength() const;
 
+        SignalIndexCachePtr GetReference();
+
         void RecalculateBinaryLength(const SubscriberConnection& connection);
 
         void Parse(const std::vector<uint8_t>& buffer, Guid& subscriberID);
@@ -95,7 +103,7 @@ namespace transport
         void Serialize(const SubscriberConnection& connection, std::vector<uint8_t>& buffer);
     };
 
-    typedef SharedPtr<SignalIndexCache> SignalIndexCachePtr;
+    typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
 }}
 
 #endif

@@ -68,6 +68,7 @@ namespace transport
         static void HandleErrorMessage(DataSubscriber* source, const std::string& message);
         static void HandleDataStartTime(DataSubscriber* source, int64_t startTime);
         static void HandleMetadata(DataSubscriber* source, const std::vector<uint8_t>& payload);
+        static void HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache);
         static void HandleNewMeasurements(DataSubscriber* source, const std::vector<MeasurementPtr>& measurements);
         static void HandleProcessingComplete(DataSubscriber* source, const std::string& message);
         static void HandleConfigurationChanged(DataSubscriber* source);
@@ -86,6 +87,7 @@ namespace transport
         virtual void DataStartTime(datetime_t startTime);
         virtual void ReceivedMetadata(const std::vector<uint8_t>& payload);
         virtual void ParsedMetadata();
+        virtual void SubscriptionUpdated(const SignalIndexCachePtr& signalIndexCache);
         virtual void ReceivedNewMeasurements(const std::vector<MeasurementPtr>& measurements);
         virtual void ReceivedNewMeasurements(const SimpleMeasurement* measurements, int32_t length);
         virtual void ConfigurationChanged();

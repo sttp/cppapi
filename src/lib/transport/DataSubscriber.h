@@ -158,6 +158,7 @@ namespace transport
         typedef std::function<void(DataSubscriber*, const std::string&)> MessageCallback;
         typedef std::function<void(DataSubscriber*, int64_t)> DataStartTimeCallback;
         typedef std::function<void(DataSubscriber*, const std::vector<uint8_t>&)> MetadataCallback;
+        typedef std::function<void(DataSubscriber*, const SignalIndexCachePtr&)> SubscriptionUpdatedCallback;
         typedef std::function<void(DataSubscriber*, const std::vector<MeasurementPtr>&)> NewMeasurementsCallback;
         typedef std::function<void(DataSubscriber*)> ConfigurationChangedCallback;
         typedef std::function<void(DataSubscriber*)> ConnectionTerminatedCallback;
@@ -225,6 +226,7 @@ namespace transport
         MessageCallback m_errorMessageCallback;
         DataStartTimeCallback m_dataStartTimeCallback;
         MetadataCallback m_metadataCallback;
+        SubscriptionUpdatedCallback m_subscriptionUpdatedCallback;
         NewMeasurementsCallback m_newMeasurementsCallback;
         MessageCallback m_processingCompleteCallback;
         ConfigurationChangedCallback m_configurationChangedCallback;
@@ -258,6 +260,7 @@ namespace transport
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);
         void Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length);
+        void DispatchSubscriptionUpdated(SignalIndexCache* signalIndexCache);
         void DispatchStatusMessage(const std::string& message);
         void DispatchErrorMessage(const std::string& message);
 
@@ -265,6 +268,7 @@ namespace transport
         static void ErrorMessageDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void DataStartTimeDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void MetadataDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
+        static void SubscriptionUpdatedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
 
@@ -292,6 +296,7 @@ namespace transport
         //   void HandleErrorMessage(DataSubscriber* source, const string& message)
         //   void HandleDataStartTime(DataSubscriber* source, int64_t startTime)
         //   void HandleMetadata(DataSubscriber* source, const vector<uint8_t>& metadata)
+        //   void HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache)
         //   void HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
         //   void HandleProcessingComplete(DataSubscriber* source, const string& message)
         //   void HandleConfigurationChanged(DataSubscriber* source)
@@ -303,6 +308,7 @@ namespace transport
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterDataStartTimeCallback(const DataStartTimeCallback& dataStartTimeCallback);
         void RegisterMetadataCallback(const MetadataCallback& metadataCallback);
+        void RegisterSubscriptionUpdatedCallback(const SubscriptionUpdatedCallback& subscriptionUpdatedCallback);
         void RegisterNewMeasurementsCallback(const NewMeasurementsCallback& newMeasurementsCallback);
         void RegisterProcessingCompleteCallback(const MessageCallback& processingCompleteCallback);
         void RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback);

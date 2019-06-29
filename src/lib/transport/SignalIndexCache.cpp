@@ -86,6 +86,16 @@ unordered_set<Guid> SignalIndexCache::GetSignalIDs() const
     return unordered_set<Guid>(m_signalIDList.begin(), m_signalIDList.end());
 }
 
+bool SignalIndexCache::GetSignalIDs(vector<Guid>& signalIDs) const
+{
+    signalIDs.clear();
+
+    for (Guid signalID : m_signalIDList)
+        signalIDs.emplace_back(signalID);
+
+    return !signalIDs.empty();
+}
+
 // Gets the first half of the human-readable measurement
 // key associated with the given 32-bit runtime ID.
 const string& SignalIndexCache::GetSource(const int32_t signalIndex) const
@@ -156,6 +166,11 @@ uint32_t SignalIndexCache::Count() const
 uint32_t SignalIndexCache::GetBinaryLength() const
 {
     return m_binaryLength;
+}
+
+SignalIndexCachePtr SignalIndexCache::GetReference()
+{
+    return shared_from_this();
 }
 
 void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnection& connection)

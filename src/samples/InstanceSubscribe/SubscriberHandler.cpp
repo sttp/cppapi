@@ -187,6 +187,11 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     }
 }
 
+void SubscriberHandler::SubscriptionUpdated(const SignalIndexCachePtr& signalIndexCache)
+{
+    StatusMessage("Publisher provided " + ToString(signalIndexCache->Count()) + " measurements in response to subscription.");
+}
+
 void SubscriberHandler::ConfigurationChanged()
 {
     StatusMessage("Configuration change detected. Metadata refresh requested.");
