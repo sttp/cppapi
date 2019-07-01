@@ -89,7 +89,8 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     }
 
     // Apply exponential back-off algorithm for retry attempt delays
-    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * int32_t(pow(2, connector.m_connectAttempt - 1)) : 0;
+    const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
+    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * int32_t(pow(2, exponent)) : 0;
 
     if (retryInterval > connector.m_maxRetryInterval)
         retryInterval = connector.m_maxRetryInterval;
@@ -150,7 +151,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
 
     m_cancel = false;
 
-    while (!subscriber.m_disconnecting)
+    while (!subscriber.m_disposing)
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
@@ -181,10 +182,11 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
             errorMessage = current_exception_diagnostic_information(true);
         }
 
-        if (!connected && !subscriber.m_disconnecting)
+        if (!connected && !subscriber.m_disposing)
         {
             // Apply exponential back-off algorithm for retry attempt delays
-            int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * int32_t(pow(2, m_connectAttempt - 1)) : 0;
+            const int32_t exponent = (m_connectAttempt > 13 ? 13 : m_connectAttempt) - 1;
+            int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * int32_t(pow(2, exponent)) : 0;
             autoReconnecting = true;
 
             if (retryInterval > m_maxRetryInterval)
@@ -324,6 +326,7 @@ DataSubscriber::DataSubscriber() :
     m_compressMetadata(true),
     m_compressSignalIndexCache(true),
     m_disconnecting(false),
+    m_disposing(false),
     m_userData(nullptr),
     m_totalCommandChannelBytesReceived(0UL),
     m_totalDataChannelBytesReceived(0UL),
@@ -348,6 +351,7 @@ DataSubscriber::DataSubscriber() :
 // Destructor calls disconnect to clean up after itself.
 DataSubscriber::~DataSubscriber()
 {
+    m_disposing = true;
     Disconnect();
 }
 

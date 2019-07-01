@@ -183,6 +183,7 @@ namespace transport
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
         volatile bool m_disconnecting;
+        volatile bool m_disposing;
         void* m_userData;
 
         // Statistics counters

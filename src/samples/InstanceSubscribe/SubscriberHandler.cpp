@@ -42,19 +42,7 @@ SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
 
     // TODO: Modify subscription info properties as desired...
 
-    // To set up a remotely synchronized subscription, set this flag
-    // to true and add the framesPerSecond parameter to the
-    // ExtraConnectionStringParameters. Additionally, the following
-    // example demonstrates the use of some other useful parameters
-    // when setting up remotely synchronized subscriptions.
-
-    //info.RemotelySynchronized = true;
-    //info.ExtraConnectionStringParameters = "framesPerSecond=30;timeResolution=10000;downsamplingMethod=Closest";
-    //info.LagTime = 3.0;
-    //info.LeadTime = 1.0;
-    //info.UseLocalClockAsRealTime = false;
-
-    // Other example properties (see SubscriptionInfo class in DataSubscriber.h for all properties)
+    // See SubscriptionInfo class in DataSubscriber.h for all properties
     //info.Throttled = false;
     //info.IncludeTime = true;
     //info.UseMillisecondResolution = true;
@@ -66,8 +54,19 @@ void SubscriberHandler::SetupSubscriberConnector(SubscriberConnector& connector)
 {
     SubscriberInstance::SetupSubscriberConnector(connector);
 
-    // TODO: Modify connector properties as desired...
+    // TODO: Customize subscriber connector properties as desired...
+
+    //// Enable auto-reconnect sequence:
+    //connector.SetAutoReconnect(true);
+
+    //// Set maximum number to attempt reconnection, -1 means never stop retrying connection attempts:
     //connector.SetMaxRetries(-1);
+    //
+    //// Set number of initial milliseconds to wait before retrying connection attempt:
+    //connector.SetRetryInterval(2000);
+    //
+    //// Set maximum number of milliseconds to wait before retrying connection attempt, connection retry attempts use exponential back-off algorithm up to this defined maximum:
+    //connector.SetMaxRetryInterval(120000);
 }
 
 void SubscriberHandler::StatusMessage(const string& message)
