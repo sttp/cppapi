@@ -403,7 +403,7 @@
     <ClInclude Include="transport\tssc\TSSCDecoder.h" />
     <ClInclude Include="transport\tssc\TSSCEncoder.h" />
     <ClInclude Include="transport\tssc\TSSCPointMetadata.h" />
-    <ClInclude Include="transport\Version.h" />
+    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="filterexpressions\CompileGrammar.bat" />

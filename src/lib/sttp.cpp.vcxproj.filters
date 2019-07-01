@@ -1066,9 +1066,6 @@
     <ClInclude Include="transport\TransportTypes.h">
       <Filter>transport</Filter>
     </ClInclude>
-    <ClInclude Include="transport\Version.h">
-      <Filter>transport</Filter>
-    </ClInclude>
     <ClInclude Include="transport\tssc\TSSCDecoder.h">
       <Filter>transport\tssc</Filter>
     </ClInclude>
@@ -1086,6 +1083,7 @@
     <ClInclude Include="pugixml.hpp" />
     <ClInclude Include="ThreadSafeQueue.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
