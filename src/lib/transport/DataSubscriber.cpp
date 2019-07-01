@@ -24,7 +24,7 @@
 //******************************************************************************************************
 
 #include "DataSubscriber.h"
-#include "Version.h"
+#include "../Version.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
 #include "../Convert.h"
@@ -150,7 +150,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
 
     m_cancel = false;
 
-    while (true)
+    while (!subscriber.m_disconnecting)
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
@@ -181,7 +181,7 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
             errorMessage = current_exception_diagnostic_information(true);
         }
 
-        if (!connected)
+        if (!connected && !subscriber.m_disconnecting)
         {
             // Apply exponential back-off algorithm for retry attempt delays
             int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * int32_t(pow(2, m_connectAttempt - 1)) : 0;
