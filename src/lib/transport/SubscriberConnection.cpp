@@ -952,24 +952,33 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
     try
     {
         const DataSetPtr metadata = FilterClientMetadata(filterExpressions);
-        const vector<uint8_t> serializedMetadata = SerializeMetadata(metadata);
-        vector<DataTablePtr> tables = metadata->Tables();
-        uint64_t rowCount = 0;
 
-        for (size_t i = 0; i < tables.size(); i++)
-            rowCount += tables[i]->RowCount();
-
-        if (rowCount > 0)
+        if (metadata == nullptr)
         {
-            const TimeSpan elapsedTime = UtcNow() - startTime;
-            m_parent->DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + ", sending response to " + GetConnectionID() + "...");
+            m_parent->DispatchStatusMessage("No meta-data has been defined by the publisher, sending an empty response to " + GetConnectionID() + "...");
+            SendResponse(ServerResponse::Succeeded, ServerCommand::MetadataRefresh, vector<uint8_t>(0));
         }
         else
         {
-            m_parent->DispatchStatusMessage("No meta-data is available" + string(filterExpressions.empty() ? "" : " due to user applied meta-data filters") + ", sending an empty response to " + GetConnectionID() + "...");
-        }
+            const vector<uint8_t> serializedMetadata = SerializeMetadata(metadata);
+            vector<DataTablePtr> tables = metadata->Tables();
+            uint64_t rowCount = 0;
 
-        SendResponse(ServerResponse::Succeeded, ServerCommand::MetadataRefresh, serializedMetadata);
+            for (size_t i = 0; i < tables.size(); i++)
+                rowCount += tables[i]->RowCount();
+
+            if (rowCount > 0)
+            {
+                const TimeSpan elapsedTime = UtcNow() - startTime;
+                m_parent->DispatchStatusMessage(ToString(rowCount) + " records spanning " + ToString(tables.size()) + " tables of meta-data prepared in " + ToString(elapsedTime) + ", sending response to " + GetConnectionID() + "...");
+            }
+            else
+            {
+                m_parent->DispatchStatusMessage("No meta-data is available" + string(filterExpressions.empty() ? "" : " due to user applied meta-data filters") + ", sending an empty response to " + GetConnectionID() + "...");
+            }
+
+            SendResponse(ServerResponse::Succeeded, ServerCommand::MetadataRefresh, serializedMetadata);
+        }
     }
     catch (const FilterExpressionParserException& ex)
     {
