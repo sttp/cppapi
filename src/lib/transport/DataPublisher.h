@@ -68,6 +68,7 @@ namespace transport
         sttp::data::DataSetPtr m_filteringMetadata;
         RoutingTables m_routingTables;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
+        std::unordered_set<SubscriberConnectionPtr> m_subscriberConnectionDispatchRefs;
         sttp::SharedMutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
         int32_t m_maximumAllowedConnections;
@@ -77,8 +78,9 @@ namespace transport
         bool m_supportsTemporalSubscriptions;
         bool m_useBaseTimeOffsets;
         uint32_t m_cipherKeyRotationPeriod;
-        volatile bool m_started;
-        volatile bool m_shuttingDown;
+        std::atomic_bool m_started;
+        std::atomic_bool m_shuttingDown;
+        sttp::Mutex m_connectActionMutex;
         void* m_userData;
 
         // Callback queue
@@ -105,6 +107,9 @@ namespace transport
         SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
         SubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
         UserCommandCallback m_userCommandCallback;
+
+        SubscriberConnection* AddDispatchReference(SubscriberConnectionPtr connectionRef);
+        SubscriberConnectionPtr ReleaseDispatchReference(SubscriberConnection* connectionPtr);
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);

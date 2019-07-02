@@ -172,7 +172,12 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
         try
         {
             m_connectAttempt++;
+
+            if (subscriber.m_disposing)
+                return ConnectCanceled;
+
             subscriber.Connect(m_hostname, m_port, autoReconnecting);
+            
             connected = true;
             break;
         }
@@ -223,7 +228,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
         }
     }
 
-    return subscriber.IsConnected() ? ConnectSuccess : ConnectFailed;
+    return subscriber.m_disposing ? ConnectCanceled : subscriber.IsConnected() ? ConnectSuccess : ConnectFailed;
 }
 
 // Cancel all current and
@@ -682,7 +687,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
     signalIndexCache->Parse(uncompressedBuffer, m_subscriberID);
     m_signalIndexCache.swap(signalIndexCache);
 
-    DispatchSubscriptionUpdated(m_signalIndexCache.get());
+    DispatchSubscriptionUpdated(AddDispatchReference(m_signalIndexCache));
 }
 
 // Updates base time offsets.
@@ -880,6 +885,26 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
     }
 }
 
+SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef)
+{
+    SignalIndexCache* signalIndexCachePtr = signalIndexCacheRef.get();
+
+    // Hold onto signal index cache shared pointer until it's delivered
+    m_signalIndexCacheDispatchRefs.emplace(signalIndexCacheRef);
+
+    return signalIndexCachePtr;
+}
+
+SignalIndexCachePtr DataSubscriber::ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr)
+{
+    const SignalIndexCachePtr signalIndexCacheRef = signalIndexCachePtr->GetReference();
+    
+    // Remove used reference to signal index cache pointer
+    m_signalIndexCacheDispatchRefs.erase(signalIndexCacheRef);
+
+    return signalIndexCacheRef;
+}
+
 // Dispatches the given function to the callback thread.
 void DataSubscriber::Dispatch(const DispatcherFunction& function)
 {
@@ -986,7 +1011,7 @@ void DataSubscriber::SubscriptionUpdatedDispatcher(DataSubscriber* source, const
         const SubscriptionUpdatedCallback subscriptionUpdated = source->m_subscriptionUpdatedCallback;
 
         if (subscriptionUpdated != nullptr)
-            subscriptionUpdated(source, signalIndexCache->GetReference());
+            subscriptionUpdated(source, source->ReleaseDispatchReference(signalIndexCache));
     }
 }
 
@@ -1171,6 +1196,8 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, bool a
     if (m_connected)
         throw SubscriberException("Subscriber is already connected; disconnect first");
 
+    // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+    ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
     const DnsResolver::query query(hostname, to_string(port));
     const DnsResolver::iterator endpointIterator = resolver.resolve(query);
@@ -1218,6 +1245,10 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port)
 
 void DataSubscriber::Disconnect(bool autoReconnecting)
 {
+    // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+    if (!autoReconnecting)
+        m_connectActionMutex.lock();
+
     ErrorCode error;
 
     // Notify running threads that
@@ -1264,6 +1295,9 @@ void DataSubscriber::Disconnect(bool autoReconnecting)
 
     // Disconnect completed
     m_disconnecting = false;
+
+    if (!autoReconnecting)
+        m_connectActionMutex.unlock();
 }
 
 // Disconnects from the publisher.

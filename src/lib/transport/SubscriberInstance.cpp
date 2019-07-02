@@ -56,6 +56,11 @@ SubscriberInstance::SubscriberInstance() :
     m_subscriber->SetUserData(this);
 }
 
+SubscriberInstance::~SubscriberInstance()
+{
+    m_subscriber.reset();
+}
+
 // public functions
 
 void SubscriberInstance::Initialize(const string& hostname, uint16_t port, uint16_t udpPort)
@@ -560,8 +565,6 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     return info;
 }
 
-SubscriberInstance::~SubscriberInstance() = default;
-
 void SubscriberInstance::StatusMessage(const string& message)
 {
     cout << message << endl << endl;
@@ -1062,6 +1065,9 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
+    if (instance == nullptr)
+        return;
+
     if (source->IsConnected())
     {
         instance->ConnectionEstablished();
@@ -1084,18 +1090,30 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->StatusMessage(message);
 }
 
 void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ErrorMessage(message);
 }
 
 void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t startTime)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     time_t unixSOC;
     uint16_t milliseconds;
 
@@ -1109,6 +1127,9 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
+    if (instance == nullptr)
+        return;
+
     // Call virtual method to handle metadata payload
     instance->ReceivedMetadata(payload);
 
@@ -1120,18 +1141,29 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
 void SubscriberInstance::HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->SubscriptionUpdated(signalIndexCache);
 }
 
 void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ReceivedNewMeasurements(measurements);
 }
 
 void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
 
     // Call virtual method to notify consumer that configuration has changed
     instance->ConfigurationChanged();
@@ -1143,6 +1175,10 @@ void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
 void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
 }
@@ -1150,5 +1186,9 @@ void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const 
 void SubscriberInstance::HandleConnectionTerminated(DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ConnectionTerminated();
 }

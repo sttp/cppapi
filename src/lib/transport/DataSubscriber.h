@@ -89,7 +89,7 @@ namespace transport
         int32_t m_connectAttempt;
         bool m_connectionRefused;
         bool m_autoReconnect;
-        bool m_cancel;
+        std::atomic_bool m_cancel;
 
         // Auto-reconnect handler.
         static void AutoReconnect(DataSubscriber* subscriber);
@@ -188,16 +188,17 @@ namespace transport
         bool m_compressPayloadData;
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
-        volatile bool m_disconnecting;
-        volatile bool m_disposing;
+        std::atomic_bool m_disconnecting;
+        std::atomic_bool m_disposing;
+        sttp::Mutex m_connectActionMutex;
         void* m_userData;
 
         // Statistics counters
         uint64_t m_totalCommandChannelBytesReceived;
         uint64_t m_totalDataChannelBytesReceived;
         uint64_t m_totalMeasurementsReceived;
-        volatile bool m_connected;
-        volatile bool m_subscribed;
+        std::atomic_bool m_connected;
+        std::atomic_bool m_subscribed;
 
         // Assembly info
         std::string m_assemblySource;
@@ -206,6 +207,7 @@ namespace transport
 
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
+        std::unordered_set<SignalIndexCachePtr> m_signalIndexCacheDispatchRefs;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         tssc::TSSCDecoder m_tsscDecoder;
@@ -263,6 +265,9 @@ namespace transport
         void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
         void ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint32_t length, std::vector<MeasurementPtr>& measurements);
         void ParseCompactMeasurements(uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
+
+        SignalIndexCache* AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef);
+        SignalIndexCachePtr ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr);
 
         // Dispatchers
         void Dispatch(const DispatcherFunction& function);

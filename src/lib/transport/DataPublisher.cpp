@@ -111,7 +111,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
 
         if (connectionAccepted)
         {
-            DispatchClientConnected(connection.get());
+            DispatchClientConnected(AddDispatchReference(connection));
         }
         else
         {
@@ -132,7 +132,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
 
 void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connection)
 {
-    DispatchClientDisconnected(connection.get());
+    DispatchClientDisconnected(AddDispatchReference(connection));
 }
 
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
@@ -142,6 +142,26 @@ void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 
     WriterLock writeLock(m_subscriberConnectionsLock);
     m_subscriberConnections.erase(connection);
+}
+
+SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPtr connectionRef)
+{
+    SubscriberConnection* connectionPtr = connectionRef.get();
+
+    // Hold onto subscriber connection shared pointer until it's delivered
+    m_subscriberConnectionDispatchRefs.emplace(connectionRef);
+
+    return connectionPtr;
+}
+
+SubscriberConnectionPtr DataPublisher::ReleaseDispatchReference(SubscriberConnection* connectionPtr)
+{
+    const SubscriberConnectionPtr connectionRef = connectionPtr->GetReference();
+    
+    // Remove used reference to subscriber connection pointer
+    m_subscriberConnectionDispatchRefs.erase(connectionRef);
+
+    return connectionRef;
 }
 
 void DataPublisher::Dispatch(const DispatcherFunction& function)
@@ -252,7 +272,7 @@ void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vecto
         const SubscriberConnectionCallback clientConnectedCallback = source->m_clientConnectedCallback;
 
         if (clientConnectedCallback != nullptr)
-            clientConnectedCallback(source, connection->GetReference());
+            clientConnectedCallback(source, source->ReleaseDispatchReference(connection));
     }
 }
 
@@ -263,11 +283,12 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
     if (source != nullptr)
     {
         const SubscriberConnectionCallback clientDisconnectedCallback = source->m_clientDisconnectedCallback;
+        const SubscriberConnectionPtr subscriberConnectionRef = source->ReleaseDispatchReference(connection);
 
         if (clientDisconnectedCallback != nullptr)
-            clientDisconnectedCallback(source, connection->GetReference());
+            clientDisconnectedCallback(source, subscriberConnectionRef);
 
-        source->RemoveConnection(connection->GetReference());
+        source->RemoveConnection(subscriberConnectionRef);
     }
 }
 
@@ -280,7 +301,7 @@ void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* s
         const SubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_processingIntervalChangeRequestedCallback;
 
         if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
-            temporalProcessingIntervalChangeRequestedCallback(source, connection->GetReference());
+            temporalProcessingIntervalChangeRequestedCallback(source, source->ReleaseDispatchReference(connection));
     }
 }
 
@@ -293,7 +314,7 @@ void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* sourc
         const SubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
 
         if (temporalSubscriptionRequestedCallback != nullptr)
-            temporalSubscriptionRequestedCallback(source, connection->GetReference());
+            temporalSubscriptionRequestedCallback(source, source->ReleaseDispatchReference(connection));
     }
 }
 
@@ -306,7 +327,7 @@ void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source
         const SubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
 
         if (temporalSubscriptionCanceledCallback != nullptr)
-            temporalSubscriptionCanceledCallback(source, connection->GetReference());
+            temporalSubscriptionCanceledCallback(source, source->ReleaseDispatchReference(connection));
     }
 }
 
@@ -319,7 +340,7 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
         const UserCommandCallback userCommandCallback = source->m_userCommandCallback;
 
         if (userCommandCallback != nullptr)
-            userCommandCallback(source, userCommandData->connection->GetReference(), userCommandData->command, userCommandData->data);
+            userCommandCallback(source, source->ReleaseDispatchReference(userCommandData->connection), userCommandData->command, userCommandData->data);
     }
 
     delete userCommandData;
@@ -782,6 +803,9 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     if (m_started)
         Stop();
 
+    // Let any pending start operation complete before stop - prevents destruction stop before start is completed
+    ScopeLock lock(m_connectActionMutex);
+
 #if BOOST_LEGACY
     m_commandChannelService.reset();
 #else
@@ -827,6 +851,9 @@ void DataPublisher::Start(const string& networkInterfaceIP, uint16_t port)
 
 void DataPublisher::Stop()
 {
+    // Let any pending start operation complete before stop - prevents destruction stop before start is completed
+    ScopeLock lock(m_connectActionMutex);
+
     // Notify running threads that the
     // publisher is shutting down
     m_shuttingDown = true;

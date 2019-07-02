@@ -106,4 +106,17 @@ namespace transport
     typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
 }}
 
+// Setup standard hash code for SignalIndexCachePtr
+namespace std  // NOLINT
+{
+    template<>
+    struct hash<sttp::transport::SignalIndexCachePtr>
+    {
+        size_t operator () (const sttp::transport::SignalIndexCachePtr& signalIndexCache) const
+        {
+            return boost::hash<sttp::transport::SignalIndexCachePtr>()(signalIndexCache);
+        }
+    };
+}
+
 #endif

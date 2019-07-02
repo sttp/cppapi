@@ -42,7 +42,7 @@ namespace sttp
         TimerElapsedCallback m_callback;
         void* m_userData;
         bool m_autoReset;
-        volatile bool m_running;
+        std::atomic_bool m_running;
 
         void TimerThread()
         {
@@ -142,6 +142,9 @@ namespace sttp
 
         void Stop()
         {
+            if (!m_running)
+                return;
+
             m_running = false;
 
             if (m_timerThread != nullptr)

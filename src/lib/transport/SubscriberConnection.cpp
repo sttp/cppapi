@@ -193,7 +193,7 @@ int32_t SubscriberConnection::GetProcessingInterval() const
 void SubscriberConnection::SetProcessingInterval(int32_t value)
 {
     m_processingInterval = value;
-    m_parent->DispatchProcessingIntervalChangeRequested(this);        
+    m_parent->DispatchProcessingIntervalChangeRequested(m_parent->AddDispatchReference(GetReference()));
     m_parent->DispatchStatusMessage(m_connectionID + " was assigned a new processing interval of " + ToString(value) + "ms.");
 }
 
@@ -523,7 +523,7 @@ void SubscriberConnection::CancelTemporalSubscription()
     {
         m_temporalSubscriptionCanceled = true;
         SendResponse(ServerResponse::ProcessingComplete, ServerCommand::Subscribe, ToString(m_parent->GetNodeID()));
-        m_parent->DispatchTemporalSubscriptionCanceled(this);
+        m_parent->DispatchTemporalSubscriptionCanceled(m_parent->AddDispatchReference(GetReference()));
     }
 }
 
@@ -861,7 +861,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     m_parent->DispatchStatusMessage(message);
 
                     if (GetIsTemporalSubscription())
-                        m_parent->DispatchTemporalSubscriptionRequested(this);
+                        m_parent->DispatchTemporalSubscriptionRequested(m_parent->AddDispatchReference(GetReference()));
                 }
                 else
                 {
@@ -1037,7 +1037,7 @@ void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, uint32_t 
 
 void SubscriberConnection::HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length)
 {
-    m_parent->DispatchUserCommand(this, command, data, length);
+    m_parent->DispatchUserCommand(m_parent->AddDispatchReference(GetReference()), command, data, length);
 }
 
 SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string& filterExpression, bool& success)

@@ -46,7 +46,7 @@ namespace transport
         sttp::ThreadSafeQueue<RoutingTableOperation> m_routingTableOperations;
         RoutingTablePtr m_activeRoutes;
         sttp::SharedMutex m_activeRoutesLock;
-        volatile bool m_enabled;
+        std::atomic_bool m_enabled;
 
         RoutingTablePtr CloneActiveRoutes();
         void SetActiveRoutes(RoutingTablePtr activeRoutes);

@@ -70,11 +70,11 @@ namespace transport
         bool m_useMillisecondResolution;
         bool m_trackLatestMeasurements;
         bool m_isNaNFiltered;
-        volatile bool m_connectionAccepted;
-        volatile bool m_isSubscribed;
-        volatile bool m_startTimeSent;
-        volatile bool m_dataChannelActive;
-        volatile bool m_stopped;
+        std::atomic_bool m_connectionAccepted;
+        std::atomic_bool m_isSubscribed;
+        std::atomic_bool m_startTimeSent;
+        std::atomic_bool m_dataChannelActive;
+        std::atomic_bool m_stopped;
 
         // Command channel
         sttp::TcpSocket m_commandChannelSocket;

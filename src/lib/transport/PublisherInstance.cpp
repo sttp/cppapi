@@ -55,48 +55,80 @@ PublisherInstance::~PublisherInstance() = default;
 void PublisherInstance::HandleStatusMessage(DataPublisher* source, const string& message)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->StatusMessage(message);
 }
 
 void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& message)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ErrorMessage(message);
 }
 
 void PublisherInstance::HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ClientConnected(connection);
 }
 
 void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ClientDisconnected(connection);
 }
 
 void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->ProcessingIntervalChangeRequested(connection);
 }
 
 void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->TemporalSubscriptionRequested(connection);
 }
 
 void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->TemporalSubscriptionCanceled(connection);
 }
 
 void PublisherInstance::HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
     instance->HandleUserCommand(connection, command, buffer);
 }
 
