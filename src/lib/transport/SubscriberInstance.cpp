@@ -180,7 +180,9 @@ void SubscriberInstance::Connect()
     }
 
     // Connect and subscribe to publisher
-    if (connector.Connect(*m_subscriber, m_subscriptionInfo))
+    const int result = connector.Connect(*m_subscriber, m_subscriptionInfo);
+
+    if (result == SubscriberConnector::ConnectSuccess)
     {
         ConnectionEstablished();
 
@@ -194,7 +196,8 @@ void SubscriberInstance::Connect()
     }
     else
     {
-        ErrorMessage("All connection attempts failed");
+        if (result == SubscriberConnector::ConnectFailed)
+            ErrorMessage("All connection attempts failed");
     }
 }
 

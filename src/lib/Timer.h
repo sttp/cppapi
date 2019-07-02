@@ -32,6 +32,7 @@ namespace sttp
 {
     class Timer;
     typedef std::function<void(Timer* timer, void* userData)> TimerElapsedCallback;
+    typedef sttp::SharedPtr<Timer> TimerPtr;
 
     class Timer // NOLINT
     {
@@ -152,6 +153,26 @@ namespace sttp
             }
 
             m_timerThread.reset();
+        }
+
+        void Wait() const
+        {
+            if (m_running && m_timerThread != nullptr)
+                m_timerThread->join();
+        }
+
+        static void EmptyCallback(Timer*, void*)
+        {            
+        }
+
+        static TimerPtr WaitTimer(const int32_t interval, bool autoStart = true)
+        {
+            TimerPtr waitTimer = NewSharedPtr<Timer>(interval, EmptyCallback);
+
+            if (autoStart)
+                waitTimer->Start();
+
+            return waitTimer;
         }
     };
 

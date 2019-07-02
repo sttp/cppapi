@@ -24,16 +24,15 @@
 //******************************************************************************************************
 
 #include "DataSubscriber.h"
-#include "../Version.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
 #include "../Convert.h"
 #include "../EndianConverter.h"
+#include "../Version.h"
 #include <sstream>
 #include <boost/bind.hpp>
 
 using namespace std;
-using namespace std::chrono;
 using namespace boost;
 using namespace boost::asio;
 using namespace boost::asio::ip;
@@ -114,19 +113,15 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 
     if (retryInterval > 0)
     {
-        IOContext io;
-
-        connector.m_timer = new SteadyTimer(io, milliseconds(retryInterval));
-        connector.m_timer->wait();
+        connector.m_timer = Timer::WaitTimer(retryInterval);
+        connector.m_timer->Wait();
 
         if (connector.m_cancel)
             return;
-        
-        delete connector.m_timer;
-        connector.m_timer = nullptr;
     }
 
-    connector.Connect(*subscriber, true);
+    if (connector.Connect(*subscriber, true) == ConnectCanceled)
+        return;
 
     // Notify the user that reconnect attempt was completed.
     if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
@@ -146,14 +141,17 @@ void SubscriberConnector::RegisterReconnectCallback(const ReconnectCallback& rec
     m_reconnectCallback = reconnectCallback;
 }
 
-bool SubscriberConnector::Connect(DataSubscriber& subscriber, const SubscriptionInfo& info)
+int SubscriberConnector::Connect(DataSubscriber& subscriber, const SubscriptionInfo& info)
 {
+    if (m_cancel)
+        return ConnectCanceled;
+
     subscriber.SetSubscriptionInfo(info);
     return Connect(subscriber, false);
 }
 
 // Begin connection sequence.
-bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecting)
+int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecting)
 {
     if (m_autoReconnect)
         subscriber.RegisterAutoReconnectCallback(&AutoReconnect);
@@ -216,21 +214,16 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
 
             if (retryInterval > 0)
             {
-                IOContext io;
-                
-                m_timer = new SteadyTimer(io, milliseconds(retryInterval));
-                m_timer->wait();
+                m_timer = Timer::WaitTimer(retryInterval);
+                m_timer->Wait();
 
                 if (m_cancel)
-                    return false;
-                
-                delete m_timer;
-                m_timer = nullptr;
+                    return ConnectCanceled;
             }
         }
     }
 
-    return subscriber.IsConnected();
+    return subscriber.IsConnected() ? ConnectSuccess : ConnectFailed;
 }
 
 // Cancel all current and
@@ -239,15 +232,9 @@ void SubscriberConnector::Cancel()
 {
     m_cancel = true;
 
+    // Cancel any waiting timer operations by setting immediate timer expiration
     if (m_timer != nullptr)
-    {
-        // Cancel any waiting timer operations by setting immediate timer expiration
-        m_timer->expires_at(SteadyTimer::time_point::min());
-        m_timer->wait();
-                
-        delete m_timer;
-        m_timer = nullptr;
-    }
+        m_timer->Stop();
 }
 
 // Sets the hostname of the publisher to connect to.

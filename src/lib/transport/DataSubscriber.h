@@ -29,6 +29,7 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "tssc/TSSCDecoder.h"
+#include "../Timer.h"
 #include "../ThreadSafeQueue.h"
 
 namespace sttp {
@@ -80,7 +81,7 @@ namespace transport
 
         std::string m_hostname;
         uint16_t m_port;
-        SteadyTimer* m_timer;
+        sttp::TimerPtr m_timer;
 
         int32_t m_maxRetries;
         int32_t m_retryInterval;
@@ -93,9 +94,13 @@ namespace transport
         // Auto-reconnect handler.
         static void AutoReconnect(DataSubscriber* subscriber);
 
-        bool Connect(DataSubscriber& subscriber, bool autoReconnecting);
+        int Connect(DataSubscriber& subscriber, bool autoReconnecting);
 
     public:
+        static constexpr int ConnectSuccess = 1;
+        static constexpr int ConnectFailed = 0;
+        static constexpr int ConnectCanceled = -1;
+
         // Creates a new instance.
         SubscriberConnector();
 
@@ -109,7 +114,7 @@ namespace transport
         void RegisterReconnectCallback(const ReconnectCallback& reconnectCallback);
 
         // Begin connection sequence
-        bool Connect(DataSubscriber& subscriber, const SubscriptionInfo& info);
+        int Connect(DataSubscriber& subscriber, const SubscriptionInfo& info);
 
         // Cancel all current and
         // future connection sequences.
