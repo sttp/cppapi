@@ -247,7 +247,7 @@ namespace sttp
     typedef boost::asio::io_context IOContext;
     typedef boost::asio::io_context::strand Strand;
     #endif
-    typedef boost::asio::deadline_timer DeadlineTimer;
+    typedef boost::asio::steady_timer SteadyTimer;
     typedef boost::asio::ip::address IPAddress;
     typedef boost::asio::ip::tcp::socket TcpSocket;
     typedef boost::asio::ip::udp::socket UdpSocket;

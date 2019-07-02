@@ -33,6 +33,7 @@
 #include <boost/bind.hpp>
 
 using namespace std;
+using namespace std::chrono;
 using namespace boost;
 using namespace boost::asio;
 using namespace boost::asio::ip;
@@ -60,6 +61,7 @@ SubscriptionInfo::SubscriptionInfo() :
 
 SubscriberConnector::SubscriberConnector() :
     m_port(0),
+    m_timer(nullptr),
     m_maxRetries(-1),
     m_retryInterval(2000),
     m_maxRetryInterval(120000),
@@ -113,8 +115,15 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     if (retryInterval > 0)
     {
         IOContext io;
-        DeadlineTimer timer(io, Milliseconds(retryInterval));
-        timer.wait();
+
+        connector.m_timer = new SteadyTimer(io, milliseconds(retryInterval));
+        connector.m_timer->wait();
+
+        if (connector.m_cancel)
+            return;
+        
+        delete connector.m_timer;
+        connector.m_timer = nullptr;
     }
 
     connector.Connect(*subscriber, true);
@@ -208,8 +217,15 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
             if (retryInterval > 0)
             {
                 IOContext io;
-                DeadlineTimer timer(io, Milliseconds(retryInterval));
-                timer.wait();
+                
+                m_timer = new SteadyTimer(io, milliseconds(retryInterval));
+                m_timer->wait();
+
+                if (m_cancel)
+                    return false;
+                
+                delete m_timer;
+                m_timer = nullptr;
             }
         }
     }
@@ -222,6 +238,16 @@ bool SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnect
 void SubscriberConnector::Cancel()
 {
     m_cancel = true;
+
+    if (m_timer != nullptr)
+    {
+        // Cancel any waiting timer operations by setting immediate timer expiration
+        m_timer->expires_at(SteadyTimer::time_point::min());
+        m_timer->wait();
+                
+        delete m_timer;
+        m_timer = nullptr;
+    }
 }
 
 // Sets the hostname of the publisher to connect to.

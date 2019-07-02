@@ -428,20 +428,17 @@ Guid sttp::ParseGuid(const uint8_t* data, bool swapEndianness)
                 copy[i] = swappedBytes[i];
         }
 
-        if (swapEndianness)
-        {
-            // Convert Microsoft encoding to RFC
-            swappedBytes[3] = copy[0];
-            swappedBytes[2] = copy[1];
-            swappedBytes[1] = copy[2];
-            swappedBytes[0] = copy[3];
+        // Convert Microsoft encoding to RFC
+        swappedBytes[3] = copy[0];
+        swappedBytes[2] = copy[1];
+        swappedBytes[1] = copy[2];
+        swappedBytes[0] = copy[3];
 
-            swappedBytes[4] = copy[5];
-            swappedBytes[5] = copy[4];
+        swappedBytes[4] = copy[5];
+        swappedBytes[5] = copy[4];
 
-            swappedBytes[6] = copy[7];
-            swappedBytes[7] = copy[6];
-        }
+        swappedBytes[6] = copy[7];
+        swappedBytes[7] = copy[6];
 
         encodedBytes = swappedBytes;
     }

@@ -80,6 +80,7 @@ namespace transport
 
         std::string m_hostname;
         uint16_t m_port;
+        SteadyTimer* m_timer;
 
         int32_t m_maxRetries;
         int32_t m_retryInterval;
