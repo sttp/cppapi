@@ -68,7 +68,6 @@ namespace transport
         sttp::data::DataSetPtr m_filteringMetadata;
         RoutingTables m_routingTables;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
-        std::unordered_set<SubscriberConnectionPtr> m_subscriberConnectionDispatchRefs;
         sttp::SharedMutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
         int32_t m_maximumAllowedConnections;
@@ -82,6 +81,11 @@ namespace transport
         std::atomic_bool m_shuttingDown;
         sttp::Mutex m_connectActionMutex;
         void* m_userData;
+
+        // Dispatch reference - unordered map needed to manage reference
+        // counts on subscriber connections since these are persisted
+        std::unordered_map<SubscriberConnectionPtr, uint32_t> m_subscriberConnectionDispatchRefs;
+        sttp::Mutex m_subscriberConnectionDispatchRefsLock;
 
         // Callback queue
         Thread m_callbackThread;

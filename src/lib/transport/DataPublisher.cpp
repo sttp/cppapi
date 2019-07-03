@@ -147,9 +147,15 @@ void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPtr connectionRef)
 {
     SubscriberConnection* connectionPtr = connectionRef.get();
+    ScopeLock lock(m_subscriberConnectionDispatchRefsLock);
 
-    // Hold onto subscriber connection shared pointer until it's delivered
-    m_subscriberConnectionDispatchRefs.emplace(connectionRef);
+    // Increment reference count for subscriber connection shared pointer until all instances are delivered
+    const auto iterator = m_subscriberConnectionDispatchRefs.find(connectionRef);
+
+    if (iterator != m_subscriberConnectionDispatchRefs.end())
+        iterator->second++;
+    else
+        m_subscriberConnectionDispatchRefs.emplace(connectionRef, uint32_t(1));
 
     return connectionPtr;
 }
@@ -157,10 +163,20 @@ SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPt
 SubscriberConnectionPtr DataPublisher::ReleaseDispatchReference(SubscriberConnection* connectionPtr)
 {
     const SubscriberConnectionPtr connectionRef = connectionPtr->GetReference();
+    ScopeLock lock(m_subscriberConnectionDispatchRefsLock);
     
-    // Remove used reference to subscriber connection pointer
-    m_subscriberConnectionDispatchRefs.erase(connectionRef);
+    // Decrement reference count to subscriber connection pointer
+    const auto iterator = m_subscriberConnectionDispatchRefs.find(connectionRef);
 
+    if (iterator != m_subscriberConnectionDispatchRefs.end())
+    {
+        iterator->second--;
+
+        // Remove references when count hits zero
+        if (iterator->second < 1)
+            m_subscriberConnectionDispatchRefs.erase(connectionRef);
+    }
+        
     return connectionRef;
 }
 

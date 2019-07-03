@@ -587,6 +587,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
             // still an associated message to be processed.
             m_subscribed = (commandCode == ServerCommand::Subscribe); //-V796
 
+        case ServerCommand::UpdateProcessingInterval:
         case ServerCommand::RotateCipherKeys:
             // Each of these responses come with a message that will
             // be delivered to the user via the status message callback.
@@ -607,7 +608,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
             // If we don't know what the message is, we can't interpret
             // the data sent with the packet. Deliver an error message
             // to the user via the error message callback.
-            messageStream << "Received success code in response to unknown server command 0x" << ToHex(commandCode);
+            messageStream << "Received success code in response to unknown server command " << ToHex(commandCode);
             DispatchErrorMessage(messageStream.str());
             break;
     }
@@ -888,6 +889,9 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
 SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef)
 {
     SignalIndexCache* signalIndexCachePtr = signalIndexCacheRef.get();
+
+    // Note that no lock is needed for m_signalIndexCacheDispatchRefs set since all calls from
+    // HandleUpdateSignalIndexCache are from a single connection and are processed sequentially
 
     // Hold onto signal index cache shared pointer until it's delivered
     m_signalIndexCacheDispatchRefs.emplace(signalIndexCacheRef);

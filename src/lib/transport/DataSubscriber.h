@@ -207,12 +207,15 @@ namespace transport
 
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
-        std::unordered_set<SignalIndexCachePtr> m_signalIndexCacheDispatchRefs;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
         tssc::TSSCDecoder m_tsscDecoder;
         bool m_tsscResetRequested;
         uint16_t m_tsscSequenceNumber;
+
+        // Dispatch reference - unordered set works fine for signal
+        // index cache since each new call will be for a new instance
+        std::unordered_set<SignalIndexCachePtr> m_signalIndexCacheDispatchRefs;
 
         // Callback thread members
         Thread m_callbackThread;
