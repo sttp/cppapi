@@ -958,7 +958,7 @@ void DataSubscriber::DispatchErrorMessage(const string& message)
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr || buffer.empty())
         return;
     
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
@@ -970,7 +970,7 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
 void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr || buffer.empty())
         return;
 
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
@@ -982,7 +982,7 @@ void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
 void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr || buffer.empty())
         return;
 
     const DataStartTimeCallback dataStartTimeCallback = source->m_dataStartTimeCallback;
@@ -997,7 +997,7 @@ void DataSubscriber::DataStartTimeDispatcher(DataSubscriber* source, const vecto
 // Dispatcher function for metadata. Provides encoded metadata to the user via the metadata callback.
 void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr) // Empty buffer OK
         return;
 
     const MetadataCallback metadataCallback = source->m_metadataCallback;
@@ -1008,21 +1008,25 @@ void DataSubscriber::MetadataDispatcher(DataSubscriber* source, const vector<uin
 
 void DataSubscriber::SubscriptionUpdatedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer)
 {
-    SignalIndexCache* signalIndexCache = *reinterpret_cast<SignalIndexCache**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SignalIndexCache* signalIndexCachePtr = *reinterpret_cast<SignalIndexCache**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (signalIndexCachePtr != nullptr)
     {
         const SubscriptionUpdatedCallback subscriptionUpdated = source->m_subscriptionUpdatedCallback;
+        const SignalIndexCachePtr signalIndexCacheRef = source->ReleaseDispatchReference(signalIndexCachePtr);
 
         if (subscriptionUpdated != nullptr)
-            subscriptionUpdated(source, source->ReleaseDispatchReference(signalIndexCache));
+            subscriptionUpdated(source, signalIndexCacheRef);
     }
 }
 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr) // Empty buffer OK
         return;
 
     const MessageCallback processingCompleteCallback = source->m_processingCompleteCallback;
@@ -1041,7 +1045,7 @@ void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const 
 // Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
 void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr) // Empty buffer OK
         return;
 
     const ConfigurationChangedCallback configurationChangedCallback = source->m_configurationChangedCallback;

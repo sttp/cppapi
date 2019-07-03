@@ -258,7 +258,7 @@ void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, uint32
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr || buffer.empty())
         return;
 
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
@@ -270,7 +270,7 @@ void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
 void DataPublisher::ErrorMessageDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
-    if (source == nullptr)
+    if (source == nullptr || buffer.empty())
         return;
 
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
@@ -281,82 +281,105 @@ void DataPublisher::ErrorMessageDispatcher(DataPublisher* source, const vector<u
 
 void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
 {
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback clientConnectedCallback = source->m_clientConnectedCallback;
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
 
         if (clientConnectedCallback != nullptr)
-            clientConnectedCallback(source, source->ReleaseDispatchReference(connection));
+            clientConnectedCallback(source, connectionRef);
     }
 }
 
 void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback clientDisconnectedCallback = source->m_clientDisconnectedCallback;
-        const SubscriberConnectionPtr subscriberConnectionRef = source->ReleaseDispatchReference(connection);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
 
         if (clientDisconnectedCallback != nullptr)
-            clientDisconnectedCallback(source, subscriberConnectionRef);
+            clientDisconnectedCallback(source, connectionRef);
 
-        source->RemoveConnection(subscriberConnectionRef);
+        source->RemoveConnection(connectionRef);
     }
 }
 
 void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_processingIntervalChangeRequestedCallback;
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
 
         if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
-            temporalProcessingIntervalChangeRequestedCallback(source, source->ReleaseDispatchReference(connection));
+            temporalProcessingIntervalChangeRequestedCallback(source, connectionRef);
     }
 }
 
 void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
 
         if (temporalSubscriptionRequestedCallback != nullptr)
-            temporalSubscriptionRequestedCallback(source, source->ReleaseDispatchReference(connection));
+            temporalSubscriptionRequestedCallback(source, connectionRef);
     }
 }
 
 void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
-    SubscriberConnection* connection = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    if (source == nullptr || buffer.empty())
+        return;
 
-    if (source != nullptr)
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+
+    if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
 
         if (temporalSubscriptionCanceledCallback != nullptr)
-            temporalSubscriptionCanceledCallback(source, source->ReleaseDispatchReference(connection));
+            temporalSubscriptionCanceledCallback(source, connectionRef);
     }
 }
 
 void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer)
 {
+    if (source == nullptr || buffer.empty())
+        return;
+
     UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(&buffer[0]));
 
-    if (source != nullptr && userCommandData != nullptr)
+    if (userCommandData != nullptr && userCommandData->connection != nullptr)
     {
         const UserCommandCallback userCommandCallback = source->m_userCommandCallback;
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(userCommandData->connection);
 
         if (userCommandCallback != nullptr)
-            userCommandCallback(source, source->ReleaseDispatchReference(userCommandData->connection), userCommandData->command, userCommandData->data);
+            userCommandCallback(source, connectionRef, userCommandData->command, userCommandData->data);
     }
 
     delete userCommandData;
@@ -364,12 +387,12 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
 
 int32_t DataPublisher::GetColumnIndex(const sttp::data::DataTablePtr& table, const std::string& columnName)
 {
-        const DataColumnPtr& column = table->Column(columnName);
+    const DataColumnPtr& column = table->Column(columnName);
     
-        if (column == nullptr)
-            throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
+    if (column == nullptr)
+        throw PublisherException("Column name \"" + columnName + "\" was not found in table \"" + table->Name() + "\"");
     
-        return column->Index();
+    return column->Index();
 }
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber)
