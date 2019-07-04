@@ -920,7 +920,7 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
 
         // Note that these client provided meta-data filter expressions are applied only to the
         // in-memory DataSet and therefore are not subject to SQL injection attacks
-        if (length > 4)
+        if (length > 4 && m_parent->m_metadata != nullptr)
         {
             const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
             index += 4;
