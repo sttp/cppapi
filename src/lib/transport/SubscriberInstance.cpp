@@ -156,6 +156,7 @@ void SubscriberInstance::ConnectAsync()
 void SubscriberInstance::Connect()
 {
     SubscriberConnector& connector = m_subscriber->GetSubscriberConnector();
+    connector.ResetConnection();
 
     // Set up helper objects (derived classes can override behavior and settings)
     SetupSubscriberConnector(connector);

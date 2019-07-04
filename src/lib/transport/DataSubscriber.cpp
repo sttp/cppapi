@@ -290,6 +290,7 @@ void SubscriberConnector::SetConnectionRefused(bool connectionRefused)
 void SubscriberConnector::ResetConnection()
 {
     m_connectAttempt = 0;
+    m_cancel = false;
 }
 
 // Gets the hostname of the publisher to connect to.
