@@ -4,7 +4,7 @@ A [data set](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataSet.h) 
 
 Data tables define of collection of [data columns](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L60) where each data column defines a name and [data type](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L32). Data columns can also be computed where its value would be derived from other columns and [functions](https://github.com/sttp/cppapi/blob/master/doc/FilterExpressions.md#filter-expression-functions) defined in an expression.
 
-Data tables also define a set of [data rows](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataRow.h) where each data row defines a record of information with a field value for each defined data column. Each field value can by `null` regardless of the defined data column type.
+Data tables also define a set of [data rows](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataRow.h) where each data row defines a record of information with a field value for each defined data column. Each field value can be `null` regardless of the defined data column type.
 
 A data set schema and associated records can be read and written data from XML documents. The XML specification used for serialization is the standard for [W3C XML Schema Definition Language (XSD)](https://www.w3.org/TR/xmlschema/). See the [ReadXml and WriteXml](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataSet.h#L80) functions.
 
