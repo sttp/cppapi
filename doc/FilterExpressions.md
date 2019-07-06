@@ -2,7 +2,7 @@
 
 Filter expressions in STTP are used to select the desired signals for subscription or to reduce available meta-data down to a desired subset. Filtering syntax is similar to [Structured Query Language](https://en.wikipedia.org/wiki/SQL) (SQL), but does not implement the full SQL language.
 
-Filter operations operate against in-memory [data set](https://github.com/sttp/cppapi/blob/master/src/lib/data), not a backend database. The filtering syntax used in conjunction with a data set is designed for read-only operations and exposes no update functionality. Because of this, filter operations are not subject to SQL injection attacks or other security concerns typically associated with SQL implementations.
+Filter expressions operate against in-memory [data set](https://github.com/sttp/cppapi/blob/master/src/lib/data), not a backend database. The filtering syntax used in conjunction with a data set is designed for read-only operations and exposes no update functionality. Because of this, filter operations are not subject to SQL injection attacks or other security concerns typically associated with SQL implementations.
 
 STTP data publishers need to define a data set consisting of a collection of data tables representing the [primary meta-data](#primary-meta-data-table-definitions) from locally defined configurations that contain information about the time-series style data to be published. At a minimum this meta-data should define a [Guid](https://en.wikipedia.org/wiki/Universally_unique_identifier) based identifier for each [measurement](#measurementdetail) to be published as well as an associated source, i.e., a [device](#devicedetail), that produces the measurement.
 
