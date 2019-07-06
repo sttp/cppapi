@@ -2,7 +2,7 @@
 
 A [data set](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataSet.h) represents an in-memory cache of records that is structured similarly to information defined in a database. The data set object consists of a collection of [data table](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataTable.h) objects.
 
-Data tables define of collection of [data columns](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L60) where each data column defines a name and [data type](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L32). Data columns can also be a computed where its value would be derived from other columns and [functions](https://github.com/sttp/cppapi/blob/master/doc/FilterExpressions.md#filter-expression-functions) defined in an expression.
+Data tables define of collection of [data columns](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L60) where each data column defines a name and [data type](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataColumn.h#L32). Data columns can also be computed where its value would be derived from other columns and [functions](https://github.com/sttp/cppapi/blob/master/doc/FilterExpressions.md#filter-expression-functions) defined in an expression.
 
 Data tables also define a set of [data rows](https://github.com/sttp/cppapi/blob/master/src/lib/data/DataRow.h) where each data row defines a record of information with a field value for each defined data column. Each field value can by `null` regardless of the defined data column type.
 
