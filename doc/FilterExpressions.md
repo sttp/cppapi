@@ -95,7 +95,7 @@ Data publishers can define multiple tables that represent sets of measurements a
 
 Signal selection tables should represent a simple flattened "_view_" of available meta-data with as many fields as needed to be useful for measurement selection operations. See usage of `ActiveMeasurements` in [examples](#examples).
 
-### ActiveMeasurements
+### _ActiveMeasurements_
 
 The `ActiveMeasurements` table is always expected to be defined. This table represents all measurements considered _active_ and _available_ for subscription. If a data publisher is controlling access to measurements on a per-subscriber basis, this table should only include the measurements the subscriber is allowed to request for subscription.
 
@@ -136,7 +136,7 @@ Outside the expected `ActiveMeasurements` signal selection meta-data table defin
 
 The STTP data publisher API currently defines three primary data tables to define enough useful meta-data to allow a measurement data subscription to be converted into another protocol, e.g., [IEEE C37.118](https://standards.ieee.org/standard/C37_118_1-2011.html). When these tables are defined, the data publisher API will auto-generate the `ActiveMeasurements` table from the provided data.
 
-### DeviceDetail
+### _DeviceDetail_
 
 This meta-data table contains details about the devices that are the sources of available measurements. By convention, [measurements](#measurementdetail) that are not associated with a device are not sent in meta-data exchanges.
 
