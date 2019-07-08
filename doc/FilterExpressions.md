@@ -75,8 +75,8 @@ Any operators that consist of letters, e.g., `OR`, are not case sensitive, so `O
 | Less Than or Equal | `<=` |
 | Greater Than | `>` |
 | Greater Than or Equal | `>=` |
-| Equal | `=` or `==` or [`===`](#case_sensitive_comparison_operators) |
-| Not Equal | `!=` or `<>` or [`!==`](#case_sensitive_comparison_operators) |
+| Equal | `=` or `==` or [`===`](#case-sensitive-comparison-operators) |
+| Not Equal | `!=` or `<>` or [`!==`](#case-sensitive-comparison-operators) |
 
 #### Logical Operators
 
