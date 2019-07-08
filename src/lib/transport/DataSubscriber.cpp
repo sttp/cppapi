@@ -1256,7 +1256,10 @@ void DataSubscriber::Disconnect(bool autoReconnecting)
 {
     // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
     if (!autoReconnecting)
+    {
+        m_connector.Cancel();
         m_connectActionMutex.lock();
+    }
 
     ErrorCode error;
 
@@ -1298,7 +1301,6 @@ void DataSubscriber::Disconnect(bool autoReconnecting)
     }
     else
     {
-        m_connector.Cancel();
         m_commandChannelService.stop();
     }
 
