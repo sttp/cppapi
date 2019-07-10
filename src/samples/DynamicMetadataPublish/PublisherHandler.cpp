@@ -75,7 +75,7 @@ void PublisherHandler::ClientDisconnected(const SubscriberConnectionPtr& connect
 void PublisherHandler::DefineMetadata(int32_t devices)
 {
     static int32_t accessID = 1;
-    static int32_t runtimeIndex = 1;
+    int32_t runtimeIndex = 1;
 
     WriterLock writeLock(m_measurementUpdateLock);
 

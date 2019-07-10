@@ -28,7 +28,7 @@ using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
 
-Mutex SubscriberHandler::s_coutLock {};
+Mutex SubscriberHandler::s_coutLock{};
 
 SubscriberHandler::SubscriberHandler(string name) :
     m_name(std::move(name)),
@@ -57,16 +57,16 @@ void SubscriberHandler::SetupSubscriberConnector(SubscriberConnector& connector)
     // TODO: Customize subscriber connector properties as desired...
 
     //// Enable auto-reconnect sequence:
-    //connector.SetAutoReconnect(true);
+    connector.SetAutoReconnect(true);
 
     //// Set maximum number to attempt reconnection, -1 means never stop retrying connection attempts:
-    //connector.SetMaxRetries(-1);
-    //
+    connector.SetMaxRetries(-1);
+
     //// Set number of initial milliseconds to wait before retrying connection attempt:
-    //connector.SetRetryInterval(2000);
-    //
-    //// Set maximum number of milliseconds to wait before retrying connection attempt, connection retry attempts use exponential back-off algorithm up to this defined maximum:
-    //connector.SetMaxRetryInterval(120000);
+    connector.SetRetryInterval(5000);
+
+    // Set maximum number of milliseconds to wait before retrying connection attempt, connection retry attempts use exponential back-off algorithm up to this defined maximum:
+    connector.SetMaxRetryInterval(10000);
 }
 
 void SubscriberHandler::StatusMessage(const string& message)
@@ -89,7 +89,7 @@ void SubscriberHandler::ErrorMessage(const string& message)
     // For now, the base class just displays to console:
     stringstream status;
 
-    status << "[" << m_name << "] " << message;
+    status << "[" << m_name << "] " << ToString(UtcNow()) << " " << message;
 
     // Calls can come from multiple threads, so we impose a simple lock before write to console
     s_coutLock.lock();
@@ -123,66 +123,69 @@ void SubscriberHandler::ParsedMetadata()
 
 // ReSharper disable CppDeclaratorNeverUsed
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
-{
-    // TODO: The following code could be used to generate frame based output, e.g., for IEEE C37.118
-    // Start processing measurements
-    //for (auto &measurement : measurements)
-    //{
-    //    // Get adjusted value
-    //    const float64_t value = measurement->AdjustedValue();
-
-    //    // Get timestamp
-    //    DateTime timestamp = measurement->GetDateTime();
-
-    //    // Handle per measurement quality flags
-    //    int32_t qualityFlags = measurement->Flags;
-
-    //    ConfigurationFramePtr configurationFrame;
-    //    MeasurementMetadataPtr measurementMetadata;
-
-    //    // Find associated configuration for measurement
-    //    if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
-    //    {
-    //        // Lookup measurement metadata - it's faster to find metadata from within configuration frame
-    //        if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
-    //        {
-    //            const SignalReference& reference = measurementMetadata->Reference;
-
-    //            // reference.Acronym	<< target device acronym 
-    //            // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
-    //            // reference.Index    << for Phasors, Analogs and Digitals - this is the ordered "index"
-
-    //            // TODO: Handle measurement processing here...
-    //        }
-    //    }
-    //    else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))
-    //    {
-    //        // Received measurement is not part of a defined configuration frame, e.g., a statistic
-    //        const SignalReference& reference = measurementMetadata->Reference;
-    //    }
-    //}
-
-    // TODO: *** Temporary Testing Code Below *** -- REMOVE BEFORE USE
+{   
     static const uint64_t interval = 10 * 60;
+    static const uint64_t maxToShow = 20;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
+    uint64_t shown = 0;
 
     m_processCount += measurementCount;
 
-    // Only display messages every few seconds
     if (showMessage)
     {
         stringstream message;
 
         message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
-        message << ToString(measurements[0]->GetDateTime())  << endl;        
-        message << "Signal ID: " << ToString(measurements[0]->SignalID) << endl;
-        message << "\tPoint\tValue" << endl;
 
-        for (const auto& measurement : measurements)
-            message << '\t' << measurement->ID << '\t' << measurement->Value << endl;
+        if (measurementCount > 0)
+            message << ToString(measurements[0]->GetDateTime()) << endl;
 
-        StatusMessage(message.str());
+        message << "\tRuntime-ID\tMeta-data ID\tValue\t\tType\tSignalID" << endl;
+
+        // Start processing measurements
+        for (auto &measurement : measurements)
+        {
+            if (shown++ > maxToShow)
+                break;
+
+            // Get adjusted value
+            //const float64_t value = measurement->AdjustedValue();
+
+            // Get timestamp
+            //datetime_t timestamp = measurement->GetDateTime();
+
+            // Handle per measurement quality flags
+            //MeasurementStateFlags qualityFlags = measurement->Flags;
+
+            ConfigurationFramePtr configurationFrame;
+            MeasurementMetadataPtr measurementMetadata;
+
+            // Find associated configuration for measurement
+            if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
+            {
+                // Lookup measurement metadata - it's faster to find metadata from within configuration frame
+                if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
+                {
+                    const SignalReference& reference = measurementMetadata->Reference;
+
+                    // reference.Acronym	<< target device acronym 
+                    // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
+                    // reference.Index    << for Phasors, Analogs and Digitals - this is the ordered "index"
+
+                    message << '\t' << measurement->ID << '\t' << '\t' << measurementMetadata->ID << '\t' << '\t' << measurement->Value << fixed << setprecision(3) << '\t' << '\t' << SignalKindAcronym[reference.Kind] << '\t' << ToString(measurement->SignalID) << endl;
+                }
+            }
+            //else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))
+            //{
+            //    // Received measurement is not part of a defined configuration frame, e.g., a statistic
+            //    const SignalReference& reference = measurementMetadata->Reference;
+            //}
+        }
+
+        // Only display messages every few seconds
+        if (showMessage)
+            StatusMessage(message.str());
     }
 }
 
@@ -203,7 +206,7 @@ void SubscriberHandler::HistoricalReadComplete()
 
 void SubscriberHandler::ConnectionEstablished()
 {
-    StatusMessage("Connection established.");    
+    StatusMessage("Connection established.");
 }
 
 void SubscriberHandler::ConnectionTerminated()
