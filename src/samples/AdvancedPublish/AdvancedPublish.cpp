@@ -169,15 +169,15 @@ int main(int argc, char* argv[])
     const bool genHistory = argc > 2 && IsEqual(argv[2], "GenHistory");
 
     // Run the publisher.
-    if (RunPublisher(port, genHistory))
-    {
-        // Wait until the user presses enter before quitting.
-        string line;
-        getline(cin, line);
+    const bool publisherRunning = RunPublisher(port, genHistory);
 
-        // Stop data publication
+    // Wait until the user presses enter before quitting.
+    string line;
+    getline(cin, line);
+
+    // Stop data publication
+    if (publisherRunning)
         PublishTimer->Stop();
-    }
 
     if (genHistory)
         HistoryGenerator->StopArchive();
