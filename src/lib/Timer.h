@@ -80,6 +80,11 @@ namespace sttp
             Stop();
         }
 
+        bool IsRunning() const
+        {
+            return m_running;
+        }
+
         int32_t GetInterval() const
         {
             return m_interval;
@@ -160,7 +165,7 @@ namespace sttp
 
         void Wait() const
         {
-            if (m_running && m_timerThread != nullptr)
+            if (m_timerThread != nullptr)
                 m_timerThread->join();
         }
 

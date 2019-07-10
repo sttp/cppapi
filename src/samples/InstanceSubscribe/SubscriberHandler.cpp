@@ -56,17 +56,17 @@ void SubscriberHandler::SetupSubscriberConnector(SubscriberConnector& connector)
 
     // TODO: Customize subscriber connector properties as desired...
 
-    //// Enable auto-reconnect sequence:
-    connector.SetAutoReconnect(true);
+    // Enable auto-reconnect sequence:
+    //connector.SetAutoReconnect(true);
 
-    //// Set maximum number to attempt reconnection, -1 means never stop retrying connection attempts:
-    connector.SetMaxRetries(-1);
+    // Set maximum number to attempt reconnection, -1 means never stop retrying connection attempts:
+    //connector.SetMaxRetries(-1);
 
-    //// Set number of initial milliseconds to wait before retrying connection attempt:
-    connector.SetRetryInterval(5000);
+    // Set number of initial milliseconds to wait before retrying connection attempt:
+    //connector.SetRetryInterval(2000);
 
     // Set maximum number of milliseconds to wait before retrying connection attempt, connection retry attempts use exponential back-off algorithm up to this defined maximum:
-    connector.SetMaxRetryInterval(10000);
+    //connector.SetMaxRetryInterval(30000);
 }
 
 void SubscriberHandler::StatusMessage(const string& message)
