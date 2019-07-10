@@ -1114,10 +1114,10 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
         const DataRowPtr& row = rows[i];
         const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();        
         string source;
-        uint32_t id;
+        uint64_t id;
 
         ParseMeasurementKey(row->ValueAsString(idColumn).GetValueOrDefault(), source, id);
-        signalIndexCache->AddMeasurementKey(uint16_t(i), signalID, source, id, charSizeEstimate);
+        signalIndexCache->AddMeasurementKey(int32_t(i), signalID, source, id, charSizeEstimate);
     }
 
     success = true;

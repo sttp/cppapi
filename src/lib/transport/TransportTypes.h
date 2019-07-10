@@ -154,7 +154,7 @@ namespace transport
     std::string GetProtocolType(const std::string& protocolName);
 
     // Parses a measurement key in the format of "Source:ID" into its parts
-    void ParseMeasurementKey(const std::string& key, std::string& source, uint32_t& id);
+    void ParseMeasurementKey(const std::string& key, std::string& source, uint64_t& id);
 
     // Helper function to parse signal kind
     SignalKind ParseSignalKind(const std::string& acronym);

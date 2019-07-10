@@ -384,6 +384,20 @@ bool sttp::TryParseInt64(const string& value, int64_t& result, const int64_t def
     }
 }
 
+bool sttp::TryParseUInt64(const string& value, uint64_t& result, const uint64_t defaultValue)
+{
+    try
+    {
+        result = stoull(value);
+        return true;
+    }
+    catch (...)
+    {
+        result = defaultValue;
+        return false;
+    }
+}
+
 bool sttp::TryParseDouble(const string& value, float64_t& result, const float64_t defaultValue)
 {
     try

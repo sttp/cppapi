@@ -268,19 +268,42 @@ std::string sttp::transport::GetProtocolType(const std::string& protocolName)
     return "Frame";
 }
 
-void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& source, uint32_t& id)
+void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& source, uint64_t& id)
 {
     const vector<string> parts = Split(key, ":");
+    const size_t length = parts.size();
 
-    if (parts.size() == 2)
+    if (length == 2)
     {
-        source = parts[0];
-        id = uint32_t(stoul(parts[1]));
+        source =  parts[0];
+        id = uint64_t(stoull(parts[1]));
+    }
+    else if (length > 2)
+    {
+        stringstream sourceParts;
+
+        for (size_t i = 0; i < length - 1; i++)
+        {
+            if (i > 0)
+                sourceParts << ':';
+
+            sourceParts << source;
+        }
+
+        source =  sourceParts.str();
+        id = uint64_t(stoull(parts[length - 1]));
     }
     else
     {
-        source = parts[0];
-        id = UInt32::MaxValue;
+        if (TryParseUInt64(key, id))
+        {
+            source = Empty::String;
+        }
+        else
+        {
+            source = key;
+            id = UInt64::MaxValue;
+        }
     }
 }
 
