@@ -43,19 +43,19 @@ int main(int argc, char* argv[])
     {
         cout << "Usage:" << endl;
         cout << "    InstancePublish PORT [AutoUpdateMetadata?]" << endl;
+        return 0;
     }
-    else
-    {
-        // Get port.
-        stringstream(argv[1]) >> port;
-    }
+
+    // Get port.
+    stringstream(argv[1]) >> port;
 
     if (argc > 2)
         autoUpdateMetadata = ParseBoolean(argv[2]);
     else
-        autoUpdateMetadata = true;
+        autoUpdateMetadata = false;
 
     PublisherHandler* publisher = new PublisherHandler("Publisher");
+    string line;
     
     if (publisher->Start(port, false))
     {
@@ -72,29 +72,28 @@ int main(int argc, char* argv[])
                     publisher->StatusMessage("Metadata update timer stopped: reached configured device limit of " + ToString(MaxDeviceCount) + ".");
                 }
             },
-                true);
+            true);
 
             metadataUpdate.Start();
 
-            string line;
             getline(cin, line);
 
             metadataUpdate.Stop();
         }
         else
         {
-            int key = 0;
+            cout << "At any time, enter the number of devices to define in meta-data and press enter to update meta-data. Type 'exit' and press enter to quit.\r\n\r\n";
 
-            while (key != 10)
+            getline(cin, line);
+
+            while (line != "exit")
             {
-                // Space bar then Enter will update metadata
-                if (key == 32)
-                {
-                    publisher->DefineMetadata(++deviceCount);
-                    getchar();
-                }
+                int32_t devices;
 
-                key = getchar();
+                if (TryParseInt32(line, devices))
+                    publisher->DefineMetadata(devices);
+
+                getline(cin, line);                
             }
         }
     }

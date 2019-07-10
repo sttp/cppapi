@@ -85,8 +85,12 @@ void PublisherHandler::DefineMetadata(int32_t devices)
     // these Guid values would need to persist between runs defining a permanent association between the
     // defined metadata and the identifier...
 
+    m_deviceMetadata.clear();
+    m_measurementMetadata.clear();
+    m_phasorMetadata.clear();
+
     // Add device metadata incrementally so that Guids remain consistent for duration of publisher lifetime...
-    for (int32_t i = static_cast<int>(m_deviceMetadata.size()); i < devices; i++)
+    for (int32_t i = 0; i < devices; i++)
     {
         DeviceMetadataPtr device1Metadata = NewSharedPtr<DeviceMetadata>();
         const datetime_t timestamp = UtcNow();
@@ -174,6 +178,8 @@ void PublisherHandler::DefineMetadata(int32_t devices)
 
     // Pass meta-data to publisher instance for proper conditioning
     PublisherInstance::DefineMetadata(m_deviceMetadata, m_measurementMetadata, m_phasorMetadata, m_metadataVersion);
+
+    StatusMessage("Meta-data update complete.");
 }
 
 bool PublisherHandler::Start(uint16_t port, bool ipV6)
@@ -242,13 +248,13 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
         // Publish measurements
         PublishMeasurements(measurements);
 
-        // Display a processing message every few seconds
-        const bool showMessage = m_processCount + count >= (m_processCount / interval + 1) * interval && GetTotalMeasurementsSent() > 0;
-        m_processCount += count;
+        //// Display a processing message every few seconds
+        //const bool showMessage = m_processCount + count >= (m_processCount / interval + 1) * interval && GetTotalMeasurementsSent() > 0;
+        //m_processCount += count;
 
 
-        if (showMessage)
-            StatusMessage(ToString(GetTotalMeasurementsSent()) + " measurements published so far...\n");
+        //if (showMessage)
+        //    StatusMessage(ToString(GetTotalMeasurementsSent()) + " measurements published so far...\n");
     },
     true);
 
