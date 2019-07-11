@@ -130,7 +130,7 @@ namespace sttp
     uint32_t ThreadSafeQueue<T>::Size()
     {
         ScopeLock lock(m_mutex);
-        return m_queue.size();
+        return ConvertUInt32(m_queue.size());
     }
 
     // Waits for data to be inserted into the queue.

@@ -249,7 +249,7 @@ void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, uint32
     userCommandData->connection = connection;
     userCommandData->command = command;
 
-    for (size_t i = 0; i < length; i++)
+    for (uint32_t i = 0; i < length; i++)
         userCommandData->data.push_back(data[i]);
 
     Dispatch(&UserCommandDispatcher, reinterpret_cast<uint8_t*>(&userCommandData), 0, sizeof(UserCommandData**));
@@ -289,7 +289,7 @@ void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vecto
     if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback clientConnectedCallback = source->m_clientConnectedCallback;
-        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr); //-V821
 
         if (clientConnectedCallback != nullptr)
             clientConnectedCallback(source, connectionRef);
@@ -325,7 +325,7 @@ void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* s
     if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalProcessingIntervalChangeRequestedCallback = source->m_processingIntervalChangeRequestedCallback;
-        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr); //-V821
 
         if (temporalProcessingIntervalChangeRequestedCallback != nullptr)
             temporalProcessingIntervalChangeRequestedCallback(source, connectionRef);
@@ -342,7 +342,7 @@ void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* sourc
     if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalSubscriptionRequestedCallback = source->m_temporalSubscriptionRequestedCallback;
-        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr); //-V821
 
         if (temporalSubscriptionRequestedCallback != nullptr)
             temporalSubscriptionRequestedCallback(source, connectionRef);
@@ -359,7 +359,7 @@ void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source
     if (connectionPtr != nullptr)
     {
         const SubscriberConnectionCallback temporalSubscriptionCanceledCallback = source->m_temporalSubscriptionCanceledCallback;
-        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(connectionPtr); //-V821
 
         if (temporalSubscriptionCanceledCallback != nullptr)
             temporalSubscriptionCanceledCallback(source, connectionRef);
@@ -376,7 +376,7 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
     if (userCommandData != nullptr && userCommandData->connection != nullptr)
     {
         const UserCommandCallback userCommandCallback = source->m_userCommandCallback;
-        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(userCommandData->connection);
+        const SubscriberConnectionPtr connectionRef = source->ReleaseDispatchReference(userCommandData->connection); //-V821
 
         if (userCommandCallback != nullptr)
             userCommandCallback(source, connectionRef, userCommandData->command, userCommandData->data);

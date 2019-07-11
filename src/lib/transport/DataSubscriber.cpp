@@ -1036,7 +1036,7 @@ void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const 
     {
         stringstream messageStream;
 
-        for (uint32_t i = 0; i < buffer.size(); ++i)
+        for (uint32_t i = 0; i < ConvertUInt32(buffer.size()); ++i)
             messageStream << buffer[i];
 
         processingCompleteCallback(source, messageStream.str());

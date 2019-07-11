@@ -64,7 +64,7 @@ namespace data
 
         const DataColumnPtr& operator[](const std::string& columnName) const;
 
-        const DataColumnPtr& operator[](int32_t index) const;
+        const DataColumnPtr& operator[](int32_t index) const; //-V302
 
         DataColumnPtr CreateColumn(const std::string& name, DataType type, std::string expression = std::string{});
 

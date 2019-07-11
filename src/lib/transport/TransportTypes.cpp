@@ -64,6 +64,8 @@ Measurement::Measurement() :
 Measurement::Measurement(const SimpleMeasurement& source) :
     SignalID(source.SignalID),
     Value(source.Value),
+    Adder(0.0),
+    Multiplier(1.0),
     Timestamp(source.Timestamp),
     Flags(source.Flags),
     ID(0LL)
