@@ -851,7 +851,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     m_commandChannelService.restart();
 #endif
 
-    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false);
+    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false); //-V601
     
     // Run call-back thread
     m_commandChannelAcceptThread = Thread([&,this]

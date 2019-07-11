@@ -51,6 +51,7 @@ namespace transport
         std::unordered_map<Guid, MeasurementMetadataPtr> m_measurements;
         sttp::StringMap<DeviceMetadataPtr> m_devices;
         sttp::StringMap<ConfigurationFramePtr> m_configurationFrames;
+        sttp::Thread m_connectThread;
 
         Mutex m_configurationUpdateLock;
         void* m_userData;

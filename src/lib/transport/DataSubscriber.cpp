@@ -413,7 +413,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
         return;
     }
 
@@ -451,7 +451,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
         return;
     }
 
@@ -1017,7 +1017,7 @@ void DataSubscriber::SubscriptionUpdatedDispatcher(DataSubscriber* source, const
     if (signalIndexCachePtr != nullptr)
     {
         const SubscriptionUpdatedCallback subscriptionUpdated = source->m_subscriptionUpdatedCallback;
-        const SignalIndexCachePtr signalIndexCacheRef = source->ReleaseDispatchReference(signalIndexCachePtr);
+        const SignalIndexCachePtr signalIndexCacheRef = source->ReleaseDispatchReference(signalIndexCachePtr); //-V821
 
         if (subscriptionUpdated != nullptr)
             subscriptionUpdated(source, signalIndexCacheRef);
@@ -1258,6 +1258,7 @@ void DataSubscriber::Disconnect(bool autoReconnecting)
     if (!autoReconnecting)
     {
         m_connector.Cancel();
+        m_connectionTerminationThread.join();
         m_connectActionMutex.lock();
     }
 
@@ -1504,7 +1505,7 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, size_t bytesTransferre
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
         return;
     }
 

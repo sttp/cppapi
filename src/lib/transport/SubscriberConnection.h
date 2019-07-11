@@ -101,6 +101,7 @@ namespace transport
 
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
+        sttp::SharedMutex m_signalIndexCacheLock;
         TimerPtr m_baseTimeRotationTimer;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
@@ -110,7 +111,6 @@ namespace transport
         sttp::Mutex m_latestMeasurementsLock;
         TimerPtr m_throttledPublicationTimer;
         tssc::TSSCEncoder m_tsscEncoder;
-        sttp::Mutex m_tsscEncoderLock;
         uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
         bool m_tsscResetRequested;
         uint16_t m_tsscSequenceNumber;
@@ -247,7 +247,7 @@ namespace transport
         void SetSubscriptionInfo(const std::string& value);
 
         // Gets or sets signal index cache for subscriber representing run-time mappings for subscribed points
-        const SignalIndexCachePtr& GetSignalIndexCache() const;
+        const SignalIndexCachePtr& GetSignalIndexCache();
         void SetSignalIndexCache(SignalIndexCachePtr signalIndexCache);
 
         // Statistical functions

@@ -50,7 +50,15 @@ namespace sttp
 
             do
             {
-                boost::this_thread::sleep(boost::posix_time::milliseconds(m_interval));
+                try
+                {
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(m_interval));
+                }
+                catch (boost::thread_interrupted&)
+                {
+                    m_running = false;
+                    return;
+                }
 
                 if (m_running)
                     m_callback(this, m_userData);

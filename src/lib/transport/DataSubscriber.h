@@ -220,6 +220,7 @@ namespace transport
         // Callback thread members
         Thread m_callbackThread;
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
+        Thread m_connectionTerminationThread;
 
         // Command channel
         Thread m_commandChannelResponseThread;

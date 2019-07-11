@@ -342,17 +342,24 @@ void SubscriberConnection::SetSubscriptionInfo(const string& value)
     m_subscriptionInfo = source + " version " + version + " updated on " + updatedOn;
 }
 
-const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache() const
+const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache()
 {
+    ReaderLock readLock(m_signalIndexCacheLock);
+
     return m_signalIndexCache;
 }
 
 void SubscriberConnection::SetSignalIndexCache(SignalIndexCachePtr signalIndexCache)
 {
+    WriterLock writeLock(m_signalIndexCacheLock);
+
     m_signalIndexCache = std::move(signalIndexCache);
 
     // Update measurement routes for newly subscribed measurement signal IDs
     m_parent->m_routingTables.UpdateRoutes(shared_from_this(), m_signalIndexCache->GetSignalIDs());
+
+    // Reset TSSC encoder on successful (re)subscription
+    m_tsscResetRequested = true;
 }
 
 uint64_t SubscriberConnection::GetTotalCommandChannelBytesSent() const
@@ -748,14 +755,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
                         SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
                     }
-                   
-                    m_tsscEncoderLock.lock();
 
-                    // Reset TSSC encoder on successful (re)subscription
-                    m_tsscResetRequested = true;
                     SetSignalIndexCache(signalIndexCache);
-
-                    m_tsscEncoderLock.unlock();
 
                     // If using compact measurement format with base time offsets, setup base time rotation timer
                     if (!m_usingPayloadCompression && m_parent->GetUseBaseTimeOffsets() && m_includeTime)
@@ -1126,7 +1127,8 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
 
 void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
-    CompactMeasurement serializer(m_signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
+    const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
+    CompactMeasurement serializer(signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
     vector<uint8_t> packet, buffer;
     int32_t count = 0;
 
@@ -1137,7 +1139,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
     {
         const Measurement& measurement = *measurements[i];
         const int64_t timestamp = measurement.Timestamp;
-        const int32_t runtimeID = m_signalIndexCache->GetSignalIndex(measurement.SignalID);
+        const int32_t runtimeID = signalIndexCache->GetSignalIndex(measurement.SignalID);
 
         if (runtimeID == Int32::MaxValue)
             continue;
@@ -1193,7 +1195,7 @@ void SubscriberConnection::PublishCompactDataPacket(const vector<uint8_t>& packe
 
 void SubscriberConnection::PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
-    m_tsscEncoderLock.lock();
+    const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
 
     if (m_tsscResetRequested)
     {
@@ -1216,7 +1218,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
     for (const auto& measurement : measurements)
     {
-        const int32_t index = m_signalIndexCache->GetSignalIndex(measurement->SignalID);
+        const int32_t index = signalIndexCache->GetSignalIndex(measurement->SignalID);
 
         if (!m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue())))
         {
@@ -1231,8 +1233,6 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
     if (count > 0)
         PublishTSSCDataPacket(count);
-
-    m_tsscEncoderLock.unlock();
 }
 
 void SubscriberConnection::PublishTSSCDataPacket(int32_t count)

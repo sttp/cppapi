@@ -58,7 +58,10 @@ SubscriberInstance::SubscriberInstance() :
 
 SubscriberInstance::~SubscriberInstance()
 {
-    m_subscriber.reset();
+    if (m_subscriber != nullptr)
+        m_subscriber->Disconnect();
+
+    m_connectThread.join();
 }
 
 // public functions
@@ -150,7 +153,7 @@ void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
 
 void SubscriberInstance::ConnectAsync()
 {
-    Thread(bind(&SubscriberInstance::Connect, this));
+    m_connectThread = Thread(bind(&SubscriberInstance::Connect, this));
 }
 
 void SubscriberInstance::Connect()
