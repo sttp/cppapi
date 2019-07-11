@@ -289,7 +289,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
             if (i > 0)
                 sourceParts << ':';
 
-            sourceParts << source;
+            sourceParts << parts[i];
         }
 
         source =  sourceParts.str();
