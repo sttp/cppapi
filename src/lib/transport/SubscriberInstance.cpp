@@ -364,6 +364,73 @@ void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetad
     nullptr);
 }
 
+PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceName(const string& deviceName, int32_t const sourceIndex, bool ignoreCase)
+{
+    DeviceMetadataPtr deviceMetadata = nullptr;
+
+    m_configurationUpdateLock.lock();
+
+    for (auto const& item : m_devices)
+    {
+        if (IsEqual(item.second->Name, deviceName, ignoreCase))
+        {
+            deviceMetadata = item.second;
+            break;
+        }
+    }
+
+    m_configurationUpdateLock.unlock();
+
+    if (deviceMetadata == nullptr)
+        return nullptr;
+
+    return GetPhasorBySourceIndex(deviceMetadata->Phasors, sourceIndex);
+}
+
+PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceID(const Guid& uniqueID, const int32_t sourceIndex)
+{
+    DeviceMetadataPtr deviceMetadata = nullptr;
+
+    m_configurationUpdateLock.lock();
+
+    for (auto const& item : m_devices)
+    {
+        if (item.second->UniqueID == uniqueID)
+        {
+            deviceMetadata = item.second;
+            break;
+        }
+    }
+
+    m_configurationUpdateLock.unlock();
+
+    if (deviceMetadata == nullptr)
+        return nullptr;
+
+    return GetPhasorBySourceIndex(deviceMetadata->Phasors, sourceIndex);
+}
+
+PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceAcronym(const string& deviceAcronym, const int32_t sourceIndex)
+{
+    DeviceMetadataPtr deviceMetadata;
+    
+    if (TryGetDeviceMetadata(deviceAcronym, deviceMetadata))
+        return GetPhasorBySourceIndex(deviceMetadata->Phasors, sourceIndex);
+
+    return nullptr;
+}
+
+PhasorReferencePtr SubscriberInstance::GetPhasorBySourceIndex(const vector<PhasorReferencePtr>& phasorReferences, int32_t sourceIndex) const
+{
+    for (auto const& phasorReference: phasorReferences)
+    {
+        if (phasorReference->Phasor->SourceIndex == sourceIndex)
+            return phasorReference;
+    }
+
+    return nullptr;
+}
+
 bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, DeviceMetadataPtr& deviceMetadata)
 {
     bool found = false;

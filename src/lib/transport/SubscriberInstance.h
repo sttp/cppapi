@@ -56,7 +56,7 @@ namespace transport
         Mutex m_configurationUpdateLock;
         void* m_userData;
 
-        void SendMetadataRefreshCommand();
+        void SendMetadataRefreshCommand();        
 
         static void ConstructConfigurationFrames(const sttp::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, sttp::StringMap<ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
@@ -237,6 +237,12 @@ namespace transport
         // Safely get parsed measurements (accessed after successful auto-parse),
         // vector will be cleared then appended to with copy of all parsed data
         void GetParsedMeasurementMetadata(std::map<Guid, MeasurementMetadataPtr>& measurements);
+
+        // Phasor data lookup functions
+        PhasorReferencePtr GetPhasorByDeviceName(const std::string& deviceName, int32_t sourceIndex, bool ignoreCase = true);
+        PhasorReferencePtr GetPhasorByDeviceID(const sttp::Guid& uniqueID, int32_t sourceIndex);
+        PhasorReferencePtr GetPhasorByDeviceAcronym(const std::string& deviceAcronym, int32_t sourceIndex);
+        PhasorReferencePtr GetPhasorBySourceIndex(const std::vector<PhasorReferencePtr>& phasorReferences, int32_t sourceIndex) const;
 
         // Metadata record lookup functions (post-parse)
         bool TryGetDeviceMetadata(const std::string& deviceAcronym, DeviceMetadataPtr& deviceMetadata);
