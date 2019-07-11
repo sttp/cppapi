@@ -49,21 +49,26 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleSubscribe", "samples\
 		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution docs", "solution docs", "{ED33BF83-3D08-4D02-89E8-1ADD916E8F14}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicMetadataPublish", "samples\DynamicMetadataPublish\DynamicMetadataPublish.vcxproj", "{DFBE36C4-1542-428D-9CA0-DE57D8A5192F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{25907C49-1084-4A33-93BD-E0F01469651D}"
 	ProjectSection(SolutionItems) = preProject
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B041A470-DEE9-4BBE-9746-D191F3472D05}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{4AFD4846-A95B-426F-839D-D2204C236BAF}"
 	ProjectSection(SolutionItems) = preProject
-		CMakeLists.txt = CMakeLists.txt
-		README.txt = README.txt
+		..\doc\FilterExpressions.md = ..\doc\FilterExpressions.md
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicMetadataPublish", "samples\DynamicMetadataPublish\DynamicMetadataPublish.vcxproj", "{DFBE36C4-1542-428D-9CA0-DE57D8A5192F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A6E76664-BD9B-4202-BFE2-AB3E6AA77DEE}"
+	ProjectSection(SolutionItems) = preProject
+		CMakeLists.txt = CMakeLists.txt
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
@@ -168,8 +173,9 @@ Global
 		{8BACFA38-D7B5-4302-A7F2-FF91306FB4A4} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{9819647C-63A0-4E1B-861F-7627FA6C6EB1} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{24578FF4-CAC8-4794-A914-3307149BEA62} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
-		{B041A470-DEE9-4BBE-9746-D191F3472D05} = {ED33BF83-3D08-4D02-89E8-1ADD916E8F14}
 		{DFBE36C4-1542-428D-9CA0-DE57D8A5192F} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
+		{25907C49-1084-4A33-93BD-E0F01469651D} = {4AFD4846-A95B-426F-839D-D2204C236BAF}
+		{A6E76664-BD9B-4202-BFE2-AB3E6AA77DEE} = {4AFD4846-A95B-426F-839D-D2204C236BAF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}
