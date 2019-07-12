@@ -76,6 +76,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
 {
     static int32_t accessID = 1;
     int32_t runtimeIndex = 1;
+    unordered_set<string> deviceAcronyms;
 
     WriterLock writeLock(m_measurementUpdateLock);
 
@@ -89,7 +90,6 @@ void PublisherHandler::DefineMetadata(int32_t devices)
     m_measurementMetadata.clear();
     m_phasorMetadata.clear();
 
-    // Add device metadata incrementally so that Guids remain consistent for duration of publisher lifetime...
     for (int32_t i = 0; i < devices; i++)
     {
         DeviceMetadataPtr device1Metadata = NewSharedPtr<DeviceMetadata>();
@@ -98,6 +98,15 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         // Add a device
         device1Metadata->Name = "Test PMU " + ToString(i);
         device1Metadata->Acronym = ToUpper(Replace(device1Metadata->Name, " ", "", false));
+
+        // Data publisher needs to make sure device acronym are unique
+        int count = 1;
+
+        while (deviceAcronyms.find(device1Metadata->Acronym) != deviceAcronyms.end())
+            device1Metadata->Acronym = device1Metadata->Acronym + ToString(++count);
+
+        deviceAcronyms.insert(device1Metadata->Acronym);
+
         device1Metadata->UniqueID = NewGuid();
         device1Metadata->Longitude = 300;
         device1Metadata->Latitude = 200;
