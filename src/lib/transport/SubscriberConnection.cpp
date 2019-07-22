@@ -1319,8 +1319,8 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t byte
 
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
-        // Validate packet size, anything larger than 32K should be considered invalid data
-        if (packetSize > Common::MaxPacketSize)
+        // Validate packet size, anything larger than 64K should be considered invalid data
+        if (packetSize > UInt16::MaxValue)
         {
             Thread([this, packetSize]
             {
