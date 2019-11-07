@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sttp.cpp", "lib\sttp.cpp.vcxproj", "{759721EF-40AE-4763-B225-6CD2710219F8}"
 EndProject
@@ -69,6 +69,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A6E76664-BD9
 	ProjectSection(SolutionItems) = preProject
 		CMakeLists.txt = CMakeLists.txt
 		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LatencyTest", "samples\LatencyTest\LatencyTest.vcxproj", "{BF9568F3-D767-4C01-9F88-DB97594D5D6C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
 	EndProjectSection
 EndProject
 Global
@@ -159,6 +164,14 @@ Global
 		{DFBE36C4-1542-428D-9CA0-DE57D8A5192F}.Release|x64.Build.0 = Release|x64
 		{DFBE36C4-1542-428D-9CA0-DE57D8A5192F}.Release|x86.ActiveCfg = Release|Win32
 		{DFBE36C4-1542-428D-9CA0-DE57D8A5192F}.Release|x86.Build.0 = Release|Win32
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Debug|x64.ActiveCfg = Debug|x64
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Debug|x64.Build.0 = Debug|x64
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Debug|x86.ActiveCfg = Debug|Win32
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Debug|x86.Build.0 = Debug|Win32
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Release|x64.ActiveCfg = Release|x64
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Release|x64.Build.0 = Release|x64
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Release|x86.ActiveCfg = Release|Win32
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -176,6 +189,7 @@ Global
 		{DFBE36C4-1542-428D-9CA0-DE57D8A5192F} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{25907C49-1084-4A33-93BD-E0F01469651D} = {4AFD4846-A95B-426F-839D-D2204C236BAF}
 		{A6E76664-BD9B-4202-BFE2-AB3E6AA77DEE} = {4AFD4846-A95B-426F-839D-D2204C236BAF}
+		{BF9568F3-D767-4C01-9F88-DB97594D5D6C} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}
