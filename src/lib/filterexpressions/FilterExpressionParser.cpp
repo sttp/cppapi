@@ -1343,11 +1343,11 @@ vector<DataRowPtr> FilterExpressionParser::Select(const ExpressionTreePtr& expre
 
 const TableIDFieldsPtr FilterExpressionParser::DefaultTableIDFields = []
 { 
-    TableIDFieldsPtr defaultTableIDFIelds = NewSharedPtr<TableIDFields>();
+    TableIDFieldsPtr defaultTableIDFields = NewSharedPtr<TableIDFields>();
 
-    defaultTableIDFIelds->SignalIDFieldName = "SignalID";
-    defaultTableIDFIelds->MeasurementKeyFieldName = "ID";
-    defaultTableIDFIelds->PointTagFieldName = "PointTag";
+    defaultTableIDFields->SignalIDFieldName = "SignalID";
+    defaultTableIDFields->MeasurementKeyFieldName = "ID";
+    defaultTableIDFields->PointTagFieldName = "PointTag";
 
-    return defaultTableIDFIelds;
+    return defaultTableIDFields;
 }();
