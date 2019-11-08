@@ -335,7 +335,7 @@ Ref<PredictionContext> PredictionContext::mergeArrays(const Ref<ArrayPredictionC
   Ref<ArrayPredictionContext> M = std::make_shared<ArrayPredictionContext>(mergedParents, mergedReturnStates);
 
   // if we created same array as a or b, return that instead
-  // TO_DO: track whether this is possible above during merge sort for speed
+  // TODO: track whether this is possible above during merge sort for speed
   if (*M == *a) {
     if (mergeCache != nullptr) {
       mergeCache->put(a, b, a);

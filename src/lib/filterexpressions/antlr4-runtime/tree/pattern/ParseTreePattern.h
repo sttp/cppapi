@@ -30,7 +30,6 @@ namespace pattern {
                      ParseTree *patternTree);
     ParseTreePattern(ParseTreePattern const&) = default;
     virtual ~ParseTreePattern();
-    ParseTreePattern& operator=(ParseTreePattern const&) = default;
 
     /// <summary>
     /// Match a specific parse tree against this tree pattern.

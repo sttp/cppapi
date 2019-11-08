@@ -464,7 +464,7 @@ bool Parser::precpred(RuleContext * /*localctx*/, int precedence) {
 }
 
 bool Parser::inContext(const std::string &/*context*/) {
-  // TO_DO: useful in parser?
+  // TODO: useful in parser?
   return false;
 }
 

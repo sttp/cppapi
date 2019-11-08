@@ -10,7 +10,7 @@
 namespace antlr4 {
 namespace atn {
 
-  /// TO_DO: make all transitions sets? no, should remove set edges.
+  /// TODO: make all transitions sets? no, should remove set edges.
   class ANTLR4CPP_PUBLIC AtomTransition final : public Transition {
   public:
     /// The token type or character value; or, signifies special label.

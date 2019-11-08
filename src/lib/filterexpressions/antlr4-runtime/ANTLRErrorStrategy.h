@@ -24,7 +24,7 @@ namespace antlr4 {
   /// Implementations of this interface report syntax errors by calling
   /// <seealso cref="Parser#notifyErrorListeners"/>.
   /// <p/>
-  /// TO_DO: what to do about lexers
+  /// TODO: what to do about lexers
   /// </summary>
   class ANTLR4CPP_PUBLIC ANTLRErrorStrategy {
   public:

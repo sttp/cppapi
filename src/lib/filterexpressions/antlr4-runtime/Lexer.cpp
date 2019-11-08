@@ -273,7 +273,7 @@ std::string Lexer::getErrorDisplay(const std::string &s) {
 }
 
 void Lexer::recover(RecognitionException * /*re*/) {
-  // TO_DO: Do we lose character or line position information?
+  // TODO: Do we lose character or line position information?
   _input->consume();
 }
 
