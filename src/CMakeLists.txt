@@ -37,6 +37,7 @@ set (STTP_HEADER_FILES
     "lib/pugixml.hpp"
     "lib/ThreadSafeQueue.h"
     "lib/Timer.h"
+    "lib/Version.h"
     "lib/data/DataColumn.h"
     "lib/data/DataRow.h"
     "lib/data/DataSet.h"
@@ -210,7 +211,6 @@ set (STTP_HEADER_FILES
     "lib/transport/tssc/TSSCEncoder.h"
     "lib/transport/tssc/TSSCDecoder.h"
     "lib/transport/tssc/TSSCPointMetadata.h"
-    "lib/transport/Version.h"
 )
 
 set (STTP_SOURCE_FILES
