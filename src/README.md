@@ -27,11 +27,11 @@ Boost library files:
 ```
 
 If you have an existing Boost installation you can simply create a symbolic
-link to the folder, e.g., `mklink /D C:\projects\sttp\boost C:\boost_1_66_0`
+link to the folder, e.g., `mklink /D C:\projects\sttp\boost C:\boost_1_71_0`
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with version v1.66 of Boost.
+has been tested with version v1.66 and v1.71 of Boost.
 
 Note that you will need to compile Boost in order to execute the sample
 applications found in:
@@ -78,7 +78,7 @@ Earlier versions of the libraries listed may not work properly.
     - Boost.Uuid
 
 Boost will need to be compiled:
-https://www.boost.org/doc/libs/1_66_0/more/getting_started/unix-variants.html
+https://www.boost.org/doc/libs/1_71_0/more/getting_started/unix-variants.html
 
 For Ubuntu, here are some common steps (don't type `$`; that represents the shell's prompt):
 
@@ -90,16 +90,16 @@ $ sudo apt install cmake
 $ sudo apt install zlib1g-dev
 $ sudo apt install libbz2-dev
 
-$ sudo mkdir /usr/local/boost_1_66_0
+$ sudo mkdir /usr/local/boost_1_71_0
 $ cd /usr/local/
-$ wget https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
-$ sudo tar -xvjf boost_1_66_0.tar.bz2
+$ wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2
+$ sudo tar -xvjf boost_1_71_0.tar.bz2
 ```
 
 Start a new terminal session before building Boost:
 
 ```
-$ cd /usr/local/boost_1_66_0
+$ cd /usr/local/boost_1_71_0
 $ sudo ./bootstrap.sh
 $ sudo ./b2 install
 ```
