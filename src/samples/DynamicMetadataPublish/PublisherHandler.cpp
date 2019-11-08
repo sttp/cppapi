@@ -127,7 +127,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         measurement1Metadata->SignalID = NewGuid();
         measurement1Metadata->DeviceAcronym = device1Metadata->Acronym;
         measurement1Metadata->Reference.Acronym = device1Metadata->Acronym;
-        measurement1Metadata->Reference.Kind = Frequency;
+        measurement1Metadata->Reference.Kind = SignalKind::Frequency;
         measurement1Metadata->Reference.Index = 0;
         measurement1Metadata->PhasorSourceIndex = 0;
         measurement1Metadata->UpdatedOn = timestamp;
@@ -139,7 +139,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         measurement2Metadata->SignalID = NewGuid();
         measurement2Metadata->DeviceAcronym = device1Metadata->Acronym;
         measurement2Metadata->Reference.Acronym = device1Metadata->Acronym;
-        measurement2Metadata->Reference.Kind = DfDt;
+        measurement2Metadata->Reference.Kind = SignalKind::DfDt;
         measurement2Metadata->Reference.Index = 0;
         measurement2Metadata->PhasorSourceIndex = 0;
         measurement2Metadata->UpdatedOn = timestamp;
@@ -151,7 +151,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         measurement3Metadata->SignalID = NewGuid();
         measurement3Metadata->DeviceAcronym = device1Metadata->Acronym;
         measurement3Metadata->Reference.Acronym = device1Metadata->Acronym;
-        measurement3Metadata->Reference.Kind = Angle;
+        measurement3Metadata->Reference.Kind = SignalKind::Angle;
         measurement3Metadata->Reference.Index = 1;   // First phase angle
         measurement3Metadata->PhasorSourceIndex = 1; // Match to Phasor.SourceIndex = 1
         measurement3Metadata->UpdatedOn = timestamp;
@@ -163,7 +163,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         measurement4Metadata->SignalID = NewGuid();
         measurement4Metadata->DeviceAcronym = device1Metadata->Acronym;
         measurement4Metadata->Reference.Acronym = device1Metadata->Acronym;
-        measurement4Metadata->Reference.Kind = Magnitude;
+        measurement4Metadata->Reference.Kind = SignalKind::Magnitude;
         measurement4Metadata->Reference.Index = 1;   // First phase magnitude
         measurement4Metadata->PhasorSourceIndex = 1; // Match to Phasor.SourceIndex = 1
         measurement4Metadata->UpdatedOn = timestamp;
@@ -232,21 +232,21 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
 
             switch (metadata->Reference.Kind)
             {
-            case Frequency:
-                value = 60.0 + sign * randFraction * 0.1;
-                break;
-            case DfDt:
-                value = sign * randFraction * 2;
-                break;
-            case Magnitude:
-                value = 500 + sign * randFraction * 50;
-                break;
-            case Angle:
-                value = sign * randFraction * 180;
-                break;
-            default:
-                value = sign * randFraction * UInt32::MaxValue;
-                break;
+                case SignalKind::Frequency:
+                    value = 60.0 + sign * randFraction * 0.1;
+                    break;
+                case SignalKind::DfDt:
+                    value = sign * randFraction * 2;
+                    break;
+                case SignalKind::Magnitude:
+                    value = 500 + sign * randFraction * 50;
+                    break;
+                case SignalKind::Angle:
+                    value = sign * randFraction * 180;
+                    break;
+                default:
+                    value = sign * randFraction * UInt32::MaxValue;
+                    break;
             }
 
             measurement->Value = value;

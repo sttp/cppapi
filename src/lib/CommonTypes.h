@@ -458,7 +458,7 @@ namespace std // NOLINT
     template<>
     struct hash<sttp::Guid>
     {
-        size_t operator () (const sttp::Guid& uid) const
+        size_t operator () (const sttp::Guid& uid) const noexcept
         {
             return boost::hash<sttp::Guid>()(uid);
         }

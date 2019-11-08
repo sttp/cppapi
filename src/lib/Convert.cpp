@@ -170,7 +170,7 @@ datetime_t sttp::FromTicks(const int64_t ticks)
 {
     static float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
-    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond);
+    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond); // NOLINT
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
@@ -193,7 +193,7 @@ bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, c
         throw runtime_error("leadTime must be greater than zero, but it can be less than one");
 
     // Calculate timestamp distance from local system time in seconds
-    const float64_t distance = (ToTicks(utc ? UtcNow() : Now()) - value) / ticksPerSecondF;
+    const float64_t distance = (ToTicks(utc ? UtcNow() : Now()) - value) / ticksPerSecondF; // NOLINT
     return distance >= -leadTime && distance <= lagTime;
 }
 
@@ -275,7 +275,7 @@ string sttp::ToString(const datetime_t& value, const char* format)
     stringstream stream;
     time_facet* facet = new time_facet(format);
     
-    stream.imbue(locale(stream.getloc(), facet));
+    auto _ = stream.imbue(locale(stream.getloc(), facet));
     stream << value;
 
     return stream.str();
@@ -326,7 +326,7 @@ bool sttp::ParseBoolean(const string& value)
         }
         catch (...)
         {
-            const char first = toupper(result[0]);
+            const char first = static_cast<char>(toupper(result[0]));
             return first == 'T' || first == 'Y';
         }
     }
@@ -524,7 +524,7 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
     {
         istringstream stream(cleanTimestamp);
 
-        stream.imbue(formats[i]);
+        auto _ = stream.imbue(formats[i]);
         stream >> timestamp;
 
         if (bool(stream))

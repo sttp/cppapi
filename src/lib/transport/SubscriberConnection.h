@@ -283,7 +283,7 @@ namespace std  // NOLINT
     template<>
     struct hash<sttp::transport::SubscriberConnectionPtr>
     {
-        size_t operator () (const sttp::transport::SubscriberConnectionPtr& connection) const
+        size_t operator () (const sttp::transport::SubscriberConnectionPtr& connection) const noexcept
         {
             return boost::hash<sttp::transport::SubscriberConnectionPtr>()(connection);
         }

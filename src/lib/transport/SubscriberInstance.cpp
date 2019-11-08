@@ -56,12 +56,24 @@ SubscriberInstance::SubscriberInstance() :
     m_subscriber->SetUserData(this);
 }
 
-SubscriberInstance::~SubscriberInstance()
+SubscriberInstance::~SubscriberInstance() noexcept
 {
-    if (m_subscriber != nullptr)
-        m_subscriber->Disconnect();
+    try
+    {
+        if (m_subscriber != nullptr)
+            m_subscriber->Disconnect();
+    }
+    catch (...)
+    {        
+    }
 
-    m_connectThread.join();
+    try
+    {
+        m_connectThread.join();
+    }
+    catch (...)
+    {        
+    }
 }
 
 // public functions
@@ -333,7 +345,7 @@ bool SubscriberInstance::TryGetDeviceAcronyms(vector<string>& deviceAcronyms)
 {
     deviceAcronyms.clear();
 
-    IterateDeviceMetadata([&deviceAcronyms](DeviceMetadataPtr device, void* userData)
+    IterateDeviceMetadata([&deviceAcronyms](const DeviceMetadataPtr& device, void* userData)
     {
         deviceAcronyms.push_back(device->Acronym);
     },
@@ -346,7 +358,7 @@ void SubscriberInstance::GetParsedDeviceMetadata(map<string, DeviceMetadataPtr>&
 {
     devices.clear();
     
-    IterateDeviceMetadata([&devices](DeviceMetadataPtr device, void* userData)
+    IterateDeviceMetadata([&devices](const DeviceMetadataPtr& device, void* userData)
     {
         devices.insert_or_assign(device->Acronym, device);
     },
@@ -357,7 +369,7 @@ void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetad
 {
     measurements.clear();
 
-    IterateMeasurementMetadata([&measurements](MeasurementMetadataPtr measurement, void* userData)
+    IterateMeasurementMetadata([&measurements](const MeasurementMetadataPtr& measurement, void* userData)
     {
         measurements.insert_or_assign(measurement->SignalID, measurement);
     },
@@ -811,7 +823,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
                 {
                     // Unexpected condition:
                     stringstream errorMessageStream;
-                    errorMessageStream << "Encountered a " << SignalKindDescription[measurementMetadata->Reference.Kind] << " measurement \"" << measurementMetadata->Reference << "\" that had a matching SourceIndex for phasor: " << phasorMetadata->Label;
+                    errorMessageStream << "Encountered a " << SignalKindDescription[static_cast<int32_t>(measurementMetadata->Reference.Kind)] << " measurement \"" << measurementMetadata->Reference << "\" that had a matching SourceIndex for phasor: " << phasorMetadata->Label;
                     ErrorMessage(errorMessageStream.str());
                 }
 

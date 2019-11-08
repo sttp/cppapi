@@ -52,7 +52,7 @@ const char* PublisherException::what() const noexcept
 
 Measurement::Measurement() :
     SignalID(Empty::Guid),
-    Value(NAN),
+    Value(numeric_limits<double>::signaling_NaN()),
     Adder(0.0),
     Multiplier(1.0),
     Timestamp(0LL),
@@ -149,7 +149,7 @@ SignalReference::SignalReference(const string& signal) : SignalID(Guid())
     }
     else
     {
-        string signalType = ToUpper(Trim(signal.substr(splitIndex + 1)));
+        const string signalType = ToUpper(Trim(signal.substr(splitIndex + 1)));
         Acronym = ToUpper(Trim(signal.substr(0, splitIndex)));
 
         // If the length of the signal type acronym is greater than 2, then this
@@ -204,38 +204,38 @@ const char* sttp::transport::SignalKindAcronym[] =
 ostream& sttp::transport::operator << (ostream& stream, const SignalReference& reference)
 {
     if (reference.Index > 0)
-        return stream << reference.Acronym << "-" << SignalKindAcronym[reference.Kind] << reference.Index;
+        return stream << reference.Acronym << "-" << SignalKindAcronym[static_cast<int32_t>(reference.Kind)] << reference.Index;
 
-    return stream << reference.Acronym << "-" << SignalKindAcronym[reference.Kind];
+    return stream << reference.Acronym << "-" << SignalKindAcronym[static_cast<int32_t>(reference.Kind)];
 }
 
 string sttp::transport::GetSignalTypeAcronym(SignalKind kind, char phasorType)
 {
     switch (kind)
     {
-        case Angle:
+        case SignalKind::Angle:
             return toupper(phasorType) == 'V' ? "VPHA" : "IPHA";
-        case Magnitude:
+        case SignalKind::Magnitude:
             return toupper(phasorType) == 'V' ? "VPHM" : "IPHM";
-        case Frequency:
+        case SignalKind::Frequency:
             return "FREQ";
-        case DfDt:
+        case SignalKind::DfDt:
             return "DFDT";
-        case Status:
+        case SignalKind::Status:
             return "FLAG";
-        case Digital:
+        case SignalKind::Digital:
             return "DIGI";
-        case Analog:
+        case SignalKind::Analog:
             return "ALOG";
-        case Calculation:
+        case SignalKind::Calculation:
             return "CALC";
-        case Statistic:
+        case SignalKind::Statistic:
             return "STAT";
-        case Alarm:
+        case SignalKind::Alarm:
             return "ALRM";
-        case Quality:
+        case SignalKind::Quality:
             return "QUAL";
-        case Unknown:
+        case SignalKind::Unknown:
         default:
             return "NULL";
     }

@@ -173,7 +173,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
                     // reference.Kind		<< kind of signal (see SignalKind in "Types.h"), like Frequency, Angle, etc
                     // reference.Index    << for Phasors, Analogs and Digitals - this is the ordered "index"
 
-                    message << '\t' << measurement->ID << '\t' << '\t' << measurementMetadata->ID << '\t' << '\t' << measurement->Value << fixed << setprecision(3) << '\t' << '\t' << SignalKindAcronym[reference.Kind] << '\t' << ToString(measurement->SignalID) << endl;
+                    message << '\t' << measurement->ID << '\t' << '\t' << measurementMetadata->ID << '\t' << '\t' << measurement->Value << fixed << setprecision(3) << '\t' << '\t' << SignalKindAcronym[static_cast<int32_t>(reference.Kind)] << '\t' << ToString(measurement->SignalID) << endl;
                 }
             }
             //else if (TryGetMeasurementMetdata(measurement->SignalID, measurementMetadata))

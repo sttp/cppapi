@@ -241,7 +241,7 @@ string ValueExpression::ToString() const
         case ExpressionValueType::DateTime:
             return sttp::ToString(ValueAsNullableDateTime());
         case ExpressionValueType::Undefined:
-            return nullptr;
+            return {};
         default:
             throw ExpressionTreeException("Unexpected expression value type encountered");
     }
@@ -582,7 +582,7 @@ ValueExpressionPtr ExpressionTree::EvaluateColumn(const ExpressionPtr& expressio
             break;
         case DataType::UInt64:
         {
-            Nullable<uint64_t> value64U = m_currentRow->ValueAsUInt64(columnIndex);
+            const Nullable<uint64_t> value64U = m_currentRow->ValueAsUInt64(columnIndex);
 
             if (value64U.HasValue())
             {

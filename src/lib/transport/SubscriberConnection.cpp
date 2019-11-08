@@ -1128,7 +1128,7 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
 void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
     const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
-    CompactMeasurement serializer(signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
+    const CompactMeasurement serializer(signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
     vector<uint8_t> packet, buffer;
     int32_t count = 0;
 

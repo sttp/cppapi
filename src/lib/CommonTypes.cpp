@@ -186,7 +186,7 @@ int32_t sttp::Compare(const string& leftValue, const string& rightValue, bool ig
 
 int32_t sttp::IndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
-    iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
+    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
 
     if (it.empty())
         return -1;
@@ -196,7 +196,7 @@ int32_t sttp::IndexOf(const string& value, const string& findValue, bool ignoreC
 
 int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
 {
-    iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
+    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
 
     if (it.empty())
         return -1;
@@ -206,7 +206,7 @@ int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t inde
 
 int32_t sttp::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
 {
-    iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
+    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
 
     if (it.empty())
         return -1;
@@ -361,7 +361,7 @@ int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, T
         }
     }
 
-    TimeSpan duration = endTime - startTime;
+    const TimeSpan duration = endTime - startTime;
 
     switch (interval)
     {

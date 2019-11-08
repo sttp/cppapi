@@ -124,7 +124,7 @@ namespace transport
     MeasurementPtr ToPtr(const Measurement& source);
     MeasurementPtr ToPtr(const SimpleMeasurement& source);
 
-    enum SignalKind : int16_t
+    enum class SignalKind : int16_t
     {
         Angle,			// Phase angle
         Magnitude,		// Phase magnitude

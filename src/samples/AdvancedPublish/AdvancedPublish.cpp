@@ -85,7 +85,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     measurement1Metadata->SignalID = ParseGuid("6586f230-8e7f-4f0f-9e18-1eefee4b9edd");
     measurement1Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement1Metadata->Reference.Acronym = device1Metadata->Acronym;
-    measurement1Metadata->Reference.Kind = Frequency;
+    measurement1Metadata->Reference.Kind = SignalKind::Frequency;
     measurement1Metadata->Reference.Index = 0;
     measurement1Metadata->PhasorSourceIndex = 0;
     measurement1Metadata->UpdatedOn = timestamp;
@@ -97,7 +97,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     measurement2Metadata->SignalID = ParseGuid("60c97530-2ed2-4abb-a7a2-99e2170479a4");
     measurement2Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement2Metadata->Reference.Acronym = device1Metadata->Acronym;
-    measurement2Metadata->Reference.Kind = DfDt;
+    measurement2Metadata->Reference.Kind = SignalKind::DfDt;
     measurement2Metadata->Reference.Index = 0;
     measurement2Metadata->PhasorSourceIndex = 0;
     measurement2Metadata->UpdatedOn = timestamp;
@@ -109,7 +109,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     measurement3Metadata->SignalID = ParseGuid("aa47a61c-8596-46af-8c28-f9ee774bcf26");
     measurement3Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement3Metadata->Reference.Acronym = device1Metadata->Acronym;
-    measurement3Metadata->Reference.Kind = Angle;
+    measurement3Metadata->Reference.Kind = SignalKind::Angle;
     measurement3Metadata->Reference.Index = 1;   // First phase angle
     measurement3Metadata->PhasorSourceIndex = 1; // Match to Phasor.SourceIndex = 1
     measurement3Metadata->UpdatedOn = timestamp;
@@ -121,7 +121,7 @@ void LoadMetadataToPublish(vector<DeviceMetadataPtr>& deviceMetadata, vector<Mea
     measurement4Metadata->SignalID = ParseGuid("4ab24720-3763-407c-afa0-15f0d69ac897");
     measurement4Metadata->DeviceAcronym = device1Metadata->Acronym;
     measurement4Metadata->Reference.Acronym = device1Metadata->Acronym;
-    measurement4Metadata->Reference.Kind = Magnitude;
+    measurement4Metadata->Reference.Kind = SignalKind::Magnitude;
     measurement4Metadata->Reference.Index = 1;   // First phase magnitude
     measurement4Metadata->PhasorSourceIndex = 1; // Match to Phasor.SourceIndex = 1
     measurement4Metadata->UpdatedOn = timestamp;
@@ -264,16 +264,16 @@ bool RunPublisher(uint16_t port, bool genHistory)
 
                 switch (metadata->Reference.Kind)
                 {
-                    case Frequency:
+                    case SignalKind::Frequency:
                         value = 60.0 + sign * randFraction * 0.1;
                         break;
-                    case DfDt:
+                    case SignalKind::DfDt:
                         value = sign * randFraction * 2;
                         break;
-                    case Magnitude:
+                    case SignalKind::Magnitude:
                         value = 500 + sign * randFraction * 50;
                         break;
-                    case Angle:
+                    case SignalKind::Angle:
                         value = sign * randFraction * 180;
                         break;
                     default:

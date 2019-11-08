@@ -133,7 +133,7 @@ void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* reco
 void FilterExpressionParser::VisitParseTreeNodes()
 {
     // Create parse tree and visit listener methods
-    ParseTreeWalker walker;
+    const ParseTreeWalker walker;
     const auto parseTree = m_parser->parse();
     walker.walk(this, parseTree);
 }

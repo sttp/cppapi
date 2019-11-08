@@ -101,9 +101,14 @@ namespace transport
         void SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn) const;
 
         SubscriberInstance();
-
     public:
-        virtual ~SubscriberInstance();
+        // Remove default constructors to force safer destruction
+        SubscriberInstance(const SubscriberInstance& _) = delete;
+        SubscriberInstance& operator=(const SubscriberInstance& _) = delete;
+        SubscriberInstance(SubscriberInstance&& _) = delete;
+        SubscriberInstance& operator=(SubscriberInstance&& _) = delete;
+
+        virtual ~SubscriberInstance() noexcept;
 
         // Constants
         static constexpr const char* SubscribeAllExpression = "FILTER ActiveMeasurements WHERE ID IS NOT NULL";

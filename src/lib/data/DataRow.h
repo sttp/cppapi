@@ -153,8 +153,6 @@ namespace data
         void SetUInt64Value(const std::string& columnName, const sttp::Nullable<uint64_t>& value);
 
         static const DataRowPtr NullPtr;
-
-        friend class DataTable;
     };
 }}
 
@@ -164,7 +162,7 @@ namespace std  // NOLINT
     template<>
     struct hash<sttp::data::DataRowPtr>
     {
-        size_t operator () (const sttp::data::DataRowPtr& dataRow) const
+        size_t operator () (const sttp::data::DataRowPtr& dataRow) const noexcept
         {
             return boost::hash<sttp::data::DataRowPtr>()(dataRow);
         }

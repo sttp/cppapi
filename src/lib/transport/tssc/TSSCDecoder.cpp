@@ -141,7 +141,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         nextPoint = NewTSSCPointMetadata();
 
         if (id >= pointCount)
-            m_points.resize(id + 1, nullptr);
+            m_points.resize(static_cast<uint32_t>(id) + 1, nullptr);
 
         m_points[id] = nextPoint;
         

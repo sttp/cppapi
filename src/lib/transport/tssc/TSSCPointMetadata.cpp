@@ -88,6 +88,7 @@ TSSCPointMetadata::TSSCPointMetadata(
     function<void(int32_t, int32_t)> writeBits,
     function<int32_t()> readBit,
     function<int32_t()> readBits5) :
+    m_commandStats(),
     m_commandsSentSinceLastChange(0),
     m_mode(4),
     m_mode21(0),
@@ -107,8 +108,6 @@ TSSCPointMetadata::TSSCPointMetadata(
     PrevValue2(0),
     PrevValue3(0)
 {
-    for (uint8_t i = 0; i < CommandStatsLength; i++)
-        m_commandStats[i] = 0;
 }
 
 void TSSCPointMetadata::WriteCode(int32_t code)

@@ -112,7 +112,7 @@ namespace std  // NOLINT
     template<>
     struct hash<sttp::transport::SignalIndexCachePtr>
     {
-        size_t operator () (const sttp::transport::SignalIndexCachePtr& signalIndexCache) const
+        size_t operator () (const sttp::transport::SignalIndexCachePtr& signalIndexCache) const noexcept
         {
             return boost::hash<sttp::transport::SignalIndexCachePtr>()(signalIndexCache);
         }

@@ -96,7 +96,7 @@ bool TSSCEncoder::TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t qual
         point = NewTSSCPointMetadata();
 
         if (id >= pointCount)
-            m_points.resize(id + 1, nullptr);
+            m_points.resize(static_cast<uint32_t>(id) + 1, nullptr);
 
         point->PrevNextPointID1 = id + 1;
         
