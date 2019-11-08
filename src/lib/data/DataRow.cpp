@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+#pragma warning(disable:26444)
+// ReSharper disable CppExpressionWithoutSideEffects
 // ReSharper disable once CppUnusedIncludeDirective
 #include "../filterexpressions/FilterExpressions.h"
 #include "DataRow.h"
@@ -470,13 +472,16 @@ void DataRow::SetValue(const int32_t columnIndex, const Nullable<T>& value, Data
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(sizeof(T)));
-        memcpy(copy, &value.Value, sizeof(T)); //-V575
-        m_values[columnIndex] = copy;
+
+        if (copy)
+        {
+            memcpy(copy, &value.Value, sizeof(T)); //-V575
+            m_values[columnIndex] = copy;
+            return;
+        }
     }
-    else
-    {
-        m_values[columnIndex] = nullptr;
-    }
+
+    m_values[columnIndex] = nullptr;
 }
 
 const DataTablePtr& DataRow::Parent() const
@@ -632,13 +637,16 @@ void DataRow::SetStringValue(const int32_t columnIndex, const Nullable<string>& 
         const string& strval = value.GetValueOrDefault();
         const uint32_t length = ConvertUInt32(strval.size() + 1);
         char* copy = static_cast<char*>(malloc(length * sizeof(char)));
-        strcpy_s(copy, length, strval.c_str());
-        m_values[columnIndex] = copy;
+
+        if (copy)
+        {
+            strcpy_s(copy, length, strval.c_str());
+            m_values[columnIndex] = copy;
+            return;
+        }
     }
-    else
-    {
-        m_values[columnIndex] = nullptr;
-    }
+
+    m_values[columnIndex] = nullptr;
 }
 
 void DataRow::SetStringValue(const string& columnName, const Nullable<string>& value)
@@ -676,13 +684,16 @@ void DataRow::SetBooleanValue(const int32_t columnIndex, const Nullable<bool>& v
     if (value.HasValue())
     {
         uint8_t* copy = static_cast<uint8_t*>(malloc(1));
-        *copy = value.GetValueOrDefault() ? 1 : 0; //-V522
-        m_values[columnIndex] = copy;
+
+        if (copy)
+        {
+            *copy = value.GetValueOrDefault() ? 1 : 0; //-V522
+            m_values[columnIndex] = copy;
+            return;
+        }
     }
-    else
-    {
-        m_values[columnIndex] = nullptr;
-    }
+
+    m_values[columnIndex] = nullptr;
 }
 
 void DataRow::SetBooleanValue(const string& columnName, const Nullable<bool>& value)
@@ -784,13 +795,16 @@ void DataRow::SetDecimalValue(const int32_t columnIndex, const Nullable<decimal_
         const string& strval = value.GetValueOrDefault().str();
         const uint32_t length = ConvertUInt32(strval.size() + 1);
         char* copy = static_cast<char*>(malloc(length * sizeof(char)));
-        strcpy_s(copy, length, strval.c_str());
-        m_values[columnIndex] = copy;
+
+        if (copy)
+        {
+            strcpy_s(copy, length, strval.c_str());
+            m_values[columnIndex] = copy;
+            return;
+        }
     }
-    else
-    {
-        m_values[columnIndex] = nullptr;
-    }
+
+    m_values[columnIndex] = nullptr;
 }
 
 void DataRow::SetDecimalValue(const string& columnName, const Nullable<decimal_t>& value)
@@ -832,13 +846,16 @@ void DataRow::SetGuidValue(const int32_t columnIndex, const Nullable<sttp::Guid>
     if (value.HasValue())
     {
         int8_t* copy = static_cast<int8_t*>(malloc(16));
-        memcpy(copy, value.GetValueOrDefault().data, 16); //-V575
-        m_values[columnIndex] = copy;
+
+        if (copy)
+        {
+            memcpy(copy, value.GetValueOrDefault().data, 16); //-V575
+            m_values[columnIndex] = copy;
+            return;
+        }
     }
-    else
-    {
-        m_values[columnIndex] = nullptr;
-    }
+
+    m_values[columnIndex] = nullptr;
 }
 
 void DataRow::SetGuidValue(const string& columnName, const Nullable<sttp::Guid>& value)
