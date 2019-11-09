@@ -13,8 +13,8 @@ To properly compile in Visual Studio, you will need to download Boost:
     http://www.boost.org/users/download/
 
 By default, the C++ STTP API project configuration adds an additional include
-directory for the Boost libraries in a parallel location to the C++ STTP API
-project in a folder called _boost_ regardless of version, for example:
+directory for the Boost libraries in a parallel location to the API project in
+a folder called _boost_ regardless of version, for example:
 
 STTP API project files:
 ```
