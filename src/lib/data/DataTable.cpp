@@ -87,7 +87,7 @@ const DataColumnPtr& DataTable::operator[](int32_t index) const
 
 DataColumnPtr DataTable::CreateColumn(const string& name, DataType type, string expression)
 {
-    return NewSharedPtr<DataColumn, DataTablePtr, string, DataType>(shared_from_this(), name, type, std::move(expression));
+    return NewSharedPtr<DataColumn, DataTablePtr, string, DataType, string>(shared_from_this(), name, type, std::move(expression));
 }
 
 DataColumnPtr DataTable::CloneColumn(const DataColumnPtr& source)
