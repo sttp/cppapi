@@ -2,6 +2,11 @@
 
 Code includes STTP functionality for both "subscribers" and "publishers".
 
+Build instructions follow:
+
+* [Windows](#compiling-in-visual-studio) (using [Visual Studio](https://visualstudio.microsoft.com/))
+* [Unix Variants](#compiling-in-linux) (using [CMake](https://cmake.org/))
+
 ## Compiling in Visual Studio
 
 To properly compile in Visual Studio, you will need to download Boost:
@@ -14,20 +19,23 @@ project in a folder called _boost_ regardless of version, for example:
 STTP API project files:
 ```
     C:\projects\sttp\cppapi
-                   \src
-                   \build
-                   etc...
+                     \src
+                     \build
+                     etc...
 ```
 Boost library files:
 ```
     C:\projects\sttp\boost
-                     \boost
+                     \doc
                      \libs
                      etc...
 ```
 
 If you have an existing Boost installation you can simply create a symbolic
-link to the folder, e.g., `mklink /D C:\projects\sttp\boost C:\boost_1_71_0`
+link to the folder, e.g.:
+```
+    mklink /D C:\projects\sttp\boost C:\boost_1_71_0
+```
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
@@ -39,17 +47,16 @@ applications found in:
     sttp\cppapi\src\samples
 ```
 
-The STTP API library uses zlib features of Boost, as a result compiling boost
-requires zlib source code that can be downloaded separately: https://zlib.net/
+The STTP API library requires the zlib features of Boost, as a result it is necessary
+to compile boost with access to zlib source code that can be downloaded separately:
+https://zlib.net/
 
-After unzipping the zlib source code, set the following Boost compile script
-environmental variables to the root of the zlib source code path, e.g.:
+After unzipping the zlib source code and running the Boost `bootstrap.bat` script,
+run  the `.\b2` build application with the following zlib parameters, adjusting
+the paths to the directory where the zlib source code was unzipped:
 ```
-    set ZLIB_SOURCE="C:\zlib-1.2.11"
-    set ZLIB_INCLUDE="C:\zlib-1.2.11"
+     b2 -s ZLIB_SOURCE="C:\zlib-1.2.11" -s ZLIB_INCLUDE="C:\zlib-1.2.11"
 ```
-
-Once environmental variables are set for zlib paths, compile Boost as normal.
 
 ## Compiling in Linux
 
