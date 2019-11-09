@@ -69,7 +69,7 @@ Earlier versions of the libraries listed may not work properly.
 
 * bzip2 Library, e.g.: `sudo apt install libbz2-dev`
 
-* Boost C++ Libraries v1.66.0 (http://www.boost.org/)
+* Boost C++ Libraries v1.71.0 (http://www.boost.org/)
     - Boost.Asio
     - Boost.Bind
     - Boost.Iostreams
