@@ -34,7 +34,14 @@
     static const Ref<dfa::DFAState> ERROR;
  */
 
+// Reduce antlr4 runtime code analysis warnings
+#pragma warning(push)
+#pragma warning(disable:26439)
+#pragma warning(disable:26444)
+
 #include "FilterExpressionSyntaxBaseListener.h"
+
+#pragma warning(pop)
 
 // For some reason this symbol gets undefined? So, we re-define it...
 #ifndef EOF

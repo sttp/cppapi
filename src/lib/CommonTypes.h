@@ -28,6 +28,21 @@
 #include <cstddef>
 #include <map>
 #include <unordered_map>
+
+// Reduce boost code analysis warnings
+#pragma warning(push)
+#pragma warning(disable:6001)
+#pragma warning(disable:6031)
+#pragma warning(disable:6255)
+#pragma warning(disable:6258)
+#pragma warning(disable:6387)
+#pragma warning(disable:26439)
+#pragma warning(disable:26444)
+#pragma warning(disable:26451)
+#pragma warning(disable:26495)
+#pragma warning(disable:26498)
+#pragma warning(disable:26812)
+
 #include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
@@ -41,6 +56,8 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/array.hpp>
+
+#pragma warning(pop) 
 
 #if _WIN32 || _WIN64
 #if _WIN64

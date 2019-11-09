@@ -21,6 +21,10 @@
 //
 //******************************************************************************************************
 
+#pragma warning(disable:26451)
+#pragma warning(disable:26812)
+#pragma warning(disable:26444)
+
 #include <iostream>
 #include <string>
 #include <fstream>
