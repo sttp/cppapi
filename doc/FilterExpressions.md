@@ -179,7 +179,7 @@ Function names are not case sensitive, so `ABS`, `abs` and `Abs` are all equival
 | `LOWER` | `expression` | Returns lower-case representation of `expression` interpreted as a string. |
 | `MAXOF` | `expression1, ..., expression_n` | Returns value in expression list with maximum value. |
 | `MINOF` | `expression1, ..., expression_n` | Returns value in expression list with minimum value. |
-| `NOW` | `` | Returns a `dateTime` value representing the current local system time. |
+| `NOW` | | Returns a `dateTime` value representing the current local system time. |
 | `NTHINDEXOF` | `source, test, index, [ignoreCase]` | Returns zero-based index of the Nth, represented by `index` value, occurrence of `test` in `source`, or `-1` if not found. `ignoreCase` is a optional boolean flag, defaults to `false`, to determine if string comparison is case sensitive. |
 | `POWER` | `expression, exponent` | Returns the value of specified numeric `expression` raised to the power of specified numeric `exponent`. |
 | `REGEXMATCH` | `regex, test` | Returns flag that determines if `test`, interpreted as a string, is a match for specified `regex` string-based regular expression. |
@@ -197,7 +197,7 @@ Function names are not case sensitive, so `ABS`, `abs` and `Abs` are all equival
 | `TRIMLEFT` | `expression` | Removes white-space from the beginning of `expression` interpreted as a string. |
 | `TRIMRIGHT` | `expression` | Removes white-space from the end of `expression` interpreted as a string. |
 | `UPPER` | `expression` | Returns upper-case representation of `expression` interpreted as a string. |
-| `UTCNOW` |  | Returns a `dateTime` value representing the current UTC system time. |
+| `UTCNOW` | | Returns a `dateTime` value representing the current UTC system time. |
 
 ## Signal Selection Meta-data Table Definitions
 
