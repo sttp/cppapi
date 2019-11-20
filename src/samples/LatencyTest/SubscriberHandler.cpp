@@ -40,7 +40,8 @@ SubscriberHandler::SubscriberHandler(string name) :
 }
 
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
-{   
+{
+    static const double_t unreasonableLatency = 60.0 * 5.0;
     static const uint64_t interval = 500000;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
@@ -72,7 +73,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
             const double_t difference = static_cast<int32_t>(duration.total_microseconds()) * 1e-6;
 
             // Throw out unreasonable timestamps
-            if (abs(difference) > 60.0)
+            if (abs(difference) > unreasonableLatency)
             {
                 m_unreasonable++;
                 continue;
