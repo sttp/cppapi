@@ -40,9 +40,8 @@ SubscriberHandler::SubscriberHandler(string name) :
 
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {   
-    static const uint64_t interval = 5000;
-    static const int32_t precision = 10;
-    static const uint64_t exportCount = 10000;
+    static const uint64_t interval = 30 * 2;
+    static const uint64_t exportCount = 500;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
 
@@ -54,6 +53,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     {
         stringstream receivedUpdate;
         receivedUpdate << GetTotalMeasurementsReceived() << " measurements received so far..." << endl << endl;
+        StatusMessage(receivedUpdate.str());
     }
 
     // Process measurements
@@ -64,22 +64,24 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         if (!m_ready)
         {
             // Start export at top of second
-            if (DatePart(timestamp, TimeInterval::Second) == 0)
+            if (DatePart(timestamp, TimeInterval::Millisecond) == 0)
                 m_ready = true;
             else
                 continue;
 
-            fprintf(m_export, ("Export for measurement " + ToString(measurement->SignalID) + "\r\n\r\n").c_str());
-            fprintf(m_export, "Timestamp,Value,Flags\r\n");
+            StatusMessage("Export started for measurement " + ToString(measurement->SignalID) + " timestamp at " + ToString(measurement->GetDateTime()));
+
+            fprintf(m_export, ("Export for measurement " + ToString(measurement->SignalID) + "\n\n").c_str());
+            fprintf(m_export, "Timestamp,Value,Flags\n");
         }
 
-        fprintf(m_export, "%s,%d.*%f,%i\r\n", ToString(measurement->Timestamp).c_str(), precision, measurement->Value, measurement->Flags);
+        fprintf(m_export, "%s,%.*f,%i\n", ToString(measurement->GetDateTime()).c_str(), 10, measurement->Value, measurement->Flags);
 
         m_processCount++;
 
         if (m_processCount >= exportCount)
         {
-            Disconnect();
+            Thread([this]{ Disconnect(); });
             break;
         }
     }
@@ -113,12 +115,12 @@ void SubscriberHandler::ConnectionEstablished()
     stringstream fileNameBuf;
     fileNameBuf << m_name << ".csv";
 
-    const char* fileName = fileNameBuf.str().c_str();
+    const string fileName = fileNameBuf.str();
         
-    if (fopen_s(&m_export, fileName, "w") != 0)
+    if (fopen_s(&m_export, fileName.c_str(), "w") != 0)
     {
         ErrorMessage("InteropTest canceled: failed to open export file \"" + ToString(fileName) + "\"");
-        Disconnect();
+        Thread([this]{ Disconnect(); });
     }
 }
 

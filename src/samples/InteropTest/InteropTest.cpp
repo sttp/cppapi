@@ -62,9 +62,6 @@ int main(int argc, char* argv[])
     // Shutdown subscriber instance
     subscriber->Disconnect();
 
-    // Disconnect the subscriber to stop background threads.
-    cout << "Disconnected." << endl;
-
     // Delete subscriber instance
     delete subscriber;
 
