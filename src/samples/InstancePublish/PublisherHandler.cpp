@@ -184,7 +184,7 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
     {
         // If metadata can change, the following integer should not be static:
         static uint32_t count = ConvertUInt32(m_measurementMetadata.size());
-        const int64_t timestamp = ToTicks(UtcNow());
+        const int64_t timestamp = RoundToSubsecondDistribution(ToTicks(UtcNow()), 30);
         vector<MeasurementPtr> measurements;
 
         measurements.reserve(count);
