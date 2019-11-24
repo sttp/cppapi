@@ -202,6 +202,29 @@ bool sttp::TimestampIsReasonable(const datetime_t& value, const float64_t lagTim
     return TimestampIsReasonable(ToTicks(value), lagTime, leadTime);
 }
 
+int64_t sttp::RoundToSubsecondDistribution(int64_t ticks, int32_t samplesPerSecond)
+{
+    int64_t baseTicks, ticksBeyondSecond, frameIndex, destinationTicks;
+
+    // Baseline timestamp to the top of the second
+    baseTicks = ticks - ticks % Ticks::PerSecond;
+
+    // Remove the whole seconds from ticks
+    ticksBeyondSecond = ticks - baseTicks;
+
+    // Calculate a frame index between 0 and m_framesPerSecond - 1,
+    // corresponding to ticks rounded to the nearest frame
+    frameIndex = static_cast<int64_t>(round(ticksBeyondSecond / (Ticks::PerSecond / float64_t(samplesPerSecond))));
+
+    // Calculate the timestamp of the nearest frame
+    destinationTicks = frameIndex * Ticks::PerSecond / samplesPerSecond;
+
+    // Recover the seconds that were removed
+    destinationTicks += baseTicks;
+
+    return destinationTicks;
+}
+
 uint32_t sttp::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
 {
     time_t fromSeconds;

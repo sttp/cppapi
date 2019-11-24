@@ -48,6 +48,9 @@ namespace sttp
     // lagTime and leadTime must be greater than zero, but can be less than one.
     bool TimestampIsReasonable(const datetime_t& value, float64_t lagTime = 5.0, float64_t leadTime = 5.0, bool utc = true);
 
+    // Returns the nearest sub-second distribution timestamp, in ticks, for provided timestamp, in ticks.
+    int64_t RoundToSubsecondDistribution(int64_t ticks, int32_t samplesPerSecond);
+
     // Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t)
     uint32_t TicksToString(char* ptr, uint32_t maxsize, std::string format, int64_t ticks);
 
