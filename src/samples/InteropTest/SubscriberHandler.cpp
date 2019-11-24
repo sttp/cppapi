@@ -113,7 +113,7 @@ void SubscriberHandler::ConnectionEstablished()
     StatusMessage("Connection established.");
 
     stringstream fileNameBuf;
-    fileNameBuf << m_name << ".csv";
+    fileNameBuf << m_name << "-cpp.csv";
 
     const string fileName = fileNameBuf.str();
         

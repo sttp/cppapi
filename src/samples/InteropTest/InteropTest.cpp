@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     SubscriberHandler* subscriber = new SubscriberHandler("InteropSubscriber");
     subscriber->Initialize(hostname, port);
     subscriber->SetAutoParseMetadata(false);
-    subscriber->SetFilterExpression("FILTER TOP 1 ActiveMeasurements WHERE SignalType='VPHM' ORDER BY ID");
+    subscriber->SetFilterExpression("FILTER ActiveMeasurements WHERE SignalType='VPHM' ORDER BY ID");
     subscriber->ConnectAsync();
 
     // Wait until the user presses enter before quitting.
