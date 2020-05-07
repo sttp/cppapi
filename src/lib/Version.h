@@ -25,7 +25,7 @@
 #define __VERSION_H
 
 #define STTP_TITLE "STTP C++ Library"
-#define STTP_VERSION "1.0.18"
-#define STTP_UPDATEDON "2019-11-09"
+#define STTP_VERSION "1.0.19"
+#define STTP_UPDATEDON "2020-05-06"
 
 #endif
