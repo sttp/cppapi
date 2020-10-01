@@ -67,11 +67,11 @@ jobs:
     - name: boost
       run: sudo apt-get update && sudo apt-get install -yq libboost-all-dev
     
-    - name: cmake build
-      run: cmake build
+    - name: cmake
+      run: cmake .
       
-    - name: cmake make
-      run: cmake --build build/
+    - name: make
+      run: make
       
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
