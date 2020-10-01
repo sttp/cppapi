@@ -2,7 +2,7 @@
 
 <img align="right" src="https://raw.githubusercontent.com/sttp/cppapi/master/src/sttp.png">
 
-Native C++ implementation for STTP
+Native C++ implementation for STTP ([IEEE 2664](https://standards.ieee.org/project/2664.html))
 
 Requires [boost](https://www.boost.org/)
 
