@@ -71,16 +71,19 @@ jobs:
         echo "::set-env name=BOOST_INCLUDEDIR::${{ env.BOOST_ROOT }}\boost\include"
         echo "::set-env name=BOOST_LIBRARYDIR::${{ env.BOOST_ROOT }}\lib"
     
-    - name: Verify boost version set in environmental variables
-      run: |
-          $env:BOOST_ROOT
-          $env:BOOST_ROOT_INCLUDEDIR
-          $env:BOOST_ROOT_LIBRARYDIR
+    - name: Verify boost root directory
+      run: $env:BOOST_ROOT
+
+    - name: Verify boost include directory
+      run: $env:BOOST_ROOT_INCLUDEDIR
+          
+    - name: Verify boost library directory
+      run: $env:BOOST_ROOT_LIBRARYDIR
   
     - name: Set symbolic boost folder to parallel STTP source
       run: |
           $currentPath = Get-Location
-          cmd /c mklink /D "$currentPath\..\boost" "$env:BOOST_ROOT"
+          cmd /c mklink /D "$currentPath\..\boost" "$env:BOOST_ROOT..\"
        
     - name: Build STTP
       run: |
