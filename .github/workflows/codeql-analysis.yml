@@ -64,20 +64,19 @@ jobs:
     #    uses a compiled language
 
     # install dependencies
-    - name: env
-      run: echo "::set-env name=BOOST_ROOT_LATEST::$env:BOOST_ROOT_1_72_0"
-       
-    - name: echo
+    - name: Setup environmental variables
+      run: |
+        echo "::set-env name=BOOST_ROOT_LATEST::$env:BOOST_ROOT_1_72_0"
+        $Env:Path += ";C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
+        
+    - name: Verify boost version
       run: $env:BOOST_ROOT_LATEST
   
-    - name: symbolic boost folder
+    - name: Set symbolic boost folder to parallel STTP source
       run: cmd /c mklink /D "..\boost" "$env:BOOST_ROOT_LATEST"
-  
-    - name: cmake
-      run: cmake .
-      
-    - name: make
-      run: make
+       
+    - name: Build STTP
+      run: msbuild src
       
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
