@@ -80,7 +80,7 @@ jobs:
     - name: Set symbolic boost folder to parallel STTP source
       run: |
           $currentPath = Get-Location
-          cmd /c mklink /D "$currentPath\..\boost" "$env:BOOST_ROOT_LATEST"
+          cmd /c mklink /D "$currentPath\..\boost" "$env:BOOST_ROOT"
        
     - name: Build STTP
       run: |
