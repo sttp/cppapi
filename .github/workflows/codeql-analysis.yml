@@ -71,7 +71,7 @@ jobs:
       run: $env:BOOST_ROOT_LATEST
   
     - name: symbolic boost folder
-      run: mklink /D ..\boost $env:BOOST_ROOT_LATEST
+      run: cmd /c mklink /D "..\boost" "$env:BOOST_ROOT_LATEST"
   
     - name: cmake
       run: cmake .
