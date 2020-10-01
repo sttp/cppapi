@@ -64,28 +64,6 @@ jobs:
     #    uses a compiled language
 
     # install dependencies
-    - name: Install zlib1g-dev
-      run: sudo apt-get install -yq zlib1g-dev
-
-    - name: Install libbz2-dev
-      run: sudo apt-get install -yq libbz2-dev
-    
-    - name: Download boost 1.71
-      run: |
-        sudo mkdir /usr/local/boost_1_71_0
-        cd /usr/local/
-        wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2
-        sudo tar -xvjf boost_1_71_0.tar.bz2
-    
-    - name: Build boost 1.71
-      run: |
-        cd /usr/local/boost_1_71_0
-        sudo ./bootstrap.sh
-        sudo ./b2 install
-    
-    - name: Add boost libraries to default path
-      run: sudo ldconfig /usr/local/lib
-    
     - name: cmake
       run: cmake .
       
