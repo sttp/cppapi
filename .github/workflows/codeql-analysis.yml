@@ -63,9 +63,18 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    - run: |
-       make bootstrap
-       make release
-
+    # install dependencies
+    - name: boost
+      run: sudo apt-get update && sudo apt-get install -yq libboost1.71-dev
+    
+    - name: mkdir
+      run: mkdir build
+      
+    - name: cmake build
+      run: cmake build
+      
+    - name: cmake make
+      run: cmake --build build/
+      
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
