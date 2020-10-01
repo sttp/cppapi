@@ -17,7 +17,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     strategy:
       fail-fast: false
@@ -69,6 +69,9 @@ jobs:
        
     - name: echo
       run: $env:BOOST_ROOT_LATEST
+  
+    - name: symbolic boost folder
+      run: mklink /D ..\boost $env:BOOST_ROOT_LATEST
   
     - name: cmake
       run: cmake .
