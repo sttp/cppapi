@@ -66,10 +66,16 @@ jobs:
     # install dependencies
 
     - name: Set boost environmental variable
-      run: echo "::set-env name=BOOST_ROOT_LATEST::$env:BOOST_ROOT_1_72_0"
-        
-    - name: Verify boost version set in environmental variable
-      run: $env:BOOST_ROOT_LATEST
+      run: |
+        echo "::set-env name=BOOST_ROOT::$env:BOOST_ROOT_1_72_0"
+        echo "::set-env name=BOOST_INCLUDEDIR::${{ env.BOOST_ROOT }}\boost\include"
+        echo "::set-env name=BOOST_LIBRARYDIR::${{ env.BOOST_ROOT }}\lib"
+    
+    - name: Verify boost version set in environmental variables
+      run: |
+          $env:BOOST_ROOT
+          $env:BOOST_ROOT_INCLUDEDIR
+          $env:BOOST_ROOT_LIBRARYDIR
   
     - name: Set symbolic boost folder to parallel STTP source
       run: |
