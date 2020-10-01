@@ -1,1 +1,5 @@
+SET (BOOST_ROOT "$ENV{BOOST_ROOT_1_72_0}")
+SET (BOOST_INCLUDEDIR "$ENV{BOOST_ROOT_1_72_0}\boost\include")
+SET (BOOST_LIBRARYDIR "$ENV{BOOST_ROOT_1_72_0}\lib")
+
 add_subdirectory(./src)
