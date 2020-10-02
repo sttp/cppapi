@@ -333,7 +333,7 @@ namespace sttp
     }
 
     template<class T>
-    static int32_t CompareValues(Nullable<T> leftNullable, Nullable<T> rightNullable)
+    static int32_t CompareValues(const Nullable<T>& leftNullable, const Nullable<T>& rightNullable)
     {
         const bool leftHasValue = leftNullable.HasValue();
         const bool rightHasValue = rightNullable.HasValue();

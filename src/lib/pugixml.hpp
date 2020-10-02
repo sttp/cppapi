@@ -1,4 +1,4 @@
-/**
+/** lgtm [cpp/missing-header-guard]
  * pugixml parser - version 1.9
  * --------------------------------------------------------
  * Copyright (C) 2006-2018, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
@@ -11,7 +11,6 @@
  * Copyright (C) 2003, by Kristen Wegner (kristen@tima.net)
  */
 
-//lgtm [cpp/missing-header-guard]
 #ifndef PUGIXML_VERSION
 // Define version macro; evaluates to major * 100 + minor so that it's safe to use in less-than comparisons
 #	define PUGIXML_VERSION 190

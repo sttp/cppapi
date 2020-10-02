@@ -56,7 +56,7 @@ namespace sttp
         ~ThreadSafeQueue();
 
         // Inserts an item into the queue.
-        void Enqueue(T item);
+        void Enqueue(const T& item);
 
         // Removes an item from the
         // queue and returns that item.
@@ -96,7 +96,7 @@ namespace sttp
 
     // Inserts an item into the queue.
     template<class T>
-    void ThreadSafeQueue<T>::Enqueue(T item)
+    void ThreadSafeQueue<T>::Enqueue(const T& item)
     {
         ScopeLock lock(m_mutex);
         m_queue.push(item);
