@@ -80,14 +80,9 @@ jobs:
     - name: Verify boost library directory
       run: $env:BOOST_ROOT_LIBRARYDIR
   
-    - name: Set symbolic boost folder to parallel STTP source
-      run: |
-          $currentPath = Get-Location
-          cmd /c mklink /D "D:\a\cppapi\boost" "$env:BOOST_ROOT"
-          cmd /c dir "D:\a\cppapi\boost"
-       
     - name: Build STTP
       run: |
+          cmd /c mklink /D "D:\a\cppapi\boost" "$env:BOOST_ROOT"
           $Env:Path += ";C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
           msbuild src
       
