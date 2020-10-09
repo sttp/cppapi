@@ -67,18 +67,10 @@ jobs:
 
     - name: Set boost environmental variable
       run: |
-        echo "::set-env name=BOOST_ROOT::$env:BOOST_ROOT_1_72_0"
-        echo "::set-env name=BOOST_INCLUDEDIR::${{ env.BOOST_ROOT }}\include\boost"
-        echo "::set-env name=BOOST_LIBRARYDIR::${{ env.BOOST_ROOT }}\lib"
+        echo "::set-env name=BOOST_ROOT::$env:BOOST_ROOT_1_72_0\include"
     
     - name: Verify boost root directory
       run: $env:BOOST_ROOT
-
-    - name: Verify boost include directory
-      run: $env:BOOST_ROOT_INCLUDEDIR
-          
-    - name: Verify boost library directory
-      run: $env:BOOST_ROOT_LIBRARYDIR
   
     - name: Build STTP
       run: |
