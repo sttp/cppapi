@@ -68,7 +68,7 @@ jobs:
     - name: Set boost environmental variable
       run: |
         echo "::set-env name=BOOST_ROOT::$env:BOOST_ROOT_1_72_0"
-        echo "::set-env name=BOOST_INCLUDEDIR::${{ env.BOOST_ROOT }}\boost\include"
+        echo "::set-env name=BOOST_INCLUDEDIR::${{ env.BOOST_ROOT }}\include\boost"
         echo "::set-env name=BOOST_LIBRARYDIR::${{ env.BOOST_ROOT }}\lib"
     
     - name: Verify boost root directory
@@ -84,9 +84,6 @@ jobs:
       run: |
           $currentPath = Get-Location
           cmd /c mklink /D "$currentPath\..\boost" "$env:BOOST_ROOT"
-          cmd /c dir "D:\a\cppapi\boost"
-          cmd /c dir "D:\a\cppapi\boost\boost"
-          cmd /c dir "D:\a\cppapi\boost\boost\uuid"
           $Env:Path += ";C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
           msbuild src
       
