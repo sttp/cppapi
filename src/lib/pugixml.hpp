@@ -1,4 +1,5 @@
-/** lgtm [cpp/missing-header-guard]
+// lgtm [cpp/missing-header-guard]
+/**
  * pugixml parser - version 1.9
  * --------------------------------------------------------
  * Copyright (C) 2006-2018, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
