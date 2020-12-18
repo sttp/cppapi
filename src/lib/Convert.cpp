@@ -447,7 +447,7 @@ string sttp::RegExEncode(const char value)
     return "\\u" + PadLeft(stream.str(), 4, '0');
 }
 
-Guid sttp::ParseGuid(const uint8_t* data, bool swapEndianness)
+Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
 {
     Guid id;
     uint8_t swappedBytes[16];
@@ -531,7 +531,7 @@ const char* sttp::Coalesce(const char* data, const char* nonEmptyValue)
 }
 
 // Attempt to parse a timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
-bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue, bool parseAsUTC)
+bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue, const bool parseAsUTC)
 {
     static const locale formats[] = {
         locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
@@ -543,11 +543,11 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
     TimeSpan utcOffset{};
     const string cleanTimestamp = PreparseTimestamp(time, utcOffset);
 
-    for (int32_t i = 0; i < formatsCount; i++)
+    for (const locale& format : formats)
     {
         istringstream stream(cleanTimestamp);
 
-        auto _ = stream.imbue(formats[i]);
+        auto _ = stream.imbue(format);
         stream >> timestamp;
 
         if (static_cast<bool>(stream))
@@ -563,7 +563,7 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
     return false;
 }
 
-datetime_t sttp::ParseTimestamp(const char* time, bool parseAsUTC)
+datetime_t sttp::ParseTimestamp(const char* time, const bool parseAsUTC)
 {
     datetime_t timestamp;
 
@@ -651,10 +651,8 @@ StringMap<string> sttp::ParseKeyValuePairs(const string& value, const char param
     //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
     //      would be encoded as:
     //          "normalKVP=-1; nestedKVP=p1\\u003dtrue\\u003b p2\\u003dfalse")
-    for (uint32_t i = 0; i < value.size(); i++)
+    for (const char character : value)
     {
-        const char character = value[i];
-
         if (character == startValueDelimiter)
         {
             if (!valueEscaped)
@@ -730,10 +728,10 @@ StringMap<string> sttp::ParseKeyValuePairs(const string& value, const char param
     // Parse key/value pairs from escaped value
     vector<string> pairs = Split(boost::algorithm::join(escapedValue, ""), parameterDelimiterStr, false);
 
-    for (uint32_t i = 0; i < pairs.size(); i++)
+    for (const string& pair : pairs)
     {
         // Separate key from value
-        vector<string> elements = Split(pairs[i], keyValueDelimiterStr, false);
+        vector<string> elements = Split(pair, keyValueDelimiterStr, false);
 
         if (elements.size() == 2)
         {

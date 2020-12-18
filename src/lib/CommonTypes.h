@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyCppcoreguidelinesMacroUsage
+// ReSharper disable CppClangTidyBugproneReservedIdentifier
+
 #pragma once
 
 #include <climits>
@@ -173,7 +176,7 @@ namespace sttp
         static const int64_t PerDay = 24LL * Ticks::PerHour;
     };
 
-    inline int32_t ConvertInt32(size_t value)
+    inline int32_t ConvertInt32(const size_t value)
     {
     #if _64BIT
         if (value > static_cast<size_t>(Int32::MaxValue))
@@ -376,7 +379,7 @@ namespace sttp
         {
         }
 
-        MemoryStream(const uint8_t* buffer, uint32_t offset, uint32_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
+        MemoryStream(const uint8_t* buffer, const uint32_t offset, const uint32_t length) : boost::iostreams::array_source(reinterpret_cast<const char*>(buffer + offset), length)
         {
         }
     };

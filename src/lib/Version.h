@@ -23,6 +23,6 @@
 
 #pragma once
 
-#define STTP_TITLE "STTP C++ Library"
-#define STTP_VERSION "1.0.20"
-#define STTP_UPDATEDON "2020-12-18"
+constexpr auto STTP_TITLE = "STTP C++ Library";
+constexpr auto STTP_VERSION = "1.0.20";
+constexpr auto STTP_UPDATEDON = "2020-12-18";

@@ -43,14 +43,13 @@ EndianConverter::EndianConverter()
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
-void EndianConverter::ByteSwap(uint8_t* value, uint32_t length)
+void EndianConverter::ByteSwap(uint8_t* value, const uint32_t length)
 {
     uint8_t *start, *end;
-    uint8_t temp;
 
     for (start = value, end = value + length - 1; start < end; ++start, --end)
     {
-        temp = *start;
+        const uint8_t temp = *start;
         *start = *end;
         *end = temp;
     }
