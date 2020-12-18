@@ -54,7 +54,7 @@ const char* sttp::data::EnumName(DataType type)
 
 const DataColumnPtr DataColumn::NullPtr = nullptr;
 
-DataColumn::DataColumn(DataTablePtr parent, string name, DataType type, string expression) :
+DataColumn::DataColumn(DataTablePtr parent, string name, const DataType type, string expression) :
     m_parent(std::move(parent)),
     m_name(std::move(name)),
     m_type(type),

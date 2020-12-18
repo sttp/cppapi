@@ -22,6 +22,10 @@
 //******************************************************************************************************
 
 #pragma warning(disable:26444)
+
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
+// ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 // ReSharper disable CppExpressionWithoutSideEffects
 // ReSharper disable once CppUnusedIncludeDirective
 #include "../filterexpressions/FilterExpressions.h"
@@ -71,7 +75,7 @@ int32_t DataRow::GetColumnIndex(const string& columnName) const
     return column->Index();
 }
 
-DataColumnPtr DataRow::ValidateColumnType(const int32_t columnIndex, DataType targetType, bool read) const
+DataColumnPtr DataRow::ValidateColumnType(const int32_t columnIndex, const DataType targetType, const bool read) const
 {
     const DataColumnPtr column = m_parent->Column(columnIndex);
 
@@ -90,7 +94,7 @@ DataColumnPtr DataRow::ValidateColumnType(const int32_t columnIndex, DataType ta
     if (!read && column->Computed())
         throw DataSetException("Cannot assign value to DataColumn \"" + column->Name() + " for table \"" + m_parent->Name() + "\", column is computed with an expression");
 
-    return column;
+    return column; // NOLINT
 }
 
 ExpressionTreePtr DataRow::GetExpressionTree(const DataColumnPtr& column)
@@ -123,7 +127,7 @@ ExpressionTreePtr DataRow::GetExpressionTree(const DataColumnPtr& column)
    return static_cast<FilterExpressionParser*>(m_values[columnIndex])->GetExpressionTrees()[0];
 }
 
-Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetType)
+Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType targetType)
 {
     try
     {
@@ -446,7 +450,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, DataType targetTyp
 }
 
 template<class T>
-Nullable<T> DataRow::GetValue(const int32_t columnIndex, DataType targetType)
+Nullable<T> DataRow::GetValue(const int32_t columnIndex, const DataType targetType)
 {
     const DataColumnPtr& column = ValidateColumnType(columnIndex, targetType, true);
 
@@ -462,7 +466,7 @@ Nullable<T> DataRow::GetValue(const int32_t columnIndex, DataType targetType)
 }
 
 template<class T>
-void DataRow::SetValue(const int32_t columnIndex, const Nullable<T>& value, DataType targetType)
+void DataRow::SetValue(const int32_t columnIndex, const Nullable<T>& value, const DataType targetType)
 {
     ValidateColumnType(columnIndex, targetType);
 

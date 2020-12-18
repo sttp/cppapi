@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
 #include "DataTable.h"
 #include "DataSet.h"
 
@@ -67,7 +69,7 @@ const DataColumnPtr& DataTable::Column(const string& columnName) const
     return DataColumn::NullPtr;
 }
 
-const DataColumnPtr& DataTable::Column(int32_t index) const
+const DataColumnPtr& DataTable::Column(const int32_t index) const
 {
     if (index < 0 || index >= ConvertInt32(m_columns.size()))
         return DataColumn::NullPtr;
@@ -80,12 +82,12 @@ const DataColumnPtr& DataTable::operator[](const string& columnName) const
     return Column(columnName);
 }
 
-const DataColumnPtr& DataTable::operator[](int32_t index) const
+const DataColumnPtr& DataTable::operator[](const int32_t index) const
 {
     return Column(index);
 }
 
-DataColumnPtr DataTable::CreateColumn(const string& name, DataType type, string expression)
+DataColumnPtr DataTable::CreateColumn(const string& name, const DataType type, string expression)
 {
     return NewSharedPtr<DataColumn, DataTablePtr, string, DataType, string>(shared_from_this(), name, type, std::move(expression));
 }
@@ -100,7 +102,7 @@ int32_t DataTable::ColumnCount() const
     return ConvertInt32(m_columns.size());
 }
 
-const DataRowPtr& DataTable::Row(int32_t index)
+const DataRowPtr& DataTable::Row(const int32_t index)
 {
     if (index < 0 || index >= ConvertInt32(m_rows.size()))
         return DataRow::NullPtr;

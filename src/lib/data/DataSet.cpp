@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
 #include "DataSet.h"
 #include "../pugixml.hpp"
 
@@ -191,7 +193,7 @@ DataSetPtr DataSet::FromXml(const std::vector<uint8_t>& buffer)
     return dataSet;
 }
 
-DataSetPtr DataSet::FromXml(const uint8_t* buffer, uint32_t length)
+DataSetPtr DataSet::FromXml(const uint8_t* buffer, const uint32_t length)
 {
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
     dataSet->ReadXml(buffer, length);
