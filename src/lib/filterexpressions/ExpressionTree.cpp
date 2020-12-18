@@ -21,6 +21,10 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
+// ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
+// ReSharper disable CppClangTidyPerformanceNoAutomaticMove
 #include "ExpressionTree.h"
 #include <regex>
 
@@ -1465,14 +1469,8 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
     if (!IsIntegerType(addValue->ValueType))
         throw ExpressionTreeException("\"DateAdd\" function add value, second argument, must be an integer type");
 
-    if (addValue->IsNull())
-        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, is null");
-
     if (intervalType->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, must be a string");
-
-    if (intervalType->IsNull())
-        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
 
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
@@ -1481,6 +1479,12 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
     // If source value is Null, result is Null
     if (dateValue->IsNull())
         return dateValue;
+
+    if (addValue->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, is null");
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
 
     int32_t value;
 
@@ -1536,9 +1540,6 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
     if (intervalType->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"DatePart\" function interval type, second argument, must be a string");
 
-    if (intervalType->IsNull())
-        throw ExpressionTreeException("\"DatePart\" function interval type, second argument, is null");
-
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
     const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
@@ -1546,6 +1547,9 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
     // If source value is Null, result is Null
     if (dateValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DatePart\" function interval type, second argument, is null");
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::DatePart(dateValue->ValueAsDateTime(), interval));
 }
@@ -1608,12 +1612,12 @@ ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue
     if (testValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"IndexOf\" function test value, second argument, must be a string");
 
-    if (testValue->IsNull())
-        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, is null");
-
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, is null");
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::IndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1725,12 +1729,12 @@ ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceV
     if (testValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, must be a string");
 
-    if (testValue->IsNull())
-        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, is null");
-
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, is null");
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::LastIndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1810,18 +1814,18 @@ ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceVa
     if (testValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, must be a string");
 
-    if (testValue->IsNull())
-        throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, is null");
-
     if (!IsIntegerType(indexValue->ValueType))
         throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, must be an integer type");
-
-    if (indexValue->IsNull())
-        throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, is null");
 
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
+
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, is null");
+
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, is null");
 
     int32_t index;
 
@@ -1897,15 +1901,15 @@ ValueExpressionPtr ExpressionTree::Replace(const ValueExpressionPtr& sourceValue
     if (replaceValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"Replace\" function replace value, third argument, must be a string");
 
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
+
     if (testValue->IsNull())
         throw ExpressionTreeException("\"Replace\" function test value, second argument, is null");
 
     if (replaceValue->IsNull())
         throw ExpressionTreeException("\"Replace\" function replace value, third argument, is null");
-
-    // If source value is Null, result is Null
-    if (sourceValue->IsNull())
-        return sourceValue;
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::String, sttp::Replace(sourceValue->ValueAsString(), testValue->ValueAsString(), replaceValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1956,18 +1960,18 @@ ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, 
     if (delimiterValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"Split\" function delimiter value, second argument, must be a string");
 
-    if (delimiterValue->IsNull())
-        throw ExpressionTreeException("\"Split\" function delimiter value, second argument, is null");
-
     if (!IsIntegerType(indexValue->ValueType))
         throw ExpressionTreeException("\"Split\" function index value, third argument, must be an integer type");
-
-    if (indexValue->IsNull())
-        throw ExpressionTreeException("\"Split\" function index value, third argument, is null");
 
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return sourceValue;
+
+    if (delimiterValue->IsNull())
+        throw ExpressionTreeException("\"Split\" function delimiter value, second argument, is null");
+
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"Split\" function index value, third argument, is null");
 
     int32_t index;
 
@@ -2083,12 +2087,12 @@ ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue,
     if (!IsIntegerType(lengthValue->ValueType))
         throw ExpressionTreeException("\"SubStr\" function length value, third argument, must be an integer type");
 
-    if (indexValue->IsNull())
-        throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
-
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::String);
+
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
 
     int32_t index, length = -1;
 
@@ -2206,7 +2210,7 @@ ValueExpressionPtr ExpressionTree::Multiply(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() * right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() * right->ValueAsBoolean() != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() * right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2306,7 +2310,7 @@ ValueExpressionPtr ExpressionTree::Add(const ValueExpressionPtr& leftValue, cons
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() + right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() + right->ValueAsBoolean() != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() + right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2338,7 +2342,7 @@ ValueExpressionPtr ExpressionTree::Subtract(const ValueExpressionPtr& leftValue,
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() - right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() - right->ValueAsBoolean() != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() - right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2389,7 +2393,7 @@ ValueExpressionPtr ExpressionTree::BitShiftLeft(const ValueExpressionPtr& leftVa
     switch (leftValue->ValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() << shiftValue);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() << shiftValue != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, leftValue->ValueAsInt32() << shiftValue);
         case ExpressionValueType::Int64:
@@ -2438,7 +2442,7 @@ ValueExpressionPtr ExpressionTree::BitShiftRight(const ValueExpressionPtr& leftV
     switch (leftValue->ValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() >> shiftValue);
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, leftValue->ValueAsBoolean() >> shiftValue != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, leftValue->ValueAsInt32() >> shiftValue);
         case ExpressionValueType::Int64:
@@ -2467,7 +2471,7 @@ ValueExpressionPtr ExpressionTree::BitwiseAnd(const ValueExpressionPtr& leftValu
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() & right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, (left->ValueAsBoolean() & right->ValueAsBoolean()) != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() & right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2496,7 +2500,7 @@ ValueExpressionPtr ExpressionTree::BitwiseOr(const ValueExpressionPtr& leftValue
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() | right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, (left->ValueAsBoolean() | right->ValueAsBoolean()) != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() | right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2525,7 +2529,7 @@ ValueExpressionPtr ExpressionTree::BitwiseXor(const ValueExpressionPtr& leftValu
     switch (valueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsBoolean() ^ right->ValueAsBoolean());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, (left->ValueAsBoolean() ^ right->ValueAsBoolean()) != 0);
         case ExpressionValueType::Int32:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, left->ValueAsInt32() ^ right->ValueAsInt32());
         case ExpressionValueType::Int64:
@@ -2698,7 +2702,7 @@ ValueExpressionPtr ExpressionTree::Equal(const ValueExpressionPtr& leftValue, co
         case ExpressionValueType::Decimal:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() == right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() == right->ValueAsDouble());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() == right->ValueAsDouble()); // NOLINT(clang-diagnostic-float-equal) //-V550
         case ExpressionValueType::String:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, sttp::IsEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
@@ -2732,7 +2736,7 @@ ValueExpressionPtr ExpressionTree::NotEqual(const ValueExpressionPtr& leftValue,
         case ExpressionValueType::Decimal:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDecimal() != right->ValueAsDecimal());
         case ExpressionValueType::Double:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() != right->ValueAsDouble());
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, left->ValueAsDouble() != right->ValueAsDouble()); // NOLINT(clang-diagnostic-float-equal) //-V550
         case ExpressionValueType::String:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, !sttp::IsEqual(left->ValueAsString(), right->ValueAsString(), !exactMatch));
         case ExpressionValueType::Guid:
@@ -2939,7 +2943,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0;
+                    targetValue = value != 0;
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = value;
@@ -2971,7 +2975,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0LL;
+                    targetValue = value != 0LL;
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);
@@ -3003,7 +3007,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == decimal_t(0);
+                    targetValue = value != decimal_t(0);
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);
@@ -3035,7 +3039,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0.0; //-V550
+                    targetValue = value != 0.0; // NOLINT(clang-diagnostic-float-equal) //-V550
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);
@@ -3125,7 +3129,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = value == 0;
+                    targetValue = value != 0LL;
                     break;
                 case ExpressionValueType::Int32:
                     targetValue = static_cast<int32_t>(value);
