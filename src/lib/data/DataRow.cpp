@@ -185,7 +185,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
                     case DataType::String:
                         return sourceValue->ToString();
                     case DataType::Boolean:
-                        return value == 0;
+                        return value != 0;
                     case DataType::Single:
                         return static_cast<float32_t>(value);
                     case DataType::Double:
@@ -224,7 +224,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
                     case DataType::String:
                         return sourceValue->ToString();
                     case DataType::Boolean:
-                        return value == 0LL;
+                        return value != 0LL;
                     case DataType::Single:
                         return static_cast<float32_t>(value);
                     case DataType::Double:
@@ -263,7 +263,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
                     case DataType::String:
                         return sourceValue->ToString();
                     case DataType::Boolean:
-                        return value == decimal_t(0);
+                        return value != decimal_t(0);
                     case DataType::Single:
                         return static_cast<float32_t>(value);
                     case DataType::Double:
@@ -302,7 +302,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
                     case DataType::String:
                         return sourceValue->ToString();
                     case DataType::Boolean:
-                        return value == 0.0; //-V550
+                        return value != 0.0; // NOLINT(clang-diagnostic-float-equal) //-V550
                     case DataType::Single:
                         return static_cast<float32_t>(value);
                     case DataType::Double:
@@ -408,7 +408,7 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
                     case DataType::String:
                         return sourceValue->ToString();
                     case DataType::Boolean:
-                        return value == 0;
+                        return value != 0;
                     case DataType::DateTime:
                         return result;
                     case DataType::Single:
