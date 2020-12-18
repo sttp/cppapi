@@ -1,5 +1,5 @@
-// Auto-generated on Fri Dec 18 11:08:18 2020
-// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\sttp\cppapi\src\lib\transport\ActiveMeasurementsSchema.xml sttp::transport::
+// Auto-generated on Fri Dec 18 12:07:31 2020
+// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\sttp\cppapi\src\lib\transport\ActiveMeasurementsSchema.xml -namespace=sttp::transport::
 
 #include "ActiveMeasurementsSchema.h"
 
