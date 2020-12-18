@@ -149,7 +149,7 @@ uint32_t SubscriberConnection::GetOperationalModes() const
     return m_operationalModes;
 }
 
-void SubscriberConnection::SetOperationalModes(uint32_t value)
+void SubscriberConnection::SetOperationalModes(const uint32_t value)
 {
     m_operationalModes = value;
     m_encoding = value & OperationalModes::EncodingMask;
@@ -190,7 +190,7 @@ int32_t SubscriberConnection::GetProcessingInterval() const
     return m_processingInterval;
 }
 
-void SubscriberConnection::SetProcessingInterval(int32_t value)
+void SubscriberConnection::SetProcessingInterval(const int32_t value)
 {
     m_processingInterval = value;
     m_parent->DispatchProcessingIntervalChangeRequested(m_parent->AddDispatchReference(GetReference()));
@@ -212,7 +212,7 @@ bool SubscriberConnection::GetIncludeTime() const
     return m_includeTime;
 }
 
-void SubscriberConnection::SetIncludeTime(bool value)
+void SubscriberConnection::SetIncludeTime(const bool value)
 {
     m_includeTime = value;
 }
@@ -222,7 +222,7 @@ bool SubscriberConnection::GetUseLocalClockAsRealTime() const
     return m_useLocalClockAsRealTime;
 }
 
-void SubscriberConnection::SetUseLocalClockAsRealTime(bool value)
+void SubscriberConnection::SetUseLocalClockAsRealTime(const bool value)
 {
     m_useLocalClockAsRealTime = value;
 }
@@ -232,7 +232,7 @@ float64_t SubscriberConnection::GetLagTime() const
     return m_lagTime;
 }
 
-void SubscriberConnection::SetLagTime(float64_t value)
+void SubscriberConnection::SetLagTime(const float64_t value)
 {
     m_lagTime = value;
 }
@@ -242,7 +242,7 @@ float64_t SubscriberConnection::GetLeadTime() const
     return m_leadTime;
 }
 
-void SubscriberConnection::SetLeadTime(float64_t value)
+void SubscriberConnection::SetLeadTime(const float64_t value)
 {
     m_leadTime = value;
 }
@@ -252,7 +252,7 @@ float64_t SubscriberConnection::GetPublishInterval() const
     return m_publishInterval;
 }
 
-void SubscriberConnection::SetPublishInterval(float64_t value)
+void SubscriberConnection::SetPublishInterval(const float64_t value)
 {
     m_publishInterval = value;
 }
@@ -262,7 +262,7 @@ bool SubscriberConnection::GetUseMillisecondResolution() const
     return m_useMillisecondResolution;
 }
 
-void SubscriberConnection::SetUseMillisecondResolution(bool value)
+void SubscriberConnection::SetUseMillisecondResolution(const bool value)
 {
     m_useMillisecondResolution = value;
 }
@@ -272,7 +272,7 @@ bool SubscriberConnection::GetTrackLatestMeasurements() const
     return m_trackLatestMeasurements;
 }
 
-void SubscriberConnection::SetTrackLatestMeasurements(bool value)
+void SubscriberConnection::SetTrackLatestMeasurements(const bool value)
 {
     m_trackLatestMeasurements = value;
 }
@@ -282,7 +282,7 @@ bool SubscriberConnection::GetIsNaNFiltered() const
     return m_isNaNFiltered;
 }
 
-void SubscriberConnection::SetIsNaNFiltered(bool value)
+void SubscriberConnection::SetIsNaNFiltered(const bool value)
 {
     if (value)
     {
@@ -305,7 +305,7 @@ bool SubscriberConnection::GetIsSubscribed() const
     return m_isSubscribed;
 }
 
-void SubscriberConnection::SetIsSubscribed(bool value)
+void SubscriberConnection::SetIsSubscribed(const bool value)
 {
     m_isSubscribed = value;
 }
@@ -382,7 +382,7 @@ bool SubscriberConnection::CipherKeysDefined() const
     return !m_keys[0].empty();
 }
 
-vector<uint8_t> SubscriberConnection::Keys(int32_t cipherIndex)
+vector<uint8_t> SubscriberConnection::Keys(const int32_t cipherIndex)
 {
     if (cipherIndex < 0 || cipherIndex > 1)
         throw out_of_range("Cipher index must be 0 or 1");
@@ -390,7 +390,7 @@ vector<uint8_t> SubscriberConnection::Keys(int32_t cipherIndex)
     return m_keys[cipherIndex];
 }
 
-vector<uint8_t> SubscriberConnection::IVs(int32_t cipherIndex)
+vector<uint8_t> SubscriberConnection::IVs(const int32_t cipherIndex)
 {
     if (cipherIndex < 0 || cipherIndex > 1)
         throw out_of_range("Cipher index must be 0 or 1");
@@ -398,12 +398,12 @@ vector<uint8_t> SubscriberConnection::IVs(int32_t cipherIndex)
     return m_ivs[cipherIndex];
 }
 
-void SubscriberConnection::Start(bool connectionAccepted)
+void SubscriberConnection::Start(const bool connectionAccepted)
 {
     m_connectionAccepted = connectionAccepted;
 
     // Attempt to lookup remote connection identification for logging purposes
-    auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
+    const auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
     m_ipAddress = remoteEndPoint.address();
 
     if (remoteEndPoint.protocol() == tcp::v6())
@@ -414,13 +414,13 @@ void SubscriberConnection::Start(bool connectionAccepted)
     try
     {
         DnsResolver resolver(m_commandChannelService);
-        const DnsResolver::query query(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
-        DnsResolver::iterator iterator = resolver.resolve(query);
+        const DnsResolver::query dnsQuery(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
+        DnsResolver::iterator iterator = resolver.resolve(dnsQuery);
         const DnsResolver::iterator end;
 
         while (iterator != end)
         {
-            auto endPoint = *iterator++;
+            const auto& endPoint = *iterator++;
 
             if (!endPoint.host_name().empty())
             {
@@ -501,7 +501,7 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         // Track latest measurements
         for (const auto& measurement : measurements)
         {
-            const sttp::Guid signalID = measurement->SignalID;
+            const Guid signalID = measurement->SignalID;
 
             if (TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription())
             {
@@ -510,7 +510,7 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
             else
             {
                 MeasurementPtr trackedMeasurement = ToPtr(*measurement);
-                trackedMeasurement->Value = NAN;
+                trackedMeasurement->Value = NaN;
                 m_latestMeasurements.insert_or_assign(signalID, trackedMeasurement);
             }
         }
@@ -574,6 +574,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                 {
                     uint32_t operationalModes = GetOperationalModes();
                     m_usingPayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
+
                     const string connectionString = DecodeString(data, index, byteLength);
 
                     if (!m_usingPayloadCompression && ((flags & DataPacketFlags::Compact) == 0 || (operationalModes & OperationalModes::CompressPayloadData) > 0))
@@ -663,18 +664,18 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_temporalSubscriptionCanceled = false;
                     }
 
-                    SignalIndexCachePtr signalIndexCache = nullptr;
-
-                    // Apply subscriber filter expression and build signal index cache
-                    if (TryGetValue(settings, "filterExpression", setting))
-                    {
-                        bool success;
+                    TryGetValue(settings, "filterExpression", setting);
                         
-                        signalIndexCache = ParseSubscriptionRequest(setting, success);
+                    if (IsEmptyOrWhiteSpace(setting))
+                        setting = ToString(Empty::Guid);
 
-                        if (!success)
-                            return;
-                    }
+                    bool success;
+                    
+                    // Apply subscriber filter expression and build signal index cache
+                    SignalIndexCachePtr signalIndexCache = ParseSubscriptionRequest(setting, success);
+
+                    if (!success)
+                        return;
 
                     // Pass subscriber assembly information to connection, if defined
                     if (TryGetValue(settings, "assemblyInfo", setting))
@@ -727,7 +728,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                                 m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
                                 m_dataChannelActive = true;
                                 
-                                Thread([&,this]
+                                Thread _([&,this]
                                 {
                                     UniqueLock lock(m_dataChannelMutex);
 
@@ -746,15 +747,13 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         }
                     }
 
-                    int32_t signalCount = 0;
+                    if (signalIndexCache == nullptr)
+                        throw PublisherException("Signal index cache is undefined.");
 
-                    if (signalIndexCache != nullptr)
-                    {
-                        signalCount = signalIndexCache->Count();
+                    int32_t signalCount = signalIndexCache->Count();
 
-                        // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
-                        SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
-                    }
+                    // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
+                    SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
 
                     SetSignalIndexCache(signalIndexCache);
 
@@ -778,7 +777,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                             {
                                 // Initialize base time offsets
                                 m_baseTimeOffsets[0] = realTime;
-                                m_baseTimeOffsets[1] = realTime + int64_t(timer->GetInterval() * Ticks::PerMillisecond);
+                                m_baseTimeOffsets[1] = realTime + static_cast<int64_t>(timer->GetInterval() * Ticks::PerMillisecond);
 
                                 m_timeIndex = 0;
                             }
@@ -790,7 +789,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                                 m_timeIndex ^= 1;
 
                                 // Setup next time base
-                                m_baseTimeOffsets[oldIndex] = realTime + int64_t(timer->GetInterval() * Ticks::PerMillisecond);
+                                m_baseTimeOffsets[oldIndex] = realTime + static_cast<int64_t>(timer->GetInterval() * Ticks::PerMillisecond);
                             }
 
                             // Send new base time offsets to client
@@ -813,11 +812,11 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     // Setup publication timer for throttled subscriptions
                     if (m_trackLatestMeasurements)
                     {
-                        int32_t publishInterval = int32_t(m_publishInterval * 1000);
+                        int32_t publishInterval = static_cast<int32_t>(m_publishInterval * 1000);
 
                         // Fall back on lag-time if publish interval is defined as zero
                         if (publishInterval <= 0)
-                            publishInterval = int32_t((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); //-V550
+                            publishInterval = static_cast<int32_t>((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); // NOLINT(clang-diagnostic-float-equal) //-V550
 
                         m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [&,this](Timer*, void*)
                         {
@@ -834,7 +833,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 
                                 if (!TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) && !GetIsTemporalSubscription())
                                 {
-                                    measurement->Value = NAN;
+                                    measurement->Value = NaN;
                                     measurement->Flags |= MeasurementStateFlags::BadTime;
                                 }
 
@@ -1058,7 +1057,7 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
     parser->SetPrimaryTableName("ActiveMeasurements");
 
     // Register call-back for ANLTR parsing exceptions -- these will be appended to any primary exception message
-    parser->RegisterParsingExceptionCallback([&parsingException](FilterExpressionParserPtr, const string& exception) { parsingException = exception; });
+    parser->RegisterParsingExceptionCallback([&parsingException](const FilterExpressionParserPtr&, const string& exception) { parsingException = exception; });
 
     try
     {
@@ -1118,7 +1117,7 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
         uint64_t id;
 
         ParseMeasurementKey(row->ValueAsString(idColumn).GetValueOrDefault(), source, id);
-        signalIndexCache->AddMeasurementKey(int32_t(i), signalID, source, id, charSizeEstimate);
+        signalIndexCache->AddMeasurementKey(static_cast<int32_t>(i), signalID, source, id, charSizeEstimate);
     }
 
     success = true;
@@ -1239,7 +1238,7 @@ void SubscriberConnection::PublishTSSCDataPacket(int32_t count)
 {
     const uint32_t length = m_tsscEncoder.FinishBlock();
     vector<uint8_t> buffer;
-    buffer.reserve(length + 8);
+    buffer.reserve(static_cast<size_t>(length) + 8);
 
     // Serialize data packet flags into response
     buffer.push_back(DataPacketFlags::Compressed);
@@ -1284,8 +1283,13 @@ bool SubscriberConnection::SendDataStartTime(uint64_t timestamp)
 // All commands received from the client are handled by this thread.
 void SubscriberConnection::ReadCommandChannel()
 {
-    if (!m_stopped)
-        async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&SubscriberConnection::ReadPayloadHeader, this, _1, _2));
+    if (m_stopped)
+        return;
+
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    {
+        ReadPayloadHeader(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
 }
 
 void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
@@ -1320,9 +1324,10 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t byte
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
         // Validate packet size, anything larger than 256K should be considered invalid data
+        // TODO: Consider allowing "continued" subscribes to overcome a fixed packet limit
         if (packetSize > static_cast<uint32_t>(UInt16::MaxValue * 4U))
         {
-            Thread([this, packetSize]
+            Thread _([this, packetSize]
             {
                 m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
                 SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
@@ -1339,10 +1344,13 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t byte
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), bind(&SubscriberConnection::ParseCommand, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [&](auto && _error, auto && _bytesTransferred)
+    {
+        ParseCommand(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
 }
 
-void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTransferred)
+void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t bytesTransferred)
 {
     if (m_stopped || !m_connectionAccepted)
         return;
@@ -1373,27 +1381,30 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
     {
         uint8_t* data = &m_readBuffer[0];
         const uint32_t command = data[0];
+        const uint32_t length = ConvertInt32(bytesTransferred);
+
+        // Forward data position beyond command byte
         data++;
 
         switch (command)
         {
             case ServerCommand::Subscribe:
-                HandleSubscribe(data, bytesTransferred);
+                HandleSubscribe(data, length);
                 break;
             case ServerCommand::Unsubscribe:
                 HandleUnsubscribe();
                 break;
             case ServerCommand::MetadataRefresh:
-                HandleMetadataRefresh(data, bytesTransferred);
+                HandleMetadataRefresh(data, length);
                 break;
             case ServerCommand::RotateCipherKeys:
                 HandleRotateCipherKeys();
                 break;
             case ServerCommand::UpdateProcessingInterval:
-                HandleUpdateProcessingInterval(data, bytesTransferred);
+                HandleUpdateProcessingInterval(data, length);
                 break;
             case ServerCommand::DefineOperationalModes:
-                HandleDefineOperationalModes(data, bytesTransferred);
+                HandleDefineOperationalModes(data, length);
                 break;
             case ServerCommand::ConfirmNotification:
             case ServerCommand::ConfirmBufferBlock:
@@ -1413,7 +1424,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, uint32_t bytesTr
             case ServerCommand::UserCommand13:
             case ServerCommand::UserCommand14:
             case ServerCommand::UserCommand15:
-                HandleUserCommand(command, data, bytesTransferred);
+                HandleUserCommand(command, data, length);
                 break;
             default:
             {
@@ -1446,7 +1457,7 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndex
     const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
     const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
 
-    serializationBuffer.reserve(uint32_t(signalIndexCache.GetBinaryLength() * 0.02));
+    serializationBuffer.reserve(static_cast<uint32_t>(signalIndexCache.GetBinaryLength() * 0.02));
     signalIndexCache.Serialize(*this, serializationBuffer);
 
     if (compressSignalIndexCache && useGZipCompression)
@@ -1534,7 +1545,11 @@ void SubscriberConnection::CommandChannelSendAsync()
         return;
 
     vector<uint8_t>& data = *m_tcpWriteBuffers[0];
-    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, bind(&SubscriberConnection::CommandChannelWriteHandler, this, _1, _2)));
+
+    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, [this](auto && _error, auto && _bytesTransferred)
+    {
+        CommandChannelWriteHandler(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    }));
 }
 
 void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
@@ -1575,7 +1590,11 @@ void SubscriberConnection::DataChannelSendAsync()
         return;
 
     vector<uint8_t>& data = *m_udpWriteBuffers[0];
-    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, bind(&SubscriberConnection::DataChannelWriteHandler, this, _1, _2)));
+
+    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, [this](auto && _error, auto && _bytesTransferred)
+    {
+        DataChannelWriteHandler(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    }));
 }
 
 void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
@@ -1639,7 +1658,7 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
         else
         {
             // Add response payload size for TCP channels to handle interleaved data reception
-            buffer.reserve(packetSize + Common::PayloadHeaderSize);
+            buffer.reserve(static_cast<size_t>(packetSize) + Common::PayloadHeaderSize);
             EndianConverter::WriteBigEndianBytes(buffer, packetSize);
         }
 
@@ -1652,7 +1671,7 @@ bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCod
         if (data.empty())
         {
             // Add zero sized data buffer to response packet
-            WriteBytes(buffer, uint32_t(0));
+            WriteBytes(buffer, static_cast<uint32_t>(0));
         }
         else
         {

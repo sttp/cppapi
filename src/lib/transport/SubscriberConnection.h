@@ -133,7 +133,7 @@ namespace transport
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
-        void ParseCommand(const ErrorCode& error, uint32_t bytesTransferred);
+        void ParseCommand(const ErrorCode& error, size_t bytesTransferred);
         std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
         std::vector<uint8_t> SerializeMetadata(const sttp::data::DataSetPtr& metadata) const;
         sttp::data::DataSetPtr FilterClientMetadata(const StringMap<sttp::filterexpressions::ExpressionTreePtr>& filterExpressions) const;
