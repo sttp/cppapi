@@ -69,18 +69,12 @@ const uint8_t TSSCCodeWords::ValueXOR28;
 const uint8_t TSSCCodeWords::ValueXOR32;
 
 TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)> writeBits) : //-V730
-    TSSCPointMetadata::TSSCPointMetadata(
-        std::move(writeBits),
-        function<int32_t()>(nullptr),
-        function<int32_t()>(nullptr))
+    TSSCPointMetadata::TSSCPointMetadata(std::move(writeBits), function<int32_t()>(nullptr), function<int32_t()>(nullptr))
 {
 }
 
 TSSCPointMetadata::TSSCPointMetadata(function<int32_t()> readBit, function<int32_t()> readBits5) : //-V730
-    TSSCPointMetadata::TSSCPointMetadata(
-        function<void(int32_t, int32_t)>(nullptr),
-        std::move(readBit),
-        std::move(readBits5))
+    TSSCPointMetadata::TSSCPointMetadata(function<void(int32_t, int32_t)>(nullptr), std::move(readBit), std::move(readBits5))
 {
 }
 
@@ -88,7 +82,7 @@ TSSCPointMetadata::TSSCPointMetadata(
     function<void(int32_t, int32_t)> writeBits,
     function<int32_t()> readBit,
     function<int32_t()> readBits5) :
-    m_commandStats(),
+    m_commandStats(), // Initializes array elements to zero
     m_commandsSentSinceLastChange(0),
     m_mode(4),
     m_mode21(0),
@@ -189,7 +183,7 @@ int32_t TSSCPointMetadata::ReadCode()
     return code;
 }
 
-void TSSCPointMetadata::UpdatedCodeStatistics(int32_t code)
+void TSSCPointMetadata::UpdatedCodeStatistics(const int32_t code)
 {
     m_commandsSentSinceLastChange++;
     m_commandStats[code]++;

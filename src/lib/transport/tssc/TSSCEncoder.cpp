@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticUndefinedReinterpretCast
 #include "TSSCEncoder.h"
 #include "../Constants.h"
 
@@ -67,7 +68,7 @@ void TSSCEncoder::Reset()
     m_prevTimestamp2 = 0LL;
 }
 
-void TSSCEncoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
+void TSSCEncoder::SetBuffer(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     ClearBitStream();
     m_data = data;
@@ -81,7 +82,7 @@ uint32_t TSSCEncoder::FinishBlock()
     return m_position;
 }
 
-bool TSSCEncoder::TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t quality, float32_t value)
+bool TSSCEncoder::TryAddMeasurement(const int32_t id, const int64_t timestamp, const uint32_t quality, float32_t value)
 {
     //if there are fewer than 100 bytes available on the buffer
     //assume that we cannot add any more.
@@ -96,7 +97,7 @@ bool TSSCEncoder::TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t qual
         point = NewTSSCPointMetadata();
 
         if (id >= pointCount)
-            m_points.resize(static_cast<uint32_t>(id) + 1, nullptr);
+            m_points.resize(static_cast<size_t>(id) + 1, nullptr);
 
         point->PrevNextPointID1 = id + 1;
         
@@ -226,10 +227,10 @@ bool TSSCEncoder::TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t qual
 
 TSSCPointMetadataPtr TSSCEncoder::NewTSSCPointMetadata()
 {
-    return NewSharedPtr<TSSCPointMetadata>([&,this](int32_t code, int32_t length) { return WriteBits(code, length); });
+    return NewSharedPtr<TSSCPointMetadata>([&,this](const int32_t code, const int32_t length) { return WriteBits(code, length); });
 }
 
-void TSSCEncoder::WritePointIDChange(int32_t id)
+void TSSCEncoder::WritePointIDChange(const int32_t id)
 {
     const uint32_t bitsChanged = static_cast<uint32_t>(id ^ m_lastPoint->PrevNextPointID1);
 
@@ -289,7 +290,7 @@ void TSSCEncoder::WritePointIDChange(int32_t id)
     m_lastPoint->PrevNextPointID1 = id;
 }
 
-void TSSCEncoder::WriteTimestampChange(int64_t timestamp)
+void TSSCEncoder::WriteTimestampChange(const int64_t timestamp)
 {
     if (m_prevTimestamp2 == timestamp)
     {
@@ -344,7 +345,7 @@ void TSSCEncoder::WriteTimestampChange(int64_t timestamp)
         }
     }
 
-    //Save the smallest delta time
+    // Save the smallest delta time
     const int64_t minDelta = abs(m_prevTimestamp1 - timestamp);
 
     if (minDelta < m_prevTimeDelta4
@@ -380,7 +381,7 @@ void TSSCEncoder::WriteTimestampChange(int64_t timestamp)
     m_prevTimestamp1 = timestamp;
 }
 
-void TSSCEncoder::WriteQualityChange(uint32_t quality, const TSSCPointMetadataPtr& point)
+void TSSCEncoder::WriteQualityChange(const uint32_t quality, const TSSCPointMetadataPtr& point)
 {
     if (point->PrevQuality2 == quality)
     {
@@ -403,12 +404,12 @@ void TSSCEncoder::ClearBitStream()
     m_bitStreamCache = 0;
 }
 
-void TSSCEncoder::WriteBits(int32_t code, int32_t length)
+void TSSCEncoder::WriteBits(const int32_t code, const int32_t length)
 {
     if (m_bitStreamBufferIndex < 0)
         m_bitStreamBufferIndex = static_cast<int32_t>(m_position++);
 
-    m_bitStreamCache = (m_bitStreamCache << length) | code;
+    m_bitStreamCache = m_bitStreamCache << length | code;
     m_bitStreamCacheBitCount += length;
 
     if (m_bitStreamCacheBitCount > 7)
@@ -453,7 +454,7 @@ void TSSCEncoder::BitStreamEnd()
     }
 }
 
-void Encode7BitUInt32(uint8_t* stream, uint32_t & position, uint32_t value)
+void Encode7BitUInt32(uint8_t* stream, uint32_t& position, const uint32_t value)
 {
     if (value < 128UL)
     {
@@ -471,7 +472,7 @@ void Encode7BitUInt32(uint8_t* stream, uint32_t & position, uint32_t value)
         return;
     }
 
-    stream[position + 1] = static_cast<uint8_t>((value >> 7) | 128);
+    stream[position + 1] = static_cast<uint8_t>(value >> 7 | 128);
 
     if (value < 2097152UL)
     {
@@ -480,7 +481,7 @@ void Encode7BitUInt32(uint8_t* stream, uint32_t & position, uint32_t value)
         return;
     }
 
-    stream[position + 2] = static_cast<uint8_t>((value >> 14) | 128);
+    stream[position + 2] = static_cast<uint8_t>(value >> 14 | 128);
 
     if (value < 268435456UL)
     {
@@ -489,7 +490,7 @@ void Encode7BitUInt32(uint8_t* stream, uint32_t & position, uint32_t value)
         return;
     }
 
-    stream[position + 3] = static_cast<uint8_t>((value >> 21) | 128);
+    stream[position + 3] = static_cast<uint8_t>(value >> 21 | 128);
     stream[position + 4] = static_cast<uint8_t>(value >> 28);
 
     position += 5;
@@ -513,7 +514,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 1] = static_cast<uint8_t>((value >> 7) | 128);
+    stream[position + 1] = static_cast<uint8_t>(value >> 7 | 128);
     
     if (value < 2097152UL)
     {
@@ -522,7 +523,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 2] = static_cast<uint8_t>((value >> 14) | 128);
+    stream[position + 2] = static_cast<uint8_t>(value >> 14 | 128);
     
     if (value < 268435456UL)
     {
@@ -531,7 +532,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 3] = static_cast<uint8_t>((value >> 21) | 128);
+    stream[position + 3] = static_cast<uint8_t>(value >> 21 | 128);
     
     if (value < 34359738368UL)
     {
@@ -540,7 +541,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 4] = static_cast<uint8_t>((value >> 28) | 128);
+    stream[position + 4] = static_cast<uint8_t>(value >> 28 | 128);
     
     if (value < 4398046511104UL)
     {
@@ -549,7 +550,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 5] = static_cast<uint8_t>((value >> 35) | 128);
+    stream[position + 5] = static_cast<uint8_t>(value >> 35 | 128);
     
     if (value < 562949953421312UL)
     {
@@ -558,7 +559,7 @@ void Encode7BitUInt64(uint8_t* stream, uint32_t& position, uint64_t value)
         return;
     }
     
-    stream[position + 6] = static_cast<uint8_t>((value >> 42) | 128);
+    stream[position + 6] = static_cast<uint8_t>(value >> 42 | 128);
     
     if (value < 72057594037927936UL)
     {

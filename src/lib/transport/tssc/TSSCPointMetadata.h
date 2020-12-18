@@ -81,10 +81,10 @@ namespace tssc
         uint8_t m_commandStats[CommandStatsLength];
         int32_t m_commandsSentSinceLastChange;
 
-        //Bit codes for the 4 modes of encoding. 
+        // Bit codes for the 4 modes of encoding. 
         uint8_t m_mode;
 
-        //(Mode 1 means no prefix.)
+        // Mode 1 means no prefix.
         uint8_t m_mode21;
 
         uint8_t m_mode31;

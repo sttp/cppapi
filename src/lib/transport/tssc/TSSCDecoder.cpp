@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticUndefinedReinterpretCast
 #include "TSSCDecoder.h"
 #include "../Constants.h"
 
@@ -71,7 +72,7 @@ TSSCPointMetadataPtr TSSCDecoder::NewTSSCPointMetadata()
     return NewSharedPtr<TSSCPointMetadata>([&,this]() { return ReadBit(); }, [&,this]() { return ReadBits5(); });
 }
 
-void TSSCDecoder::SetBuffer(uint8_t* data, uint32_t offset, uint32_t length)
+void TSSCDecoder::SetBuffer(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     ClearBitStream();
     m_data = data;
@@ -111,7 +112,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
 
     if (code <= TSSCCodeWords::PointIDXOR32)
     {
-        DecodePointID(code, m_lastPoint);
+        DecodePointID(static_cast<uint8_t>(code), m_lastPoint);
         code = m_lastPoint->ReadCode();
         
         if (code < TSSCCodeWords::TimeDelta1Forward)
@@ -141,7 +142,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         nextPoint = NewTSSCPointMetadata();
 
         if (id >= pointCount)
-            m_points.resize(static_cast<uint32_t>(id) + 1, nullptr);
+            m_points.resize(static_cast<size_t>(id) + 1, nullptr);
 
         m_points[id] = nextPoint;
         
@@ -150,7 +151,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
 
     if (code <= TSSCCodeWords::TimeXOR7Bit)
     {
-        timestamp = DecodeTimestamp(code);
+        timestamp = DecodeTimestamp(static_cast<uint8_t>(code));
         code = m_lastPoint->ReadCode();
 
         if (code < TSSCCodeWords::Quality2)
@@ -176,7 +177,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
 
     if (code <= TSSCCodeWords::Quality7Bit32)
     {
-        quality = DecodeQuality(code, nextPoint);
+        quality = DecodeQuality(static_cast<uint8_t>(code), nextPoint);
         code = m_lastPoint->ReadCode();
         
         if (code < TSSCCodeWords::Value1)
@@ -200,8 +201,8 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         quality = nextPoint->PrevQuality1;
     }
 
-    //Since value will almost always change, 
-    //This is not put inside a function call.
+    // Since value will almost always change, 
+    // this is not put inside a function call.
     uint32_t valueRaw;
 
     if (code == TSSCCodeWords::Value1)
@@ -287,7 +288,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
     return true;
 }
 
-void TSSCDecoder::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint)
+void TSSCDecoder::DecodePointID(const uint8_t code, const TSSCPointMetadataPtr& lastPoint)
 {
     switch (code)
     {
@@ -299,23 +300,23 @@ void TSSCDecoder::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPo
             m_position += 1;
             break;
         case TSSCCodeWords::PointIDXOR12:
-            lastPoint->PrevNextPointID1 = ReadBits4() ^ (m_data[m_position] << 4) ^ lastPoint->PrevNextPointID1;
+            lastPoint->PrevNextPointID1 = ReadBits4() ^ m_data[m_position] << 4 ^ lastPoint->PrevNextPointID1;
             m_position += 1;
             break;
         case TSSCCodeWords::PointIDXOR16:
-            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ lastPoint->PrevNextPointID1;
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ m_data[m_position + 1] << 8 ^ lastPoint->PrevNextPointID1;
             m_position += 2;
             break;
         case TSSCCodeWords::PointIDXOR20:
-            lastPoint->PrevNextPointID1 = ReadBits4() ^ (m_data[m_position] << 4) ^ (m_data[m_position + 1] << 12) ^ lastPoint->PrevNextPointID1;
+            lastPoint->PrevNextPointID1 = ReadBits4() ^ m_data[m_position] << 4 ^ m_data[m_position + 1] << 12 ^ lastPoint->PrevNextPointID1;
             m_position += 2;
             break;
         case TSSCCodeWords::PointIDXOR24:
-            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ (m_data[m_position + 2] << 16) ^ lastPoint->PrevNextPointID1;
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ m_data[m_position + 1] << 8 ^ m_data[m_position + 2] << 16 ^ lastPoint->PrevNextPointID1;
             m_position += 3;
             break;
         case TSSCCodeWords::PointIDXOR32:
-            lastPoint->PrevNextPointID1 = m_data[m_position] ^ (m_data[m_position + 1] << 8) ^ (m_data[m_position + 2] << 16) ^ (m_data[m_position + 3] << 24) ^ lastPoint->PrevNextPointID1;
+            lastPoint->PrevNextPointID1 = m_data[m_position] ^ m_data[m_position + 1] << 8 ^ m_data[m_position + 2] << 16 ^ m_data[m_position + 3] << 24 ^ lastPoint->PrevNextPointID1;
             m_position += 4;
             break;
         default:
@@ -332,49 +333,42 @@ void TSSCDecoder::DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPo
     }
 }
 
-int64_t TSSCDecoder::DecodeTimestamp(uint8_t code)
+int64_t TSSCDecoder::DecodeTimestamp(const uint8_t code)
 {
     int64_t timestamp;
 
-    if (code == TSSCCodeWords::TimeDelta1Forward)
+    switch (code)
     {
-        timestamp = m_prevTimestamp1 + m_prevTimeDelta1;
-    }
-    else if (code == TSSCCodeWords::TimeDelta2Forward)
-    {
-        timestamp = m_prevTimestamp1 + m_prevTimeDelta2;
-    }
-    else if (code == TSSCCodeWords::TimeDelta3Forward)
-    {
-        timestamp = m_prevTimestamp1 + m_prevTimeDelta3;
-    }
-    else if (code == TSSCCodeWords::TimeDelta4Forward)
-    {
-        timestamp = m_prevTimestamp1 + m_prevTimeDelta4;
-    }
-    else if (code == TSSCCodeWords::TimeDelta1Reverse)
-    {
-        timestamp = m_prevTimestamp1 - m_prevTimeDelta1;
-    }
-    else if (code == TSSCCodeWords::TimeDelta2Reverse)
-    {
-        timestamp = m_prevTimestamp1 - m_prevTimeDelta2;
-    }
-    else if (code == TSSCCodeWords::TimeDelta3Reverse)
-    {
-        timestamp = m_prevTimestamp1 - m_prevTimeDelta3;
-    }
-    else if (code == TSSCCodeWords::TimeDelta4Reverse)
-    {
-        timestamp = m_prevTimestamp1 - m_prevTimeDelta4;
-    }
-    else if (code == TSSCCodeWords::Timestamp2)
-    {
-        timestamp = m_prevTimestamp2;
-    }
-    else
-    {
-        timestamp = m_prevTimestamp1 ^ static_cast<int64_t>(Decode7BitUInt64(&m_data[0], m_position));
+        case TSSCCodeWords::TimeDelta1Forward:
+            timestamp = m_prevTimestamp1 + m_prevTimeDelta1;
+            break;
+        case TSSCCodeWords::TimeDelta2Forward:
+            timestamp = m_prevTimestamp1 + m_prevTimeDelta2;
+            break;
+        case TSSCCodeWords::TimeDelta3Forward:
+            timestamp = m_prevTimestamp1 + m_prevTimeDelta3;
+            break;
+        case TSSCCodeWords::TimeDelta4Forward:
+            timestamp = m_prevTimestamp1 + m_prevTimeDelta4;
+            break;
+        case TSSCCodeWords::TimeDelta1Reverse:
+            timestamp = m_prevTimestamp1 - m_prevTimeDelta1;
+            break;
+        case TSSCCodeWords::TimeDelta2Reverse:
+            timestamp = m_prevTimestamp1 - m_prevTimeDelta2;
+            break;
+        case TSSCCodeWords::TimeDelta3Reverse:
+            timestamp = m_prevTimestamp1 - m_prevTimeDelta3;
+            break;
+        case TSSCCodeWords::TimeDelta4Reverse:
+            timestamp = m_prevTimestamp1 - m_prevTimeDelta4;
+            break;
+        case TSSCCodeWords::Timestamp2:
+            timestamp = m_prevTimestamp2;
+            break;
+        default:
+            timestamp = m_prevTimestamp1 ^ static_cast<int64_t>(Decode7BitUInt64(&m_data[0], m_position));
+            break;
     }
 
     // Save the smallest delta time
@@ -412,7 +406,7 @@ int64_t TSSCDecoder::DecodeTimestamp(uint8_t code)
     return timestamp;
 }
 
-uint32_t TSSCDecoder::DecodeQuality(uint8_t code, const TSSCPointMetadataPtr& nextPoint)
+uint32_t TSSCDecoder::DecodeQuality(const uint8_t code, const TSSCPointMetadataPtr& nextPoint)
 {
     uint32_t quality;
 
@@ -452,17 +446,17 @@ int32_t TSSCDecoder::ReadBit()
 
     m_bitStreamCount--;
     
-    return (m_bitStreamCache >> m_bitStreamCount) & 1;
+    return m_bitStreamCache >> m_bitStreamCount & 1;
 }
 
 int32_t TSSCDecoder::ReadBits4()
 {
-    return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
+    return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
 }
 
 int32_t TSSCDecoder::ReadBits5()
 {
-    return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();;
+    return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
 }
 
 uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
@@ -476,7 +470,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
         return value;
     }
     
-    value ^= (static_cast<uint32_t>(stream[1]) << 7);
+    value ^= static_cast<uint32_t>(stream[1]) << 7;
     
     if (value < 16384)
     {
@@ -484,7 +478,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
         return value ^ 0x80;
     }
     
-    value ^= (static_cast<uint32_t>(stream[2]) << 14);
+    value ^= static_cast<uint32_t>(stream[2]) << 14;
     
     if (value < 2097152)
     {
@@ -492,7 +486,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
         return value ^ 0x4080;
     }
     
-    value ^= (static_cast<uint32_t>(stream[3]) << 21);
+    value ^= static_cast<uint32_t>(stream[3]) << 21;
     
     if (value < 268435456)
     {
@@ -500,7 +494,7 @@ uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)
         return value ^ 0x204080;
     }
     
-    value ^= (static_cast<uint32_t>(stream[4])  << 28);
+    value ^= static_cast<uint32_t>(stream[4])  << 28;
     position += 5;
     
     return value ^ 0x10204080;
@@ -517,7 +511,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value;
     }
     
-    value ^= (static_cast<uint64_t>(stream[1]) << 7);
+    value ^= static_cast<uint64_t>(stream[1]) << 7;
     
     if (value < 16384UL)
     {
@@ -525,7 +519,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x80UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[2]) << 14);
+    value ^= static_cast<uint64_t>(stream[2]) << 14;
     
     if (value < 2097152UL)
     {
@@ -533,7 +527,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x4080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[3]) << 21);
+    value ^= static_cast<uint64_t>(stream[3]) << 21;
     
     if (value < 268435456UL)
     {
@@ -541,7 +535,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x204080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[4]) << 28);
+    value ^= static_cast<uint64_t>(stream[4]) << 28;
     
     if (value < 34359738368UL)
     {
@@ -549,7 +543,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x10204080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[5]) << 35);
+    value ^= static_cast<uint64_t>(stream[5]) << 35;
     
     if (value < 4398046511104UL)
     {
@@ -557,7 +551,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x810204080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[6]) << 42);
+    value ^= static_cast<uint64_t>(stream[6]) << 42;
     
     if (value < 562949953421312UL)
     {
@@ -565,7 +559,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x40810204080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[7]) << 49);
+    value ^= static_cast<uint64_t>(stream[7]) << 49;
     
     if (value < 72057594037927936UL)
     {
@@ -573,7 +567,7 @@ uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position)
         return value ^ 0x2040810204080UL;
     }
     
-    value ^= (static_cast<uint64_t>(stream[8]) << 56);    
+    value ^= static_cast<uint64_t>(stream[8]) << 56;    
     position += 9;
 
     return value ^ 0x102040810204080UL;
