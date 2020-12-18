@@ -30,7 +30,6 @@
 #include "../EndianConverter.h"
 #include "../Version.h"
 #include <sstream>
-#include <boost/bind.hpp>
 
 using namespace std;
 using namespace boost;
@@ -85,13 +84,13 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 
     if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
     {
-        Thread(bind(connector.m_errorMessageCallback, subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
+        Thread _(bind(connector.m_errorMessageCallback, subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
         return;
     }
 
     // Apply exponential back-off algorithm for retry attempt delays
     const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
-    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * int32_t(pow(2, exponent)) : 0;
+    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
 
     if (retryInterval > connector.m_maxRetryInterval)
         retryInterval = connector.m_maxRetryInterval;
@@ -108,7 +107,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
         else
             errorMessageStream << "Attempting to reconnect...";
 
-        Thread(bind(connector.m_errorMessageCallback, subscriber, errorMessageStream.str()));
+        Thread _(bind(connector.m_errorMessageCallback, subscriber, errorMessageStream.str()));
     }
 
     if (retryInterval > 0)
@@ -162,7 +161,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
-            Thread(bind(m_errorMessageCallback, &subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
+            Thread _(bind(m_errorMessageCallback, &subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
             break;
         }
 
@@ -198,7 +197,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
         {
             // Apply exponential back-off algorithm for retry attempt delays
             const int32_t exponent = (m_connectAttempt > 13 ? 13 : m_connectAttempt) - 1;
-            int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * int32_t(pow(2, exponent)) : 0;
+            int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
             autoReconnecting = true;
 
             if (retryInterval > m_maxRetryInterval)
@@ -214,7 +213,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
                 else
                     errorMessageStream << "Attempting to reconnect...";
 
-                Thread(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
+                Thread _(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
             }
 
             if (retryInterval > 0)
@@ -866,7 +865,7 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
         return;
 
     // Create measurement parser
-    CompactMeasurement parser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
+    const CompactMeasurement parser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
 
     while (length != offset)
     {

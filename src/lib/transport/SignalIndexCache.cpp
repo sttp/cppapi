@@ -229,8 +229,8 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
         sourceStream.str("");
     }
 
-    // There is additional data about unauthorized signal
-    // IDs that may need to be parsed in the future...
+    // There is additional data here about unauthorized signal IDs
+    // that may need to be parsed in the future...
 }
 
 void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<uint8_t>& buffer)
@@ -239,7 +239,7 @@ void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<
     uint32_t binaryLength = 28; // cache size + subscriber ID + ref count + unauthorized count
 
     // Reserve space for binary byte length of cache
-    WriteBytes(buffer, uint32_t(0));
+    WriteBytes(buffer, static_cast<uint32_t>(0));
 
     // Encode subscriber ID
     WriteBytes(buffer, connection.GetSubscriberID());
@@ -270,7 +270,7 @@ void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<
     }
 
     // For now, not reporting unauthorized IDs, may need to add in the future
-    EndianConverter::WriteBigEndianBytes(buffer, uint32_t(0));
+    EndianConverter::WriteBigEndianBytes(buffer, static_cast<uint32_t>(0));
 
     // Update binary byte length
     *reinterpret_cast<uint32_t*>(&buffer[binaryLengthLocation]) = EndianConverter::Default.ConvertBigEndian(binaryLength);

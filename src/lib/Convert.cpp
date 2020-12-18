@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+
 #include "Convert.h"
 #include <iomanip>
 #include <sstream>
@@ -161,30 +163,30 @@ void sttp::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& millisecon
     milliseconds = static_cast<uint16_t>(ticks / 10000 % 1000);
 }
 
-datetime_t sttp::FromUnixTime(time_t unixSOC, uint16_t milliseconds)
+datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
 {
     return from_time_t(unixSOC) + Milliseconds(milliseconds);
 }
 
 datetime_t sttp::FromTicks(const int64_t ticks)
 {
-    static float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
+    static float64_t ticksPerSecondF = static_cast<float64_t>(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
-    const int64_t pticks = int64_t(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond); // NOLINT
+    const int64_t pticks = static_cast<int64_t>(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond); // NOLINT
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
 int64_t sttp::ToTicks(const datetime_t& time)
 {
-    static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
+    static int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
     const TimeSpan offset = time - DateTimeEpoch;
     return Ticks::PTimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
-        int64_t(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
+        static_cast<int64_t>(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
 }
 
 bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
 {
-    static const float64_t ticksPerSecondF = float64_t(Ticks::PerSecond);
+    static const float64_t ticksPerSecondF = static_cast<float64_t>(Ticks::PerSecond);
 
     if (lagTime <= 0)
         throw runtime_error("lagTime must be greater than zero, but it can be less than one");
@@ -202,22 +204,20 @@ bool sttp::TimestampIsReasonable(const datetime_t& value, const float64_t lagTim
     return TimestampIsReasonable(ToTicks(value), lagTime, leadTime);
 }
 
-int64_t sttp::RoundToSubsecondDistribution(int64_t ticks, int32_t samplesPerSecond)
+int64_t sttp::RoundToSubsecondDistribution(const int64_t ticks, const int32_t samplesPerSecond)
 {
-    int64_t baseTicks, ticksBeyondSecond, frameIndex, destinationTicks;
-
     // Baseline timestamp to the top of the second
-    baseTicks = ticks - ticks % Ticks::PerSecond;
+    const int64_t baseTicks = ticks - ticks % Ticks::PerSecond;
 
     // Remove the whole seconds from ticks
-    ticksBeyondSecond = ticks - baseTicks;
+    const float64_t ticksBeyondSecond = static_cast<float64_t>(ticks - baseTicks);
 
     // Calculate a frame index between 0 and m_framesPerSecond - 1,
     // corresponding to ticks rounded to the nearest frame
-    frameIndex = static_cast<int64_t>(round(ticksBeyondSecond / (Ticks::PerSecond / float64_t(samplesPerSecond))));
+    const int64_t frameIndex = static_cast<int64_t>(round(ticksBeyondSecond / (Ticks::PerSecond / static_cast<float64_t>(samplesPerSecond))));
 
     // Calculate the timestamp of the nearest frame
-    destinationTicks = frameIndex * Ticks::PerSecond / samplesPerSecond;
+    int64_t destinationTicks = frameIndex * Ticks::PerSecond / samplesPerSecond;
 
     // Recover the seconds that were removed
     destinationTicks += baseTicks;
@@ -225,7 +225,7 @@ int64_t sttp::RoundToSubsecondDistribution(int64_t ticks, int32_t samplesPerSeco
     return destinationTicks;
 }
 
-uint32_t sttp::TicksToString(char* ptr, uint32_t maxsize, string format, int64_t ticks)
+uint32_t sttp::TicksToString(char* ptr, const uint32_t maxsize, string format, const int64_t ticks)
 {
     time_t fromSeconds;
     uint16_t milliseconds;
@@ -307,7 +307,7 @@ string sttp::ToString(const datetime_t& value, const char* format)
 string sttp::ToString(const TimeSpan& value)
 {
     // TODO: Consider improving elapsed time string with hours, minutes, etc.
-    const float64_t seconds = value.total_milliseconds() / 1000.0;
+    const float64_t seconds = static_cast<float64_t>(value.total_milliseconds()) / 1000.0;
     return ToString(seconds) + " seconds";
 }
 
@@ -550,7 +550,7 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
         auto _ = stream.imbue(formats[i]);
         stream >> timestamp;
 
-        if (bool(stream))
+        if (static_cast<bool>(stream))
         {
             if (parseAsUTC)
                 timestamp += utcOffset;
@@ -575,7 +575,7 @@ datetime_t sttp::ParseTimestamp(const char* time, bool parseAsUTC)
 
 datetime_t sttp::ParseRelativeTimestamp(const char* time, const datetime_t& defaultValue)
 {
-    static const regex expression("\\*\\s*([+-]?\\d+)\\s*(\\w+)");
+    static const regex expression(R"(\*\s*([+-]?\d+)\s*(\w+))");
     datetime_t timestamp;
 
     if (TryParseTimestamp(time, timestamp, defaultValue, true))

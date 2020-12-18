@@ -169,7 +169,7 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
     if (!PublisherInstance::Start(port, ipV6))
         return false;
 
-    static float64_t randMax = float64_t(RAND_MAX);
+    static float64_t randMax = static_cast<float64_t>(RAND_MAX);
     static const uint64_t interval = 1000;
 
     const int32_t maxConnections = GetMaximumAllowedConnections();

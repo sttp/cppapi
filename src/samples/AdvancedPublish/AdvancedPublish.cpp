@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 
 bool RunPublisher(uint16_t port, bool genHistory)
 {
-    static float64_t randMax = float64_t(RAND_MAX);
+    static float64_t randMax = static_cast<float64_t>(RAND_MAX);
     string errorMessage;
     bool running = false;
 

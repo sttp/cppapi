@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyBugproneExceptionEscape
+
 #pragma warning(disable:26451)
 #pragma warning(disable:26812)
 #pragma warning(disable:26444)
@@ -60,6 +62,9 @@ void Evaluate(const FilterExpressionParserPtr& parser)
         cerr << boost::current_exception_diagnostic_information(true) << endl;
     }
 }
+
+static float64_t tickInterval = static_cast<float64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
+int64_t fracSecond(const int32_t ms) { return static_cast<int64_t>(ms / 1000.0 * tickInterval); }
 
 // Sample application to test the filter expression parser.
 int main(int argc, char* argv[])
@@ -1218,9 +1223,6 @@ int main(int argc, char* argv[])
     assert(valueExpression->ValueType == ExpressionValueType::DateTime);
     assert(valueExpression->ValueAsDateTime() == datetime_t(date(2019, 1, 1), time_duration(1, 0, 1)));
     cout << "Test " << ++test << " succeeded..." << endl;
-
-    const float64_t baseFraction = pow(10.0, time_duration::num_fractional_digits());
-    #define fracSecond(ms) static_cast<int64_t>((ms) / 1000.0 * baseFraction)
 
     // Test 124
     valueExpression = FilterExpressionParser::Evaluate(dataRow, "DateAdd('2019-01-1 00:00:59.999', 2, 'Millisecond')");

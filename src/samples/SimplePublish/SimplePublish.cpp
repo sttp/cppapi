@@ -140,7 +140,7 @@ bool RunPublisher(uint16_t port)
 
                 measurement->SignalID = metadata->SignalID;
                 measurement->Timestamp = timestamp;
-                measurement->Value = float64_t(rand());
+                measurement->Value = static_cast<float64_t>(rand());
 
                 measurements.push_back(measurement);
             }

@@ -155,7 +155,7 @@ SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPt
     if (iterator != m_subscriberConnectionDispatchRefs.end())
         iterator->second++;
     else
-        m_subscriberConnectionDispatchRefs.emplace(connectionRef, uint32_t(1));
+        m_subscriberConnectionDispatchRefs.emplace(connectionRef, static_cast<uint32_t>(1));
 
     return connectionPtr;
 }
@@ -827,7 +827,7 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
         metadata->SignalID = row->ValueAsGuid(signalID).GetValueOrDefault();
         metadata->PointTag = row->ValueAsString(pointTag).GetValueOrDefault();
         metadata->Reference = SignalReference(row->ValueAsString(signalReference).GetValueOrDefault());
-        metadata->PhasorSourceIndex = uint16_t(row->ValueAsInt32(phasorSourceIndex).GetValueOrDefault());
+        metadata->PhasorSourceIndex = static_cast<uint16_t>(row->ValueAsInt32(phasorSourceIndex).GetValueOrDefault());
         metadata->Description = row->ValueAsString(description).GetValueOrDefault();
         metadata->UpdatedOn = row->ValueAsDateTime(updatedOn).GetValueOrDefault();
 

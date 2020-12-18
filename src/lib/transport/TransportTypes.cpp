@@ -52,7 +52,7 @@ const char* PublisherException::what() const noexcept
 
 Measurement::Measurement() :
     SignalID(Empty::Guid),
-    Value(numeric_limits<double>::signaling_NaN()),
+    Value(NaN),
     Adder(0.0),
     Multiplier(1.0),
     Timestamp(0LL),
@@ -278,7 +278,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
     if (length == 2)
     {
         source =  parts[0];
-        id = uint64_t(stoull(parts[1]));
+        id = static_cast<uint64_t>(stoull(parts[1]));
     }
     else if (length > 2)
     {
@@ -293,7 +293,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
         }
 
         source =  sourceParts.str();
-        id = uint64_t(stoull(parts[length - 1]));
+        id = static_cast<uint64_t>(stoull(parts[length - 1]));
     }
     else
     {
