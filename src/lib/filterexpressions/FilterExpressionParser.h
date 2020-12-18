@@ -23,6 +23,7 @@
 
 #pragma once
 
+// ReSharper disable CppClangTidyCppcoreguidelinesMacroUsage
 #include "FilterExpressions.h"
 #include "FilterExpressionSyntaxLexer.h"
 #include "../../CommonTypes.h"
@@ -110,7 +111,7 @@ namespace filterexpressions
         inline void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
     public:
         FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
-        ~FilterExpressionParser();
+        ~FilterExpressionParser() override;
 
         const sttp::data::DataSetPtr& GetDataSet() const;
         void SetDataSet(const sttp::data::DataSetPtr& dataSet);

@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
 #include "FilterExpressionParser.h"
 #include "tree/ParseTreeWalker.h"
 #include "../Nullable.h"
@@ -134,7 +136,7 @@ void FilterExpressionParser::VisitParseTreeNodes()
 {
     // Create parse tree and visit listener methods
     const ParseTreeWalker walker;
-    const auto parseTree = m_parser->parse();
+    ParseTree* parseTree = m_parser->parse();
     walker.walk(this, parseTree);
 }
 
@@ -312,9 +314,8 @@ void FilterExpressionParser::Evaluate()
     VisitParseTreeNodes();
 
     // Each filter expression statement will have its own expression tree, evaluate each
-    for (size_t i = 0; i < m_expressionTrees.size(); i++)
+    for (auto& expressionTree : m_expressionTrees)
     {
-        const ExpressionTreePtr& expressionTree = m_expressionTrees[i];
         const vector<DataRowPtr> matchedRows = Select(expressionTree);
         int32_t signalIDColumnIndex = -1;
 
@@ -334,8 +335,8 @@ void FilterExpressionParser::Evaluate()
             signalIDColumnIndex = signalIDColumn->Index();
         }
 
-        for (size_t j = 0; j < matchedRows.size(); j++)
-            AddMatchedRow(matchedRows[j], signalIDColumnIndex);
+        for (const auto& matchedRow : matchedRows)
+            AddMatchedRow(matchedRow, signalIDColumnIndex);
     }
 }
 
@@ -441,7 +442,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
     {
         for (size_t i = 0; i < context->orderingTerm().size(); i++)
         {
-            auto orderingTermContext = context->orderingTerm(i);
+            auto* orderingTermContext = context->orderingTerm(i);
             const string& orderByColumnName = orderingTermContext->orderByColumnName()->getText();
             const DataColumnPtr& orderByColumn = table->Column(orderByColumnName);
 
@@ -592,7 +593,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
     ExpressionPtr value;
 
     // Check for predicate expressions (see explicit visit function)
-    const auto predicateExpressionContext = context->predicateExpression();
+    auto* predicateExpressionContext = context->predicateExpression();
 
     if (predicateExpressionContext != nullptr)
     {
@@ -606,7 +607,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
     }
 
     // Check for not operator expressions
-    const auto notOperatorContext = context->notOperator();
+    auto* notOperatorContext = context->notOperator();
 
     if (notOperatorContext != nullptr)
     {
@@ -621,7 +622,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
     }
 
     // Check for logical operator expressions
-    const auto logicalOperatorContext = context->logicalOperator();
+    auto* logicalOperatorContext = context->logicalOperator();
 
     if (logicalOperatorContext != nullptr)
     {
@@ -668,7 +669,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     ExpressionPtr value;
 
     // Check for value expressions (see explicit visit function)
-    const auto valueExpressionContext = context->valueExpression();
+    auto* valueExpressionContext = context->valueExpression();
 
     if (valueExpressionContext != nullptr)
     {
@@ -682,9 +683,9 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for IN expressions
-    const auto inKeywordContext = context->K_IN();
-    const auto notOperatorContext = context->notOperator();
-    const auto exactMatchModifierContext = context->exactMatchModifier();
+    auto* inKeywordContext = context->K_IN();
+    auto* notOperatorContext = context->notOperator();
+    auto* exactMatchModifierContext = context->exactMatchModifier();
 
     if (inKeywordContext != nullptr)
     {
@@ -696,7 +697,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
             throw FilterExpressionParserException("Failed to find \"IN\" predicate expression \"" + context->predicateExpression(0)->getText() + "\"");
 
         ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
-        const auto expressionList = context->expressionList();
+        auto* expressionList = context->expressionList();
         const size_t argumentCount = expressionList->expression().size();
 
         if (argumentCount < 1)
@@ -717,8 +718,8 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for IS NULL expressions
-    const auto isKeywordContext = context->K_IS();
-    const auto nullKeywordContext = context->K_NULL();
+    auto* isKeywordContext = context->K_IS();
+    auto* nullKeywordContext = context->K_NULL();
 
     if (isKeywordContext != nullptr && nullKeywordContext != nullptr)
     {
@@ -751,7 +752,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
         throw FilterExpressionParserException("Failed to find right operator predicate expression \"" + context->predicateExpression(1)->getText() + "\"");
 
     // Check for comparison operator expressions
-    const auto comparisonOperatorContext = context->comparisonOperator();
+    auto* comparisonOperatorContext = context->comparisonOperator();
 
     if (comparisonOperatorContext != nullptr)
     {
@@ -782,7 +783,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for LIKE expressions
-    const auto likeKeywordContext = context->K_LIKE();
+    auto* likeKeywordContext = context->K_LIKE();
 
     if (likeKeywordContext != nullptr)
     {
@@ -813,7 +814,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     ExpressionPtr value;
 
     // Check for literal values (see explicit visit function)
-    const auto literalValueContext = context->literalValue();
+    auto* literalValueContext = context->literalValue();
 
     if (literalValueContext != nullptr)
     {
@@ -827,7 +828,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     }
 
     // Check for column names (see explicit visit function)
-    const auto columnNameContext = context->columnName();
+    auto* columnNameContext = context->columnName();
 
     if (columnNameContext != nullptr)
     {
@@ -841,7 +842,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     }
 
     // Check for function expressions (see explicit visit function)
-    const auto functionExpressionContext = context->functionExpression();
+    auto* functionExpressionContext = context->functionExpression();
 
     if (functionExpressionContext != nullptr)
     {
@@ -855,7 +856,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     }
 
     // Check for unary operators
-    const auto unaryOperatorContext = context->unaryOperator();
+    auto* unaryOperatorContext = context->unaryOperator();
 
     if (unaryOperatorContext != nullptr)
     {
@@ -884,7 +885,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     }
 
     // Check for sub-expressions, i.e., "(" expression ")"
-    const auto expressionContext = context->expression();
+    auto* expressionContext = context->expression();
 
     if (expressionContext != nullptr)
     {
@@ -911,7 +912,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
         throw FilterExpressionParserException("Failed to find right operator value expression \"" + context->valueExpression(1)->getText() + "\"");
 
     // Check for math operator expressions
-    const auto mathOperatorContext = context->mathOperator();
+    auto* mathOperatorContext = context->mathOperator();
 
     if (mathOperatorContext != nullptr)
     {
@@ -936,7 +937,7 @@ void FilterExpressionParser::exitValueExpression(FilterExpressionSyntaxParser::V
     }
 
     // Check for bitwise operator expressions
-    const auto bitwiseOperatorContext = context->bitwiseOperator();
+    auto* bitwiseOperatorContext = context->bitwiseOperator();
 
     if (bitwiseOperatorContext != nullptr)
     {
@@ -980,9 +981,9 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
 
     if (context->INTEGER_LITERAL())
     {
-        const double_t value = stod(context->INTEGER_LITERAL()->getText());
+        const float64_t value = stod(context->INTEGER_LITERAL()->getText());
 
-        if (value > Int64::MaxValue)
+        if (value > static_cast<float64_t>(Int64::MaxValue) - 1.0)
             result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, value);
         else if (value > Int32::MaxValue)
             result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, static_cast<int64_t>(value));
@@ -1061,7 +1062,7 @@ void FilterExpressionParser::exitColumnName(FilterExpressionSyntaxParser::Column
 void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser::FunctionExpressionContext* context)
 {
     ExpressionFunctionType functionType;
-    auto functionNameContext = context->functionName();
+    auto* functionNameContext = context->functionName();
 
     if (functionNameContext->K_ABS() != nullptr)
         functionType = ExpressionFunctionType::Abs;
@@ -1149,7 +1150,7 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
         throw FilterExpressionParserException("Unexpected function type \"" + functionNameContext->getText() + "\"");
 
     ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
-    const auto expressionList = context->expressionList();
+    auto* expressionList = context->expressionList();
 
     if (expressionList != nullptr)
     {
@@ -1252,9 +1253,8 @@ vector<DataRowPtr> FilterExpressionParser::Select(const ExpressionTreePtr& expre
     {
         sort(matchedRows.begin(), matchedRows.end(), [expressionTree](const DataRowPtr& leftMatchedRow, const DataRowPtr& rightMatchedRow)
         {
-            for (size_t i = 0; i < expressionTree->OrderByTerms.size(); i++)
+            for (auto& orderByTerm : expressionTree->OrderByTerms)
             {
-                const auto orderByTerm = expressionTree->OrderByTerms[i];
                 const DataColumnPtr& orderByColumn = get<0>(orderByTerm);
                 const int32_t columnIndex = orderByColumn->Index();
                 const bool ascending = get<1>(orderByTerm);
