@@ -90,6 +90,7 @@ namespace sttp
     typedef float float32_t;
     typedef double float64_t;
     typedef boost::multiprecision::cpp_dec_float_100 decimal_t;
+    static const float64_t NaN = std::numeric_limits<double>::quiet_NaN();
 
     // DateTime type
     typedef boost::posix_time::ptime datetime_t;
@@ -420,6 +421,7 @@ namespace sttp
     Guid NewGuid();
 
     // Handy string functions (boost wrappers)
+    bool IsEmptyOrWhiteSpace(const std::string& value);
     bool IsEqual(const std::string& left, const std::string& right, bool ignoreCase = true);
     bool StartsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);
     bool EndsWith(const std::string& value, const std::string& findValue, bool ignoreCase = true);

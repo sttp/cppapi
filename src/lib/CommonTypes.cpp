@@ -21,11 +21,15 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
+// ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
+
 #include "CommonTypes.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#define BOOST_ALLOW_DEPRECATED_HEADERS
+#define BOOST_ALLOW_DEPRECATED_HEADERS  // NOLINT(clang-diagnostic-unused-macros)
 #include <boost/uuid/uuid_generators.hpp>
 
 using namespace std;
@@ -65,8 +69,8 @@ size_t StringHash::operator()(const string& value) const
     size_t seed = 0;
     const locale locale;
 
-    for (string::const_iterator it = value.begin(); it != value.end(); ++it)
-        hash_combine(seed, toupper(*it, locale));
+    for (auto it : value)
+        hash_combine(seed, toupper(it, locale));
 
     return seed;
 }
@@ -114,41 +118,48 @@ Guid sttp::NewGuid()
     return RandomGuidGen();
 }
 
-bool sttp::IsEqual(const string& left, const string& right, bool ignoreCase)
+bool sttp::IsEmptyOrWhiteSpace(const string& value)
 {
-    if (ignoreCase)
-        return iequals(left, right);
+    if (value.empty())
+        return true;
 
-    return equals(left, right);
+    return all_of(value.begin(), value.end(), [](const char c)
+    {
+        return isspace(c);
+    });
 }
 
-bool sttp::StartsWith(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::IsEqual(const string& left, const string& right, const bool ignoreCase)
 {
-    if (ignoreCase)
-        return istarts_with(value, findValue);
-
-    return starts_with(value, findValue);
+    return ignoreCase ? 
+        iequals(left, right) :
+        equals(left, right);
 }
 
-bool sttp::EndsWith(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::StartsWith(const string& value, const string& findValue, const bool ignoreCase)
 {
-    if (ignoreCase)
-        return iends_with(value, findValue);
-
-    return ends_with(value, findValue);
+    return ignoreCase ? 
+        istarts_with(value, findValue) :
+        starts_with(value, findValue);
 }
 
-bool sttp::Contains(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::EndsWith(const string& value, const string& findValue, const bool ignoreCase)
 {
-    if (ignoreCase)
-        return icontains(value, findValue);
-
-    return contains(value, findValue);
+    return ignoreCase ? 
+        iends_with(value, findValue) :
+        ends_with(value, findValue);
 }
 
-int32_t sttp::Count(const string& value, const string& findValue, bool ignoreCase)
+bool sttp::Contains(const string& value, const string& findValue, const bool ignoreCase)
 {
-    find_iterator<string::const_iterator> it = ignoreCase ?
+    return ignoreCase ? 
+        icontains(value, findValue) :
+        contains(value, findValue);
+}
+
+int32_t sttp::Count(const string& value, const string& findValue, const bool ignoreCase)
+{
+    find_iterator<string::const_iterator> it = ignoreCase ? 
         make_find_iterator(value, first_finder(findValue, is_iequal())) :
         make_find_iterator(value, first_finder(findValue, is_equal()));
 
@@ -162,7 +173,7 @@ int32_t sttp::Count(const string& value, const string& findValue, bool ignoreCas
     return count;
 }
 
-int32_t sttp::Compare(const string& leftValue, const string& rightValue, bool ignoreCase)
+int32_t sttp::Compare(const string& leftValue, const string& rightValue, const bool ignoreCase)
 {
     if (ignoreCase)
     {
@@ -184,9 +195,11 @@ int32_t sttp::Compare(const string& leftValue, const string& rightValue, bool ig
     return 0;
 }
 
-int32_t sttp::IndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t sttp::IndexOf(const string& value, const string& findValue, const bool ignoreCase)
 {
-    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_first(value, findValue) : find_first(value, findValue);
+    const iterator_range<string::const_iterator> it = ignoreCase ?
+        ifind_first(value, findValue) :
+        find_first(value, findValue);
 
     if (it.empty())
         return -1;
@@ -194,9 +207,11 @@ int32_t sttp::IndexOf(const string& value, const string& findValue, bool ignoreC
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t index, bool ignoreCase)
+int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t index, const bool ignoreCase)
 {
-    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_nth(value, findValue, index) : find_nth(value, findValue, index);
+    const iterator_range<string::const_iterator> it = ignoreCase ? 
+        ifind_nth(value, findValue, index) :
+        find_nth(value, findValue, index);
 
     if (it.empty())
         return -1;
@@ -204,9 +219,11 @@ int32_t sttp::IndexOf(const string& value, const string& findValue, int32_t inde
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-int32_t sttp::LastIndexOf(const string& value, const string& findValue, bool ignoreCase)
+int32_t sttp::LastIndexOf(const string& value, const string& findValue, const bool ignoreCase)
 {
-    const iterator_range<string::const_iterator> it = ignoreCase ? ifind_last(value, findValue) : find_last(value, findValue);
+    const iterator_range<string::const_iterator> it = ignoreCase ? 
+        ifind_last(value, findValue) :
+        find_last(value, findValue);
 
     if (it.empty())
         return -1;
@@ -214,7 +231,7 @@ int32_t sttp::LastIndexOf(const string& value, const string& findValue, bool ign
     return ConvertInt32(std::distance(value.begin(), it.begin()));
 }
 
-vector<string> sttp::Split(const string& value, const string& delimiterValue, bool ignoreCase)
+vector<string> sttp::Split(const string& value, const string& delimiterValue, const bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -231,7 +248,7 @@ vector<string> sttp::Split(const string& value, const string& delimiterValue, bo
     return values;
 }
 
-string sttp::Split(const string& value, const string& delimiterValue, int32_t index, bool ignoreCase)
+string sttp::Split(const string& value, const string& delimiterValue, int32_t index, const bool ignoreCase)
 {
     split_iterator<string::const_iterator> it = ignoreCase ?
         make_split_iterator(value, first_finder(delimiterValue, is_iequal())) :
@@ -249,12 +266,11 @@ string sttp::Split(const string& value, const string& delimiterValue, int32_t in
     return string {};
 }
 
-string sttp::Replace(const string& value, const string& findValue, const string& replaceValue, bool ignoreCase)
+string sttp::Replace(const string& value, const string& findValue, const string& replaceValue, const bool ignoreCase)
 {
-    if (ignoreCase)
-        return ireplace_all_copy(value, findValue, replaceValue);
-
-    return replace_all_copy(value, findValue, replaceValue);
+    return ignoreCase ? 
+        ireplace_all_copy(value, findValue, replaceValue) :
+        replace_all_copy(value, findValue, replaceValue);
 }
 
 string sttp::ToUpper(const string& value)
@@ -297,7 +313,7 @@ string sttp::TrimLeft(const string& value, const string& trimValues)
     return trim_left_copy_if(value, is_any_of(trimValues));
 }
 
-string sttp::PadLeft(const string& value, uint32_t count, char padChar)
+string sttp::PadLeft(const string& value, const uint32_t count, const char padChar)
 {
     if (value.size() < count)
         return string(count - value.size(), padChar) + value;
@@ -305,7 +321,7 @@ string sttp::PadLeft(const string& value, uint32_t count, char padChar)
     return value;
 }
 
-string sttp::PadRight(const string& value, uint32_t count, char padChar)
+string sttp::PadRight(const string& value, const uint32_t count, const char padChar)
 {
     if (value.size() < count)
         return value + string(count - value.size(), padChar);
@@ -313,7 +329,7 @@ string sttp::PadRight(const string& value, uint32_t count, char padChar)
     return value;
 }
 
-datetime_t sttp::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval interval)
+datetime_t sttp::DateAdd(const datetime_t& value, const int32_t addValue, const TimeInterval interval)
 {
     switch (interval)
     {
@@ -340,7 +356,7 @@ datetime_t sttp::DateAdd(const datetime_t& value, int32_t addValue, TimeInterval
     }
 }
 
-int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, TimeInterval interval)
+int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, const TimeInterval interval)
 {
     if (interval < TimeInterval::Hour)
     {
@@ -380,7 +396,7 @@ int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, T
 
 int32_t sttp::DatePart(const datetime_t& value, TimeInterval interval)
 {
-    static float64_t tickInterval = pow(10.0, TimeSpan::num_fractional_digits());
+    static int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
 
     switch (interval)
     {
@@ -403,7 +419,7 @@ int32_t sttp::DatePart(const datetime_t& value, TimeInterval interval)
         case TimeInterval::Second:
             return static_cast<int32_t>(value.time_of_day().seconds());
         case TimeInterval::Millisecond:
-            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / tickInterval * 1000.0);
+            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / tickInterval * 1000LL);
         default:
             throw runtime_error("Unexpected time interval encountered");
     }
