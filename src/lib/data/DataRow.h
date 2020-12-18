@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_ROW_H
-#define __DATA_ROW_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "../Nullable.h"
@@ -168,5 +167,3 @@ namespace std  // NOLINT
         }
     };
 }
-
-#endif

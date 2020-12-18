@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __ROUTING_TABLES_H
-#define __ROUTING_TABLES_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "../ThreadSafeQueue.h"
@@ -64,5 +63,3 @@ namespace transport
         void Clear();
     };
 }}
-
-#endif

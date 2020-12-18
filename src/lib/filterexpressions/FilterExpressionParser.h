@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __FILTER_EXPRESSION_PARSER_H
-#define __FILTER_EXPRESSION_PARSER_H
+#pragma once
 
 #include "FilterExpressions.h"
 #include "FilterExpressionSyntaxLexer.h"
@@ -166,5 +165,3 @@ namespace filterexpressions
 
     typedef sttp::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
 }}
-
-#endif

@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __SUBSCRIBERINSTANCE_H
-#define __SUBSCRIBERINSTANCE_H
+#pragma once
 
 #include "DataSubscriber.h"
 
@@ -261,5 +260,3 @@ namespace transport
         static bool TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata);
     };
 }}
-
-#endif

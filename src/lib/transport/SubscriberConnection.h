@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __SUBSCRIBER_CONNECTION_H
-#define __SUBSCRIBER_CONNECTION_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "../Timer.h"
@@ -289,5 +288,3 @@ namespace std  // NOLINT
         }
     };
 }
-
-#endif

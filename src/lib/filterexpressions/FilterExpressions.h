@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __FILTER_EXPRESSIONS_H
-#define __FILTER_EXPRESSIONS_H
+#pragma once
 
 // When using filter expressions this header file must be included first, before all others, otherwise
 // "antlr4-runtime/ATNSimulator.h" causes an "E0040 expected an identifier" error in Visual Studio here:
@@ -46,6 +45,4 @@
 // For some reason this symbol gets undefined? So, we re-define it...
 #ifndef EOF
 #define EOF (-1)
-#endif
-
 #endif

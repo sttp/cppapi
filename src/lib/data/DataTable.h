@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_TABLE_H
-#define __DATA_TABLE_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "DataColumn.h"
@@ -87,5 +86,3 @@ namespace data
 
     typedef sttp::SharedPtr<DataTable> DataTablePtr;
 }}
-
-#endif

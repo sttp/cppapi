@@ -21,11 +21,8 @@
 //
 //******************************************************************************************************
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#pragma once
 
 #define STTP_TITLE "STTP C++ Library"
-#define STTP_VERSION "1.0.19"
-#define STTP_UPDATEDON "2020-05-06"
-
-#endif
+#define STTP_VERSION "1.0.20"
+#define STTP_UPDATEDON "2020-12-18"

@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __EXPRESSION_TREE_H
-#define __EXPRESSION_TREE_H
+#pragma once
 
 #include "../../CommonTypes.h"
 #include "../../data/DataSet.h"
@@ -394,5 +393,3 @@ namespace filterexpressions
 
     typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
-
-#endif

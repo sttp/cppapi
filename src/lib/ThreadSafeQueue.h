@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __THREAD_SAFE_QUEUE_H
-#define __THREAD_SAFE_QUEUE_H
+#pragma once
 
 #include "CommonTypes.h"
 #include <queue>
@@ -165,5 +164,3 @@ namespace sttp
         m_release = false;
     }
 }
-
-#endif

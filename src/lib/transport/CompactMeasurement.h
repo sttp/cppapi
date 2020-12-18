@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __COMPACT_MEASUREMENT_H
-#define __COMPACT_MEASUREMENT_H
+#pragma once
 
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
@@ -58,5 +57,3 @@ namespace transport
         uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer, int32_t runtimeID) const;
     };
 }}
-
-#endif

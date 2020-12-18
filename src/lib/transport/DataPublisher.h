@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_PUBLISHER_H
-#define __DATA_PUBLISHER_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "../ThreadSafeQueue.h"
@@ -266,5 +265,3 @@ namespace transport
 
     typedef SharedPtr<DataPublisher> DataPublisherPtr;
 }}
-
-#endif

@@ -22,8 +22,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __NULLABLE_H
-#define __NULLABLE_H
+#pragma once
 
 #include "Convert.h"
 
@@ -351,5 +350,3 @@ namespace sttp
         return leftHasValue ? 1 : -1;
     }
 }
-
-#endif

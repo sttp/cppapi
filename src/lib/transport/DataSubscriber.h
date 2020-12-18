@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_SUBSCRIBER_H
-#define __DATA_SUBSCRIBER_H
+#pragma once
 
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
@@ -414,5 +413,3 @@ namespace transport
 
     typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
 }}
-
-#endif

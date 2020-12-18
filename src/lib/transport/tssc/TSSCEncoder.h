@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __TSSC_ENCODER_H
-#define __TSSC_ENCODER_H
+#pragma once
 
 #include "../TransportTypes.h"
 #include "TSSCPointMetadata.h"
@@ -99,5 +98,3 @@ namespace tssc
         bool TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t quality, float32_t value);
     };
 }}}
-
-#endif

@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_PUBLISHER_INSTANCE_H
-#define __DATA_PUBLISHER_INSTANCE_H
+#pragma once
 
 #include "DataPublisher.h"
 
@@ -144,5 +143,3 @@ namespace transport
         void DisconnectSubscriber(const sttp::Guid& instanceID) const;
     };
 }}
-
-#endif

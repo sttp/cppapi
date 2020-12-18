@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __TSSC_DECODER_H
-#define __TSSC_DECODER_H
+#pragma once
 
 #include "../TransportTypes.h"
 #include "TSSCPointMetadata.h"
@@ -85,5 +84,3 @@ namespace tssc
         int32_t ReadBits5();
     };
 }}}
-
-#endif

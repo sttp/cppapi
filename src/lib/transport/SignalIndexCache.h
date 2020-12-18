@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __SIGNAL_INDEX_CACHE_H
-#define __SIGNAL_INDEX_CACHE_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include <unordered_set>
@@ -118,5 +117,3 @@ namespace std  // NOLINT
         }
     };
 }
-
-#endif

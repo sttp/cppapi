@@ -1,5 +1,5 @@
-// Auto-generated on Thu Feb 14 22:45:54 2019
-// EmbedFile.exe MetadataSchema D:\Projects\cppapi\src\lib\transport\MetadataSchema.xml sttp::transport::
+// Auto-generated on Fri Dec 18 11:06:17 2020
+// EmbedFile.exe MetadataSchema D:\Projects\sttp\cppapi\src\lib\transport\MetadataSchema.xml sttp::transport::
 
 #include "MetadataSchema.h"
 

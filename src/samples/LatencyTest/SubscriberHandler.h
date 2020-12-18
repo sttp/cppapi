@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __SUBSCRIBER_HANDLER_H
-#define __SUBSCRIBER_HANDLER_H
+#pragma once
 
 #include "../../lib/CommonTypes.h"
 #include "../../lib/transport/SubscriberInstance.h"
@@ -51,5 +50,3 @@ public:
 };
 
 typedef sttp::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;
-
-#endif

@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef _TIMER_H
-#define _TIMER_H
+#pragma once
 
 #include "CommonTypes.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -194,5 +193,3 @@ namespace sttp
 
     typedef sttp::SharedPtr<Timer> TimerPtr;
 }
-
-#endif

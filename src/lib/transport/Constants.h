@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __CONSTANTS_H
-#define __CONSTANTS_H
+#pragma once
 
 #include "../CommonTypes.h"
 
@@ -291,5 +290,3 @@ namespace transport
         TLS
     };
 }}
-
-#endif

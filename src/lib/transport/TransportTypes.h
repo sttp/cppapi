@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __TRANSPORT_TYPES_H
-#define __TRANSPORT_TYPES_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "Constants.h"
@@ -306,5 +305,3 @@ namespace transport
     //	vector<Measurement> Digitals;
     //};
 }}
-
-#endif

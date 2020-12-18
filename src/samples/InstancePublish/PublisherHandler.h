@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __PUBLISHER_HANDLER_H
-#define __PUBLISHER_HANDLER_H
+#pragma once
 
 #include "../../lib/CommonTypes.h"
 #include "../../lib/transport/PublisherInstance.h"
@@ -56,5 +55,3 @@ public:
 };
 
 typedef sttp::SharedPtr<PublisherHandler> PublisherHandlerPtr;
-
-#endif

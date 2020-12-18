@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_COLUMN_H
-#define __DATA_COLUMN_H
+#pragma once
 
 #include "../CommonTypes.h"
 
@@ -88,5 +87,3 @@ namespace data
         friend class DataTable;
     };
 }}
-
-#endif

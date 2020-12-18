@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __TSSC_POINT_METADATA_H
-#define __TSSC_POINT_METADATA_H
+#pragma once
 
 #include "../TransportTypes.h"
 
@@ -135,5 +134,3 @@ namespace tssc
 
     typedef SharedPtr<TSSCPointMetadata> TSSCPointMetadataPtr;
 }}}
-
-#endif

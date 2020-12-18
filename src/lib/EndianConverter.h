@@ -23,8 +23,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __ENDIAN_CONVERTER_H
-#define __ENDIAN_CONVERTER_H
+#pragma once
 
 #include "CommonTypes.h"
 
@@ -119,5 +118,3 @@ namespace sttp
         }
     };
 }
-
-#endif

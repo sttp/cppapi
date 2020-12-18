@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __COMMON_TYPES_H
-#define __COMMON_TYPES_H
+#pragma once
 
 #include <climits>
 #include <cstddef>
@@ -483,5 +482,3 @@ namespace std // NOLINT
         }
     };
 }
-
-#endif

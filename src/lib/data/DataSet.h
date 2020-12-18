@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __DATA_SET_H
-#define __DATA_SET_H
+#pragma once
 
 #include "../CommonTypes.h"
 #include "DataTable.h"
@@ -95,5 +94,3 @@ namespace data
         static const std::string ExtXmlSchemaDataNamespace;
     };
 }}
-
-#endif

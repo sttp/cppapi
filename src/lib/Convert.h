@@ -21,8 +21,7 @@
 //
 //******************************************************************************************************
 
-#ifndef __COMMON_CONVERT_H
-#define __COMMON_CONVERT_H
+#pragma once
 
 #include "CommonTypes.h"
 
@@ -140,5 +139,3 @@ namespace sttp
     // Parses a string of key/value pairs into a case-insensitive string dictionary
     StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
 }
-
-#endif
