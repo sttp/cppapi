@@ -162,7 +162,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
-            Thread _([&,this]{ m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
+            Thread _([this]{ m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
             break;
         }
 
@@ -214,7 +214,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
                 else
                     errorMessageStream << "Attempting to reconnect...";
 
-                Thread _([&,this]{ m_errorMessageCallback(&subscriber, errorMessageStream.str()); });
+                Thread _([this]{ m_errorMessageCallback(&subscriber, errorMessageStream.str()); });
             }
 
             if (retryInterval > 0)
@@ -417,7 +417,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([&,this] { ConnectionTerminatedDispatcher(); });
+        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
         return;
     }
 
@@ -458,7 +458,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([&,this] { ConnectionTerminatedDispatcher(); });
+        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
         return;
     }
 
@@ -1239,8 +1239,8 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     m_commandChannelService.restart();
 #endif
 
-    m_callbackThread = Thread([&,this]{ RunCallbackThread(); });
-    m_commandChannelResponseThread = Thread([&,this]{ RunCommandChannelResponseThread(); });
+    m_callbackThread = Thread([this]{ RunCallbackThread(); });
+    m_commandChannelResponseThread = Thread([this]{ RunCommandChannelResponseThread(); });
     m_connected = true;
 
     SendOperationalModes();
@@ -1364,7 +1364,7 @@ void DataSubscriber::Subscribe()
         // Attempt to bind to local UDP port
         m_dataChannelSocket.open(ipVersion);
         m_dataChannelSocket.bind(udp::endpoint(ipVersion, m_subscriptionInfo.DataChannelLocalPort));
-        m_dataChannelResponseThread = Thread([&,this]{ RunDataChannelResponseThread(); });
+        m_dataChannelResponseThread = Thread([this]{ RunDataChannelResponseThread(); });
 
         if (!m_dataChannelSocket.is_open())
             throw SubscriberException("Failed to bind to local port");
@@ -1496,7 +1496,7 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, size_t bytesTransferre
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([&,this]{ ConnectionTerminatedDispatcher(); });
+        m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
         return;
     }
 

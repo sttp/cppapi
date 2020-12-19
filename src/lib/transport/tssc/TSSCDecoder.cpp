@@ -69,7 +69,7 @@ void TSSCDecoder::Reset()
 
 TSSCPointMetadataPtr TSSCDecoder::NewTSSCPointMetadata()
 {
-    return NewSharedPtr<TSSCPointMetadata>([&,this]() { return ReadBit(); }, [&,this]() { return ReadBits5(); });
+    return NewSharedPtr<TSSCPointMetadata>([this]() { return ReadBit(); }, [this]() { return ReadBits5(); });
 }
 
 void TSSCDecoder::SetBuffer(uint8_t* data, const uint32_t offset, const uint32_t length)

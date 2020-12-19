@@ -728,7 +728,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                                 m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
                                 m_dataChannelActive = true;
                                 
-                                Thread _([&,this]
+                                Thread _([this]
                                 {
                                     UniqueLock lock(m_dataChannelMutex);
 
@@ -766,7 +766,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_baseTimeOffsets[1] = 0LL;
                         m_latestTimestamp = 0LL;
 
-                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [&,this](Timer* timer, void*)
+                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](Timer* timer, void*)
                         {
                             const uint64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
 
@@ -818,7 +818,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         if (publishInterval <= 0)
                             publishInterval = static_cast<int32_t>((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); // NOLINT(clang-diagnostic-float-equal) //-V550
 
-                        m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [&,this](Timer*, void*)
+                        m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [this](Timer*, void*)
                         {
                             if (m_latestMeasurements.empty())
                                 return;

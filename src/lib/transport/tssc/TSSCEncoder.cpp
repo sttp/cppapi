@@ -227,7 +227,7 @@ bool TSSCEncoder::TryAddMeasurement(const int32_t id, const int64_t timestamp, c
 
 TSSCPointMetadataPtr TSSCEncoder::NewTSSCPointMetadata()
 {
-    return NewSharedPtr<TSSCPointMetadata>([&,this](const int32_t code, const int32_t length) { return WriteBits(code, length); });
+    return NewSharedPtr<TSSCPointMetadata>([this](const int32_t code, const int32_t length) { return WriteBits(code, length); });
 }
 
 void TSSCEncoder::WritePointIDChange(const int32_t id)

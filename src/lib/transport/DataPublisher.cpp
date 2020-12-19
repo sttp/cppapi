@@ -859,7 +859,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false); //-V601
     
     // Run call-back thread
-    m_commandChannelAcceptThread = Thread([&,this]
+    m_commandChannelAcceptThread = Thread([this]
     {
         while (true)
         {
@@ -874,7 +874,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     });
 
     // Run command channel accept thread
-    m_callbackThread = Thread([&,this]
+    m_callbackThread = Thread([this]
     {
         StartAccept();
         m_commandChannelService.run();
@@ -909,7 +909,7 @@ void DataPublisher::ShutDown(const bool joinThread)
     m_shuttingDown = true;
     m_started = false;
 
-    Thread shutdownThread([&,this]{
+    Thread shutdownThread([this]{
         try
         {
             // Let any pending start operation complete before continuing stop - prevents destruction stop before start is completed
@@ -922,7 +922,7 @@ void DataPublisher::ShutDown(const bool joinThread)
             m_routingTables.Clear();
 
             // Shutdown client connections - execute on a separate thread to more safely handle callbacks
-            Thread shutdownClientsThread([&,this]
+            Thread shutdownClientsThread([this]
             {
                 WriterLock writeLock(m_subscriberConnectionsLock);
 
