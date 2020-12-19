@@ -22,7 +22,7 @@
     <ProjectGuid>{BF9568F3-D767-4C01-9F88-DB97594D5D6C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LatencyTest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>LatencyTest</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
