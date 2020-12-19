@@ -104,7 +104,7 @@ TSSCPointMetadata::TSSCPointMetadata(
 {
 }
 
-void TSSCPointMetadata::WriteCode(int32_t code)
+void TSSCPointMetadata::WriteCode(const int32_t code)
 {
     switch (m_mode)
     {

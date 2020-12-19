@@ -84,11 +84,11 @@ uint32_t TSSCEncoder::FinishBlock()
 
 bool TSSCEncoder::TryAddMeasurement(const int32_t id, const int64_t timestamp, const uint32_t quality, float32_t value)
 {
-    //if there are fewer than 100 bytes available on the buffer
-    //assume that we cannot add any more.
+    // If there are fewer than 100 bytes available on the buffer assume that we cannot add any more.
     if (m_lastPosition - m_position < 100)
         return false;
 
+    // Setup tracking for metadata associated with measurement ID and next point to encode
     const int32_t pointCount = ConvertInt32(m_points.size());
     TSSCPointMetadataPtr point = id >= pointCount ? nullptr : m_points[id];
     
@@ -104,23 +104,32 @@ bool TSSCEncoder::TryAddMeasurement(const int32_t id, const int64_t timestamp, c
         m_points[id] = point;
     }
 
-    //Note: since I will not know the incoming pointID. The most recent
-    //      measurement received will be the one that contains the 
-    //      coding algorithm for this measurement. Since for the more part
-    //      measurements generally have some sort of sequence to them, 
-    //      this still ends up being a good enough assumption.
+    // Given that the incoming pointID is not known in advance, the current
+    // measurement will contain the encoding details for the next.
 
+    // General compression strategy is to use delta-encoding for each
+    // measurement component value that is received with the same identity.
+    // See https://en.wikipedia.org/wiki/Delta_encoding
+
+    // Delta-encoding sizes are embedded in the stream as type-specific
+    // codes using as few bits as possible
+
+    // Encode measurement ID and code for value delta
     if (m_lastPoint->PrevNextPointID1 != id)
         WritePointIDChange(id);
 
+    // Encode measurement timestamp and code for value delta
     if (m_prevTimestamp1 != timestamp)
         WriteTimestampChange(timestamp);
 
+    // Encode measurement quality and code for no-change or 7-bit encoding
     if (point->PrevQuality1 != quality)
         WriteQualityChange(quality, point);
 
+    // Reinterpret bits of floating-point value as unsigned integer for bit manipulation
     const uint32_t valueRaw = *reinterpret_cast<uint32_t*>(&value);
 
+    // Encode measurement value and code for value delta
     if (point->PrevValue1 == valueRaw)
     {
         m_lastPoint->WriteCode(TSSCCodeWords::Value1);
@@ -383,6 +392,12 @@ void TSSCEncoder::WriteTimestampChange(const int64_t timestamp)
 
 void TSSCEncoder::WriteQualityChange(const uint32_t quality, const TSSCPointMetadataPtr& point)
 {
+    // Quality flags deviate very little, so the value is only encoded when it deviates
+    // from previous value. When value is added to the stream, the value is compressed
+    // using 7-bit variable-length quantity encoding. More specifically, the algorithm
+    // writes out an integer 7-bits at a time with the high-bit of the current output
+    // byte only being set when the next byte should also be read.
+    // See https://en.wikipedia.org/wiki/Variable-length_quantity
     if (point->PrevQuality2 == quality)
     {
         m_lastPoint->WriteCode(TSSCCodeWords::Quality2);
@@ -430,7 +445,7 @@ void TSSCEncoder::BitStreamFlush()
 
         if (m_bitStreamCacheBitCount > 0)
         {
-            //Make up 8 bits by padding.
+            // Make up 8 bits by padding.
             m_bitStreamCache <<= 8 - m_bitStreamCacheBitCount;
             m_data[m_bitStreamBufferIndex] = static_cast<uint8_t>(m_bitStreamCache);
             m_bitStreamCache = 0;

@@ -92,12 +92,17 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         return false;
     }
 
-    //Note: since I will not know the incoming pointID. The most recent
-    //      measurement received will be the one that contains the 
-    //      coding algorithm for this measurement. Since for the more part
-    //      measurements generally have some sort of sequence to them, 
-    //      this still ends up being a good enough assumption.
+    // Given that the incoming pointID is not known in advance, the current
+    // measurement will contain the encoding details for the next.
 
+    // General compression strategy is to use delta-encoding for each
+    // measurement component value that is received with the same identity.
+    // See https://en.wikipedia.org/wiki/Delta_encoding
+
+    // Delta-encoding sizes are embedded in the stream as type-specific
+    // codes using as few bits as possible
+
+    // Read next code for measurement ID decoding
     int32_t code = m_lastPoint->ReadCode();
 
     if (code == TSSCCodeWords::EndOfStream)
@@ -110,6 +115,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         return false;
     }
 
+    // Decode measurement ID and read next code for timestamp decoding
     if (code <= TSSCCodeWords::PointIDXOR32)
     {
         DecodePointID(static_cast<uint8_t>(code), m_lastPoint);
@@ -132,8 +138,10 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         }
     }
 
+    // Assign decoded measurement ID to out parameter
     id = m_lastPoint->PrevNextPointID1;
 
+    // Setup tracking for metadata associated with measurement ID and next point to decode
     const int32_t pointCount = ConvertInt32(m_points.size());
     TSSCPointMetadataPtr nextPoint = id >= pointCount ? nullptr : m_points[id];
     
@@ -149,6 +157,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         nextPoint->PrevNextPointID1 = id + 1;
     }
 
+    // Decode measurement timestamp and read next code for quality flags decoding
     if (code <= TSSCCodeWords::TimeXOR7Bit)
     {
         timestamp = DecodeTimestamp(static_cast<uint8_t>(code));
@@ -175,6 +184,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         timestamp = m_prevTimestamp1;
     }
 
+    // Decode measurement quality flags and read next code for measurement value decoding
     if (code <= TSSCCodeWords::Quality7Bit32)
     {
         quality = DecodeQuality(static_cast<uint8_t>(code), nextPoint);
@@ -201,10 +211,10 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         quality = nextPoint->PrevQuality1;
     }
 
-    // Since value will almost always change, 
-    // this is not put inside a function call.
+    // Since measurement value will almost always change, this is not put inside a function call.
     uint32_t valueRaw;
 
+    // Decode measurement value
     if (code == TSSCCodeWords::Value1)
     {
         valueRaw = nextPoint->PrevValue1;
@@ -282,6 +292,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
         nextPoint->PrevValue1 = valueRaw;
     }
 
+    // Assign decoded measurement value to out parameter
     value = *reinterpret_cast<float32_t*>(&valueRaw);
     m_lastPoint = nextPoint;
 
