@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyPerformanceNoAutomaticMove
 // ReSharper disable once CppUnusedIncludeDirective
 #include "../filterexpressions/FilterExpressions.h"
 #include "DataPublisher.h"
@@ -77,9 +78,9 @@ DataPublisher::DataPublisher(const string& networkInterfaceIP, uint16_t port) :
     Start(networkInterfaceIP, port);
 }
 
-DataPublisher::~DataPublisher()
+DataPublisher::~DataPublisher() // NOLINT
 {
-    Stop();
+    ShutDown(true);
 }
 
 DataPublisher::CallbackDispatcher::CallbackDispatcher() :
@@ -92,7 +93,11 @@ DataPublisher::CallbackDispatcher::CallbackDispatcher() :
 void DataPublisher::StartAccept()
 {
     const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
-    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), boost::bind(&DataPublisher::AcceptConnection, this, connection, boost::asio::placeholders::error));
+
+    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), [this, connection](auto && _error)
+    {
+        AcceptConnection(connection, forward<decltype(_error)>(_error));
+    });
 }
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
@@ -117,7 +122,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
         {
             DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
             
-            Thread([connection]
+            Thread _([connection]
             {
                 boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
                 connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
@@ -144,7 +149,7 @@ void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
     m_subscriberConnections.erase(connection);
 }
 
-SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPtr connectionRef)
+SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPtr connectionRef) // NOLINT
 {
     SubscriberConnection* connectionPtr = connectionRef.get();
     ScopeLock lock(m_subscriberConnectionDispatchRefsLock);
@@ -185,7 +190,7 @@ void DataPublisher::Dispatch(const DispatcherFunction& function)
     Dispatch(function, nullptr, 0, 0);
 }
 
-void DataPublisher::Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length)
+void DataPublisher::Dispatch(const DispatcherFunction& function, const uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     CallbackDispatcher dispatcher;
     SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
@@ -242,7 +247,7 @@ void DataPublisher::DispatchTemporalSubscriptionCanceled(SubscriberConnection* c
     Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, uint32_t command, const uint8_t* data, uint32_t length)
+void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, const uint32_t command, const uint8_t* data, const uint32_t length)
 {
     // ReSharper disable once CppNonReclaimedResourceAcquisition
     UserCommandData* userCommandData = new UserCommandData();
@@ -840,9 +845,9 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
 void DataPublisher::Start(const TcpEndPoint& endpoint)
 {
     if (m_started)
-        Stop();
+        ShutDown(true);
 
-    // Let any pending start operation complete before stop - prevents destruction stop before start is completed
+    // Let any pending start operation complete before possible stop - prevents destruction stop before start is completed
     ScopeLock lock(m_connectActionMutex);
 
 #if BOOST_LEGACY
@@ -878,67 +883,92 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     m_started = true;
 }
 
-void DataPublisher::Start(uint16_t port, bool ipV6)
+void DataPublisher::Start(const uint16_t port, const bool ipV6)
 {
     Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
 
-void DataPublisher::Start(const string& networkInterfaceIP, uint16_t port)
+void DataPublisher::Start(const string& networkInterfaceIP, const uint16_t port)
 {
     Start(TcpEndPoint(make_address(networkInterfaceIP), port));
 }
 
 void DataPublisher::Stop()
 {
-    // Let any pending start operation complete before stop - prevents destruction stop before start is completed
-    ScopeLock lock(m_connectActionMutex);
+    if (!m_started || m_shuttingDown)
+        return;
 
-    // Notify running threads that the
-    // publisher is shutting down
+    // Stop method executes shutdown on a separate thread without stopping to prevent
+    // issues where user may call stop method from a dispatched event thread
+    ShutDown(false);
+}
+
+void DataPublisher::ShutDown(const bool joinThread)
+{
+    // Notify running threads that the publisher is shutting down
     m_shuttingDown = true;
     m_started = false;
 
-    // Stop accepting new connections
-    m_clientAcceptor.close();
-
-    // Clear routing tables to cease any queued publication
-    m_routingTables.Clear();
-
-    // Release client connections - execute on a separate thread to more safely handle callbacks
-    Thread releaseClientConnections([&,this]
-    {
-        WriterLock writeLock(m_subscriberConnectionsLock);
-
-        for (const auto& connection : m_subscriberConnections)
+    Thread shutdownThread([&,this]{
+        try
         {
-            connection->Stop();
+            // Let any pending start operation complete before continuing stop - prevents destruction stop before start is completed
+            ScopeLock lock(m_connectActionMutex);
 
-            if (m_clientDisconnectedCallback != nullptr)
-                m_clientDisconnectedCallback(this, connection);
+            // Stop accepting new connections
+            m_clientAcceptor.close();
+
+            // Clear routing tables to cease any queued publication
+            m_routingTables.Clear();
+
+            // Shutdown client connections - execute on a separate thread to more safely handle callbacks
+            Thread shutdownClientsThread([&,this]
+            {
+                WriterLock writeLock(m_subscriberConnectionsLock);
+
+                for (const auto& connection : m_subscriberConnections)
+                {
+                    connection->Stop();
+
+                    if (m_clientDisconnectedCallback != nullptr)
+                        m_clientDisconnectedCallback(this, connection);
+                }
+
+                m_subscriberConnections.clear();
+            });
+
+            // Release queues and close sockets so
+            // that threads can shut down gracefully
+            m_callbackQueue.Release();
+
+            // Join with all threads to guarantee their completion
+            // before returning control to the caller
+            shutdownClientsThread.join();
+            m_callbackThread.join();
+            m_commandChannelAcceptThread.join();
+
+            // Empty queues and reset them so they can be used
+            // again later if the user decides to restart
+            m_callbackQueue.Clear();
+            m_callbackQueue.Reset();
+
+            m_commandChannelService.stop();
+        }
+        catch (SystemError& ex)
+        {
+            cerr << "Exception while stopping data publisher: " << ex.what();
+        }
+        catch (...)
+        {
+            cerr << "Exception while stopping data publisher: " << boost::current_exception_diagnostic_information(true);
         }
 
-        m_subscriberConnections.clear();
+        // Shutdown complete
+        m_shuttingDown = false;
     });
 
-    // Release queues and close sockets so
-    // that threads can shut down gracefully
-    m_callbackQueue.Release();
-
-    // Join with all threads to guarantee their completion
-    // before returning control to the caller
-    releaseClientConnections.join();
-    m_callbackThread.join();
-    m_commandChannelAcceptThread.join();
-
-    // Empty queues and reset them so they can be used
-    // again later if the user decides to restart
-    m_callbackQueue.Clear();
-    m_callbackQueue.Reset();
-
-    m_commandChannelService.stop();
-
-    // Shutdown complete
-    m_shuttingDown = false;
+    if (joinThread)
+        shutdownThread.join();
 }
 
 bool DataPublisher::IsStarted() const
@@ -981,7 +1011,7 @@ SecurityMode DataPublisher::GetSecurityMode() const
     return m_securityMode;
 }
 
-void DataPublisher::SetSecurityMode(SecurityMode value)
+void DataPublisher::SetSecurityMode(const SecurityMode value)
 {
     m_securityMode = value;
 }
@@ -991,7 +1021,7 @@ int32_t DataPublisher::GetMaximumAllowedConnections() const
     return m_maximumAllowedConnections;
 }
 
-void DataPublisher::SetMaximumAllowedConnections(int32_t value)
+void DataPublisher::SetMaximumAllowedConnections(const int32_t value)
 {
     m_maximumAllowedConnections = value;
 }
@@ -1001,7 +1031,7 @@ bool DataPublisher::GetIsMetadataRefreshAllowed() const
     return m_isMetadataRefreshAllowed;
 }
 
-void DataPublisher::SetIsMetadataRefreshAllowed(bool value)
+void DataPublisher::SetIsMetadataRefreshAllowed(const bool value)
 {
     m_isMetadataRefreshAllowed = value;
 }
@@ -1011,7 +1041,7 @@ bool DataPublisher::GetIsNaNValueFilterAllowed() const
     return m_isNaNValueFilterAllowed;
 }
 
-void DataPublisher::SetNaNValueFilterAllowed(bool value)
+void DataPublisher::SetNaNValueFilterAllowed(const bool value)
 {
     m_isNaNValueFilterAllowed = value;
 }
@@ -1021,7 +1051,7 @@ bool DataPublisher::GetIsNaNValueFilterForced() const
     return m_isNaNValueFilterForced;
 }
 
-void DataPublisher::SetIsNaNValueFilterForced(bool value)
+void DataPublisher::SetIsNaNValueFilterForced(const bool value)
 {
     m_isNaNValueFilterForced = value;
 }
@@ -1031,7 +1061,7 @@ bool DataPublisher::GetSupportsTemporalSubscriptions() const
     return m_supportsTemporalSubscriptions;
 }
 
-void DataPublisher::SetSupportsTemporalSubscriptions(bool value)
+void DataPublisher::SetSupportsTemporalSubscriptions(const bool value)
 {
     m_supportsTemporalSubscriptions = value;
 }
@@ -1041,7 +1071,7 @@ uint32_t DataPublisher::GetCipherKeyRotationPeriod() const
     return m_cipherKeyRotationPeriod;
 }
 
-void DataPublisher::SetCipherKeyRotationPeriod(uint32_t value)
+auto DataPublisher::SetCipherKeyRotationPeriod(const uint32_t value) -> void
 {
     m_cipherKeyRotationPeriod = value;
 }
@@ -1051,7 +1081,7 @@ bool DataPublisher::GetUseBaseTimeOffsets() const
     return m_useBaseTimeOffsets;
 }
 
-void DataPublisher::SetUseBaseTimeOffsets(bool value)
+void DataPublisher::SetUseBaseTimeOffsets(const bool value)
 {
     m_useBaseTimeOffsets = value;
 }
@@ -1170,7 +1200,7 @@ void DataPublisher::DisconnectSubscriber(const sttp::Guid& instanceID)
 {
     SubscriberConnectionPtr targetConnection = nullptr;
 
-    IterateSubscriberConnections([&targetConnection, instanceID](SubscriberConnectionPtr connection, void* userData)
+    IterateSubscriberConnections([&targetConnection, instanceID](const SubscriberConnectionPtr& connection, void* userData)
     {
         if (connection->GetInstanceID() == instanceID)
             targetConnection = connection;

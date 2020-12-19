@@ -100,6 +100,7 @@ namespace transport
         void AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error);
         void ConnectionTerminated(const SubscriberConnectionPtr& connection);
         void RemoveConnection(const SubscriberConnectionPtr& connection);
+        void ShutDown(bool joinThread);
 
         // Callbacks
         MessageCallback m_statusMessageCallback;
@@ -146,7 +147,7 @@ namespace transport
 
         // Releases all threads and sockets
         // tied up by the publisher.
-        ~DataPublisher();
+        ~DataPublisher(); // NOLINT
 
         // Iterator handler delegates
         typedef std::function<void(SubscriberConnectionPtr, void* userData)> SubscriberConnectionIteratorHandlerFunction;
