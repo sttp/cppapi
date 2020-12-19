@@ -48,7 +48,7 @@ static const uint32_t DiscardedValueMask = 0x00400000;
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-inline MeasurementStateFlags MapToFullFlags(uint8_t compactFlags)
+inline MeasurementStateFlags MapToFullFlags(const uint8_t compactFlags)
 {
     uint32_t fullFlags = 0U;
 
@@ -75,9 +75,9 @@ inline MeasurementStateFlags MapToFullFlags(uint8_t compactFlags)
 
 // Takes the full 32-bit measurement flags format and
 // maps them to the 8-bit compact measurement flags.
-inline uint32_t MapToCompactFlags(uint32_t fullFlags)
+inline uint8_t MapToCompactFlags(const uint32_t fullFlags)
 {
-    uint32_t compactFlags = 0U;
+    uint8_t compactFlags = 0;
 
     if ((fullFlags & DataRangeMask) > 0)
         compactFlags |= CompactDataRangeFlag;
@@ -100,7 +100,7 @@ inline uint32_t MapToCompactFlags(uint32_t fullFlags)
     return compactFlags;
 }
 
-CompactMeasurement::CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets, bool includeTime, bool useMillisecondResolution, int32_t timeIndex) :
+CompactMeasurement::CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets, const bool includeTime, const bool useMillisecondResolution, const int32_t timeIndex) :
     m_signalIndexCache(std::move(signalIndexCache)),
     m_baseTimeOffsets(baseTimeOffsets),
     m_includeTime(includeTime),
@@ -135,7 +135,7 @@ uint32_t CompactMeasurement::GetBinaryLength(const bool usingBaseTimeOffset) con
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& measurement) const
+bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, const uint32_t length, MeasurementPtr& measurement) const
 {
     // Ensure that we at least have enough
     // data to read the compact state flags
@@ -206,7 +206,7 @@ bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, ui
     measurement->SignalID = signalID;
     measurement->Source = measurementSource;
     measurement->ID = measurementID;
-    measurement->Value = measurementValue;
+    measurement->Value = static_cast<float64_t>(measurementValue);
     measurement->Timestamp = timestamp;
 
     return true;

@@ -1380,7 +1380,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
     try
     {
         uint8_t* data = &m_readBuffer[0];
-        const uint32_t command = data[0];
+        const uint8_t command = data[0];
         const uint32_t length = ConvertInt32(bytesTransferred);
 
         // Forward data position beyond command byte
