@@ -36,10 +36,10 @@ using namespace sttp::data;
 using namespace sttp::filterexpressions;
 using namespace sttp::transport;
 
-struct UserCommandData // NOLINT
+struct UserCommandData
 {
-    SubscriberConnection* connection;
-    uint32_t command;
+    SubscriberConnection* connection {};
+    uint32_t command {};
     vector<uint8_t> data;
 };
 
@@ -96,7 +96,7 @@ void DataPublisher::StartAccept()
 
     m_clientAcceptor.async_accept(connection->CommandChannelSocket(), [this, connection](auto && _error)
     {
-        AcceptConnection(connection, forward<decltype(_error)>(_error));
+        AcceptConnection(connection, std::forward<decltype(_error)>(_error));
     });
 }
 
