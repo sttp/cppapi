@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyPerformanceNoAutomaticMove
 #include "DataSubscriber.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
@@ -84,7 +85,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 
     if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
     {
-        Thread _(bind(connector.m_errorMessageCallback, subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
+        Thread _([&connector, subscriber]{ connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
         return;
     }
 
@@ -107,7 +108,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
         else
             errorMessageStream << "Attempting to reconnect...";
 
-        Thread _(bind(connector.m_errorMessageCallback, subscriber, errorMessageStream.str()));
+        Thread _([&connector, subscriber, &errorMessageStream]{ connector.m_errorMessageCallback(subscriber, errorMessageStream.str()); });
     }
 
     if (retryInterval > 0)
@@ -161,7 +162,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
-            Thread _(bind(m_errorMessageCallback, &subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."));
+            Thread _([&,this]{ m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
             break;
         }
 
@@ -213,7 +214,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
                 else
                     errorMessageStream << "Attempting to reconnect...";
 
-                Thread _(bind(m_errorMessageCallback, &subscriber, errorMessageStream.str()));
+                Thread _([&,this]{ m_errorMessageCallback(&subscriber, errorMessageStream.str()); });
             }
 
             if (retryInterval > 0)
@@ -248,39 +249,39 @@ void SubscriberConnector::SetHostname(const string& hostname)
 }
 
 // Sets the port that the publisher is listening on.
-void SubscriberConnector::SetPort(uint16_t port)
+void SubscriberConnector::SetPort(const uint16_t port)
 {
     m_port = port;
 }
 
 // Sets the maximum number of retries during a connection sequence.
-void SubscriberConnector::SetMaxRetries(int32_t maxRetries)
+void SubscriberConnector::SetMaxRetries(const int32_t maxRetries)
 {
     m_maxRetries = maxRetries;
 }
 
 // Sets the interval of idle time (in milliseconds) between connection attempts.
-void SubscriberConnector::SetRetryInterval(int32_t retryInterval)
+void SubscriberConnector::SetRetryInterval(const int32_t retryInterval)
 {
     m_retryInterval = retryInterval;
 }
 
 // Sets maximum retry interval - connection retry attempts use exponential
 // back-off algorithm up to this defined maximum.
-void SubscriberConnector::SetMaxRetryInterval(int32_t maxRetryInterval)
+void SubscriberConnector::SetMaxRetryInterval(const int32_t maxRetryInterval)
 {
     m_maxRetryInterval = maxRetryInterval;
 }
 
 // Sets the flag that determines whether the subscriber should
 // automatically attempt to reconnect when the connection is terminated.
-void SubscriberConnector::SetAutoReconnect(bool autoReconnect)
+void SubscriberConnector::SetAutoReconnect(const bool autoReconnect)
 {
     m_autoReconnect = autoReconnect;
 }
 
 // Sets flag indicating connection was refused.
-void SubscriberConnector::SetConnectionRefused(bool connectionRefused)
+void SubscriberConnector::SetConnectionRefused(const bool connectionRefused)
 {
     m_connectionRefused = connectionRefused;
 }
@@ -367,7 +368,7 @@ DataSubscriber::DataSubscriber() :
 }
 
 // Destructor calls disconnect to clean up after itself.
-DataSubscriber::~DataSubscriber()
+DataSubscriber::~DataSubscriber() // NOLINT
 {
     m_disposing = true;
     Disconnect();
@@ -399,7 +400,11 @@ void DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void DataSubscriber::RunCommandChannelResponseThread()
 {
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    {
+        ReadPayloadHeader(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
+
     m_commandChannelService.run();
 }
 
@@ -412,7 +417,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread([&,this] { ConnectionTerminatedDispatcher(); });
         return;
     }
 
@@ -438,7 +443,10 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), bind(&DataSubscriber::ReadPacket, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this](auto && _error, auto && _bytesTransferred)
+    {
+        ReadPacket(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
 }
 
 // Callback for async read of packets.
@@ -450,7 +458,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread([&,this] { ConnectionTerminatedDispatcher(); });
         return;
     }
 
@@ -472,7 +480,10 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     ProcessServerResponse(&m_readBuffer[0], 0, ConvertUInt32(bytesTransferred));
 
     // Read next payload header
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), bind(&DataSubscriber::ReadPayloadHeader, this, _1, _2));
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    {
+        ReadPayloadHeader(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
 }
 
 // If the user defines a separate UDP channel for their
@@ -480,7 +491,6 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
 void DataSubscriber::RunDataChannelResponseThread()
 {
     vector<uint8_t> buffer(Common::MaxPacketSize);
-    uint32_t length;
 
     udp::endpoint endpoint(m_hostAddress, 0);
     ErrorCode error;
@@ -488,7 +498,7 @@ void DataSubscriber::RunDataChannelResponseThread()
 
     while (true)
     {
-        length = ConvertUInt32(m_dataChannelSocket.receive_from(asio::buffer(buffer), endpoint, 0, error));
+        const uint32_t length = ConvertUInt32(m_dataChannelSocket.receive_from(asio::buffer(buffer), endpoint, 0, error));
 
         if (m_disconnecting)
             break;
@@ -509,7 +519,7 @@ void DataSubscriber::RunDataChannelResponseThread()
 }
 
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
-void DataSubscriber::ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length)
+void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offset, const uint32_t length)
 {
     uint8_t* packetBodyStart = buffer + Common::ResponseHeaderSize;
     const uint32_t packetBodyLength = length - Common::ResponseHeaderSize;
@@ -564,14 +574,10 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, uint32_t offset, uin
 }
 
 // Handles success messages received from the server.
-void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     const uint32_t messageLength = ConvertUInt32(length / sizeof(char));
     stringstream messageStream;
-
-    char* messageStart;
-    char* messageEnd;
-    char* messageIter;
 
     switch (commandCode)
     {
@@ -593,11 +599,11 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
             // be delivered to the user via the status message callback.
             if (data != nullptr)
             {
-                messageStart = reinterpret_cast<char*>(data + offset);
-                messageEnd = messageStart + messageLength;
+                char* messageStart = reinterpret_cast<char*>(data + offset);
+                char* messageEnd = messageStart + messageLength;
                 messageStream << "Received success code in response to server command " << ToHex(commandCode) << ": ";
 
-                for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+                for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
                     messageStream << *messageIter;
 
                 DispatchStatusMessage(messageStream.str());
@@ -615,7 +621,7 @@ void DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_
 }
 
 // Handles failure messages from the server.
-void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleFailed(const uint8_t commandCode, uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     if (data == nullptr)
         return;
@@ -623,44 +629,40 @@ void DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t o
     const uint32_t messageLength = ConvertUInt32(length / sizeof(char));
     stringstream messageStream;
 
-    char* messageStart;
-    char* messageEnd;
-    char* messageIter;
-
-    messageStart = reinterpret_cast<char*>(data + offset);
-    messageEnd = messageStart + messageLength;
+    char* messageStart = reinterpret_cast<char*>(data + offset);
+    char* messageEnd = messageStart + messageLength;
 
     if (commandCode == ServerCommand::Connect)
         m_connector.SetConnectionRefused(true);
     else
         messageStream << "Received failure code from server command " << ToHex(commandCode) << ": ";
 
-    for (messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+    for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
         messageStream << *messageIter;
 
     DispatchErrorMessage(messageStream.str());
 }
 
 // Handles metadata refresh messages from the server.
-void DataSubscriber::HandleMetadataRefresh(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleMetadataRefresh(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     Dispatch(&MetadataDispatcher, data, offset, length);
 }
 
 // Handles data start time reported by the server at the beginning of a subscription.
-void DataSubscriber::HandleDataStartTime(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleDataStartTime(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     Dispatch(&DataStartTimeDispatcher, data, offset, length);
 }
 
 // Handles processing complete message sent by the server at the end of a temporal session.
-void DataSubscriber::HandleProcessingComplete(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleProcessingComplete(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     Dispatch(&ProcessingCompleteDispatcher, data, offset, length);
 }
 
 // Cache signal IDs sent by the server into the signal index cache.
-void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     if (data == nullptr)
         return;
@@ -692,7 +694,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset
 }
 
 // Updates base time offsets.
-void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     if (data == nullptr)
         return;
@@ -708,13 +710,13 @@ void DataSubscriber::HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint3
 }
 
 // Handles configuration changed message sent by the server at the end of a temporal session.
-void DataSubscriber::HandleConfigurationChanged(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleConfigurationChanged(uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     Dispatch(&ConfigurationChangedDispatcher);
 }
 
 // Handles data packets from the server. Decodes the measurements and provides them to the user via the new measurements callback.
-void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, const uint32_t length)
 {
     const NewMeasurementsCallback newMeasurementsCallback = m_newMeasurementsCallback;
 
@@ -754,7 +756,7 @@ void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t l
     }
 }
 
-void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint32_t length, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const uint32_t length, vector<MeasurementPtr>& measurements)
 {
     MeasurementPtr measurement;
     string errorMessage;
@@ -827,7 +829,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
                 measurement->ID = measurementID;
                 measurement->Timestamp = time;
                 measurement->Flags = static_cast<MeasurementStateFlags>(quality);
-                measurement->Value = value;
+                measurement->Value = static_cast<float64_t>(value);
 
                 measurements.push_back(measurement);
             }
@@ -857,7 +859,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint3
         m_tsscSequenceNumber = 1;
 }
 
-void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, const uint32_t length, const bool includeTime, const bool useMillisecondResolution, const int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
 {
     const MessageCallback errorMessageCallback = m_errorMessageCallback;
 
@@ -886,7 +888,7 @@ void DataSubscriber::ParseCompactMeasurements(uint8_t* data, uint32_t offset, ui
     }
 }
 
-SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef)
+SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef) // NOLINT
 {
     SignalIndexCache* signalIndexCachePtr = signalIndexCacheRef.get();
 
@@ -916,7 +918,7 @@ void DataSubscriber::Dispatch(const DispatcherFunction& function)
 }
 
 // Dispatches the given function to the callback thread and provides the given data to that function when it is called.
-void DataSubscriber::Dispatch(const DispatcherFunction& function, const uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::Dispatch(const DispatcherFunction& function, const uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     CallbackDispatcher dispatcher;
     SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
@@ -1135,7 +1137,7 @@ bool DataSubscriber::IsPayloadDataCompressed() const
 }
 
 // Set the value which determines whether payload data is compressed.
-void DataSubscriber::SetPayloadDataCompressed(bool compressed)
+void DataSubscriber::SetPayloadDataCompressed(const bool compressed)
 {
     // This operational mode can only be changed before connect - dynamic updates not supported
     m_compressPayloadData = compressed;
@@ -1148,7 +1150,7 @@ bool DataSubscriber::IsMetadataCompressed() const
 }
 
 // Set the value which determines whether metadata exchange is compressed.
-void DataSubscriber::SetMetadataCompressed(bool compressed)
+void DataSubscriber::SetMetadataCompressed(const bool compressed)
 {
     m_compressMetadata = compressed;
 
@@ -1163,7 +1165,7 @@ bool DataSubscriber::IsSignalIndexCacheCompressed() const
 }
 
 // Set the value which determines whether signal index cache exchange is compressed.
-void DataSubscriber::SetSignalIndexCacheCompressed(bool compressed)
+void DataSubscriber::SetSignalIndexCacheCompressed(const bool compressed)
 {
     m_compressSignalIndexCache = compressed;
 
@@ -1199,7 +1201,7 @@ void DataSubscriber::SetSubscriptionInfo(const SubscriptionInfo& info)
     m_subscriptionInfo = info;
 }
 
-void DataSubscriber::Connect(const string& hostname, const uint16_t port, bool autoReconnecting)
+void DataSubscriber::Connect(const string& hostname, const uint16_t port, const bool autoReconnecting)
 {
     if (m_connected)
         throw SubscriberException("Subscriber is already connected; disconnect first");
@@ -1207,8 +1209,8 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, bool a
     // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
-    const DnsResolver::query query(hostname, to_string(port));
-    const DnsResolver::iterator endpointIterator = resolver.resolve(query);
+    const DnsResolver::query dnsQuery(hostname, to_string(port));
+    const DnsResolver::iterator endpointIterator = resolver.resolve(dnsQuery);
     DnsResolver::iterator hostEndpoint;
     ErrorCode error;
 
@@ -1237,8 +1239,8 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, bool a
     m_commandChannelService.restart();
 #endif
 
-    m_callbackThread = Thread(bind(&DataSubscriber::RunCallbackThread, this));
-    m_commandChannelResponseThread = Thread(bind(&DataSubscriber::RunCommandChannelResponseThread, this));
+    m_callbackThread = Thread([&,this]{ RunCallbackThread(); });
+    m_commandChannelResponseThread = Thread([&,this]{ RunCommandChannelResponseThread(); });
     m_connected = true;
 
     SendOperationalModes();
@@ -1251,7 +1253,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port)
     Connect(hostname, port, false);
 }
 
-void DataSubscriber::Disconnect(bool autoReconnecting)
+void DataSubscriber::Disconnect(const bool autoReconnecting)
 {
     // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
     if (!autoReconnecting)
@@ -1328,16 +1330,8 @@ void DataSubscriber::Subscribe(const SubscriptionInfo& info)
 void DataSubscriber::Subscribe()
 {
     stringstream connectionStream;
-    string connectionString;
-
     vector<uint8_t> buffer;
-    uint8_t* connectionStringPtr;
-    uint32_t connectionStringSize;
     uint32_t bigEndianConnectionStringSize;
-    uint8_t* bigEndianConnectionStringSizePtr;
-
-    uint32_t bufferSize;
-    uint32_t i;
 
     // Make sure to unsubscribe before attempting another
     // subscription so we don't leave connections open
@@ -1370,7 +1364,7 @@ void DataSubscriber::Subscribe()
         // Attempt to bind to local UDP port
         m_dataChannelSocket.open(ipVersion);
         m_dataChannelSocket.bind(udp::endpoint(ipVersion, m_subscriptionInfo.DataChannelLocalPort));
-        m_dataChannelResponseThread = Thread(bind(&DataSubscriber::RunDataChannelResponseThread, this));
+        m_dataChannelResponseThread = Thread([&,this]{ RunDataChannelResponseThread(); });
 
         if (!m_dataChannelSocket.is_open())
             throw SubscriberException("Failed to bind to local port");
@@ -1390,13 +1384,13 @@ void DataSubscriber::Subscribe()
     if (!m_subscriptionInfo.ExtraConnectionStringParameters.empty())
         connectionStream << m_subscriptionInfo.ExtraConnectionStringParameters << ";";
 
-    connectionString = connectionStream.str();
-    connectionStringPtr = reinterpret_cast<uint8_t*>(&connectionString[0]);
-    connectionStringSize = ConvertUInt32(connectionString.size() * sizeof(char));
+    string connectionString = connectionStream.str();
+    uint8_t* connectionStringPtr = reinterpret_cast<uint8_t*>(&connectionString[0]);
+    const uint32_t connectionStringSize = ConvertUInt32(connectionString.size() * sizeof(char));
     bigEndianConnectionStringSize = EndianConverter::Default.ConvertBigEndian(connectionStringSize);
-    bigEndianConnectionStringSizePtr = reinterpret_cast<uint8_t*>(&bigEndianConnectionStringSize);
+    uint8_t* bigEndianConnectionStringSizePtr = reinterpret_cast<uint8_t*>(&bigEndianConnectionStringSize);
 
-    bufferSize = 5 + connectionStringSize;
+    const uint32_t bufferSize = 5 + connectionStringSize;
     buffer.resize(bufferSize, 0);
 
     buffer[0] = DataPacketFlags::Compact;
@@ -1405,7 +1399,7 @@ void DataSubscriber::Subscribe()
     buffer[3] = bigEndianConnectionStringSizePtr[2];
     buffer[4] = bigEndianConnectionStringSizePtr[3];
 
-    for (i = 0; i < connectionStringSize; ++i)
+    for (size_t i = 0; i < connectionStringSize; ++i)
         buffer[5 + i] = connectionStringPtr[i];
 
     SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
@@ -1429,28 +1423,23 @@ void DataSubscriber::Unsubscribe()
 }
 
 // Sends a command to the server.
-void DataSubscriber::SendServerCommand(uint8_t commandCode)
+void DataSubscriber::SendServerCommand(const uint8_t commandCode)
 {
     SendServerCommand(commandCode, nullptr, 0, 0);
 }
 
 // Sends a command along with the given message to the server.
-void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
+void DataSubscriber::SendServerCommand(const uint8_t commandCode, string message)
 {
-    uint32_t bufferSize;
     vector<uint8_t> buffer;
-
-    uint8_t* messagePtr;
-    uint32_t messageSize;
     uint32_t bigEndianMessageSize;
-    uint8_t* bigEndianMessageSizePtr;
+    uint8_t* messagePtr = reinterpret_cast<uint8_t*>(&message[0]);
+    const uint32_t messageSize = ConvertUInt32(message.size() * sizeof(char));
 
-    messagePtr = reinterpret_cast<uint8_t*>(&message[0]);
-    messageSize = ConvertUInt32(message.size() * sizeof(char));
     bigEndianMessageSize = EndianConverter::Default.ConvertBigEndian(messageSize);
-    bigEndianMessageSizePtr = reinterpret_cast<uint8_t*>(&bigEndianMessageSize);
+    uint8_t* bigEndianMessageSizePtr = reinterpret_cast<uint8_t*>(&bigEndianMessageSize);
 
-    bufferSize = 4 + messageSize;
+    const uint32_t bufferSize = 4 + messageSize;
     buffer.resize(bufferSize, 0);
 
     buffer[0] = bigEndianMessageSizePtr[0];
@@ -1458,14 +1447,14 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, string message)
     buffer[2] = bigEndianMessageSizePtr[2];
     buffer[3] = bigEndianMessageSizePtr[3];
 
-    for (uint32_t i = 0; i < messageSize; ++i)
+    for (size_t i = 0; i < messageSize; ++i)
         buffer[4 + i] = messagePtr[i];
 
     SendServerCommand(commandCode, &buffer[0], 0, bufferSize);
 }
 
 // Sends a command along with the given data to the server.
-void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length)
+void DataSubscriber::SendServerCommand(const uint8_t commandCode, const uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     if (!m_connected)
         return;
@@ -1489,11 +1478,14 @@ void DataSubscriber::SendServerCommand(uint8_t commandCode, const uint8_t* data,
 
     if (data != nullptr)
     {
-        for (uint32_t i = 0; i < length; ++i)
+        for (size_t i = 0; i < length; ++i)
             m_writeBuffer[5 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), bind(&DataSubscriber::WriteHandler, this, _1, _2));
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), [this](auto && _error, auto && _bytesTransferred)
+    {
+        WriteHandler(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+    });
 }
 
 void DataSubscriber::WriteHandler(const ErrorCode& error, size_t bytesTransferred)
@@ -1504,7 +1496,7 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, size_t bytesTransferre
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
         // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread(bind(&DataSubscriber::ConnectionTerminatedDispatcher, this));
+        m_connectionTerminationThread = Thread([&,this]{ ConnectionTerminatedDispatcher(); });
         return;
     }
 
@@ -1576,14 +1568,14 @@ bool DataSubscriber::IsSubscribed() const
     return m_subscribed;
 }
 
-void DataSubscriber::GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const
+void DataSubscriber::GetAssemblyInfo(string& source, string& version, string& updatedOn) const
 {
     source = m_assemblySource;
     version = m_assemblyVersion;
     updatedOn = m_assemblyUpdatedOn;
 }
 
-void DataSubscriber::SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn)
+void DataSubscriber::SetAssemblyInfo(const string& source, const string& version, const string& updatedOn)
 {
     m_assemblySource = source;
     m_assemblyVersion = version;
