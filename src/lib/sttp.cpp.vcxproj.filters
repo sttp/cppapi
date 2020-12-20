@@ -1081,11 +1081,19 @@
     <ClInclude Include="ThreadSafeQueue.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Version.h" />
-    <ClInclude Include="utf8\unchecked.h" />
-    <ClInclude Include="utf8\checked.h" />
-    <ClInclude Include="utf8\core.h" />
-    <ClInclude Include="utf8\cpp11.h" />
     <ClInclude Include="utf8.h" />
+    <ClInclude Include="utf8\core.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\checked.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\cpp11.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\unchecked.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
@@ -1123,6 +1131,9 @@
     </Filter>
     <Filter Include="transport\tssc">
       <UniqueIdentifier>{a5e5dad0-7ed1-4d85-bfc2-f8856a6f90fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utf8">
+      <UniqueIdentifier>{310acc35-38d5-4b71-8669-56c7540e6d28}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
