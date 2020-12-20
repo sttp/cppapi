@@ -37,6 +37,7 @@ set (STTP_HEADER_FILES
     "lib/pugixml.hpp"
     "lib/ThreadSafeQueue.h"
     "lib/Timer.h"
+    "lib/utf8.h"
     "lib/Version.h"
     "lib/data/DataColumn.h"
     "lib/data/DataRow.h"
@@ -211,6 +212,10 @@ set (STTP_HEADER_FILES
     "lib/transport/tssc/TSSCEncoder.h"
     "lib/transport/tssc/TSSCDecoder.h"
     "lib/transport/tssc/TSSCPointMetadata.h"
+    "lib/utf8/checked.h"
+    "lib/utf8/core.h"
+    "lib/utf8/cpp11.h"
+    "lib/utf8/unchecked.h"
 )
 
 set (STTP_SOURCE_FILES
@@ -411,11 +416,12 @@ include_directories(
 add_definitions(
    -DBOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE 
    -DBOOST_ASIO_ENABLE_CANCELIO 
+   -DUSE_UTF8_INSTEAD_OF_CODECVT
    -DANTLR4CPP_STATIC 
 )
 
 # Define compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -ftabstop=4 -finput-charset=UTF-8 -fextended-identifiers -Wno-attributes")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -ftabstop=4 -finput-charset=UTF-8 -fextended-identifiers -Wno-attributes")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
