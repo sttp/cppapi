@@ -101,6 +101,7 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;$(SolutionDir)lib\FilterExpressions\antlr4-runtime</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,6 +122,7 @@ COPY $(ProjectDir)MetadataSample2.xml $(TargetDir)</Command>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;$(SolutionDir)lib\FilterExpressions\antlr4-runtime</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,6 +145,7 @@ COPY $(ProjectDir)MetadataSample2.xml $(TargetDir)</Command>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;$(SolutionDir)lib\FilterExpressions\antlr4-runtime</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,6 +170,7 @@ COPY $(ProjectDir)MetadataSample2.xml $(TargetDir)</Command>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;ANTLR4CPP_STATIC;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\boost;$(SolutionDir)lib\FilterExpressions\antlr4-runtime</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
