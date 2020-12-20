@@ -40,13 +40,13 @@ RoutingTables::RoutingTables() :
             if (!m_enabled)
                 break;
 
-            const auto operation = m_routingTableOperations.Dequeue();
-            operation.first(*this, operation.second);
+            const auto [handler, routes] = m_routingTableOperations.Dequeue();
+            handler(*this, routes);
         }
     });
 }
 
-RoutingTables::~RoutingTables()
+RoutingTables::~RoutingTables() // NOLINT
 {
     m_enabled = false;
     m_routingTableOperations.Release();
@@ -74,14 +74,14 @@ void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const De
     const unordered_set<sttp::Guid>& routes = destinationRoutes.second;
 
     // Remove subscriber connection from undesired measurement route destinations
-    for (auto& pair : activeRoutes)
+    for (auto& [signalID, destinations] : activeRoutes)
     {
-        if (routes.find(pair.first) != routes.end())
-            pair.second->erase(destination);
+        if (routes.find(signalID) != routes.end())
+            destinations->erase(destination);
     }
 
     // Add subscriber connection to desired measurement route destinations
-    for (auto& signalID : routes)
+    for (const auto& signalID : routes)
     {
         DestinationsPtr destinations;
 
@@ -104,8 +104,8 @@ void RoutingTables::RemoveRoutesOperation(RoutingTables& routingTables, const De
     const SubscriberConnectionPtr& destination = destinationRoutes.first;
 
     // Remove subscriber connection from existing measurement route destinations
-    for (auto& pair : activeRoutes)
-        pair.second->erase(destination);
+    for (const auto& [_, destinations] : activeRoutes)
+        destinations->erase(destination);
 
     routingTables.SetActiveRoutes(activeRoutesPtr);
 }
@@ -134,7 +134,7 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
         ReaderLock readLock(m_activeRoutesLock);
         const RoutingTable& activeRoutes = *m_activeRoutes;
 
-        for (auto& measurement : measurements)
+        for (const auto& measurement : measurements)
         {
             DestinationsPtr destinationsPtr;
 
@@ -142,7 +142,7 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
             {
                 const Destinations& destinations = *destinationsPtr;
 
-                for (auto& destination : destinations)
+                for (const auto& destination : destinations)
                 {
                     if (destination == nullptr)
                         continue;
@@ -163,12 +163,12 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     }
 
     // Publish routed measurements
-    for (auto& pair : routedMeasurementMap)
+    for (auto& [destinationPtr, measurements] : routedMeasurementMap)
     {
-        auto& destination = *pair.first;
+        auto& destination = *destinationPtr;
 
         if (destination.GetIsSubscribed() && !destination.GetIsTemporalSubscription())
-            destination.PublishMeasurements(*pair.second);
+            destination.PublishMeasurements(*measurements);
     }
 }
 

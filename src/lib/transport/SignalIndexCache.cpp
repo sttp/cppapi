@@ -68,7 +68,7 @@ bool SignalIndexCache::Contains(const int32_t signalIndex) const
 }
 
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-Guid SignalIndexCache::GetSignalID(int32_t signalIndex) const
+Guid SignalIndexCache::GetSignalID(const int32_t signalIndex) const
 {
     const auto result = m_reference.find(signalIndex);
 

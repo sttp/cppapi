@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
 #include "TransportTypes.h"
-#include "Constants.h"
 #include "../Convert.h"
 
 using namespace std;
@@ -54,10 +54,7 @@ Measurement::Measurement() :
     SignalID(Empty::Guid),
     Value(NaN),
     Adder(0.0),
-    Multiplier(1.0),
-    Timestamp(0LL),
-    Flags(MeasurementStateFlags::Normal),
-    ID(0LL)
+    Multiplier(1.0)
 {
 }
 
@@ -67,8 +64,7 @@ Measurement::Measurement(const SimpleMeasurement& source) :
     Adder(0.0),
     Multiplier(1.0),
     Timestamp(source.Timestamp),
-    Flags(source.Flags),
-    ID(0LL)
+    Flags(source.Flags)
 {
 }
 
@@ -127,9 +123,7 @@ MeasurementPtr sttp::transport::ToPtr(const SimpleMeasurement& source)
 }
 
 SignalReference::SignalReference() :
-    SignalID(Empty::Guid),
-    Index(0),
-    Kind(SignalKind::Unknown)
+    SignalID(Empty::Guid)
 {    
 }
 

@@ -42,8 +42,6 @@ SubscriberInstance::SubscriberInstance() :
     m_maxRetries(-1),
     m_retryInterval(2000),
     m_filterExpression(SubscribeAllNoStatsExpression),
-    m_startTime(""),
-    m_stopTime(""),
 #ifdef SWIG
     m_receiveSimpleMeasurements(true),
 #else
@@ -165,7 +163,7 @@ void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
 
 void SubscriberInstance::ConnectAsync()
 {
-    m_connectThread = Thread(bind(&SubscriberInstance::Connect, this));
+    m_connectThread = Thread([this]{ Connect(); });
 }
 
 void SubscriberInstance::Connect()
@@ -382,11 +380,11 @@ PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceName(const string& devic
 
     m_configurationUpdateLock.lock();
 
-    for (auto const& item : m_devices)
+    for (const auto& [_, metadata] : m_devices)
     {
-        if (IsEqual(item.second->Name, deviceName, ignoreCase))
+        if (IsEqual(metadata->Name, deviceName, ignoreCase))
         {
-            deviceMetadata = item.second;
+            deviceMetadata = metadata;
             break;
         }
     }
@@ -405,11 +403,11 @@ PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceID(const Guid& uniqueID,
 
     m_configurationUpdateLock.lock();
 
-    for (auto const& item : m_devices)
+    for (const auto& [_, metadata] : m_devices)
     {
-        if (item.second->UniqueID == uniqueID)
+        if (metadata->UniqueID == uniqueID)
         {
-            deviceMetadata = item.second;
+            deviceMetadata = metadata;
             break;
         }
     }
@@ -506,9 +504,8 @@ bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, C
 
     m_configurationUpdateLock.lock();
 
-    for (auto const& frameRecord : m_configurationFrames)
+    for (const auto& [_, currentFrame] : m_configurationFrames)
     {
-        const ConfigurationFramePtr currentFrame = frameRecord.second;
         const auto iterator = currentFrame->Measurements.find(signalID);
 
         if (iterator != currentFrame->Measurements.end())
@@ -640,8 +637,8 @@ SubscriptionInfo SubscriberInstance::CreateSubscriptionInfo()
     info.Throttled = false;
     info.UdpDataChannel = false;
     info.IncludeTime = true;
-    info.LagTime = 3.0F;
-    info.LeadTime = 1.0F;
+    info.LagTime = 3.0;
+    info.LeadTime = 1.0;
     info.UseLocalClockAsRealTime = false;
     info.UseMillisecondResolution = true;
 
@@ -694,8 +691,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     else
     {
         // Copy payload to a local non-constant buffer, pugi load_buffer_inplace can modify buffer
-        for (size_t i = 0; i < payload.size(); i++)
-            uncompressedBuffer.push_back(payload[i]);
+        for (auto byte : payload)
+            uncompressedBuffer.push_back(byte);
     }
 
     // Step 2: Load string into an XML parser

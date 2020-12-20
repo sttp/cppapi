@@ -383,7 +383,7 @@ bool PublisherInstance::TryGetSubscriberConnections(vector<SubscriberConnectionP
 {
     subscriberConnections.clear();
 
-    m_publisher->IterateSubscriberConnections([&subscriberConnections](SubscriberConnectionPtr connection, void* userData)
+    m_publisher->IterateSubscriberConnections([&subscriberConnections](const SubscriberConnectionPtr& connection, void* userData)
     {
         subscriberConnections.push_back(connection);
     },
