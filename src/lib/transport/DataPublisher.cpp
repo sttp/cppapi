@@ -92,9 +92,9 @@ void DataPublisher::StartAccept()
 {
     const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
 
-    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), [this, connection](auto && _error)
+    m_clientAcceptor.async_accept(connection->CommandChannelSocket(), [this, connection]<typename T0>(T0&& error)
     {
-        AcceptConnection(connection, std::forward<decltype(_error)>(_error));
+        AcceptConnection(connection, error);
     });
 }
 

@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 // ReSharper disable CppClangTidyPerformanceNoAutomaticMove
+// ReSharper disable CppClangTidyClangDiagnosticShadowUncapturedLocal
 #include "DataSubscriber.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
@@ -162,7 +163,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
-            Thread _([this]{ m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
+            Thread _([&,this]{ m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled."); });
             break;
         }
 
@@ -214,7 +215,7 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
                 else
                     errorMessageStream << "Attempting to reconnect...";
 
-                Thread _([this]{ m_errorMessageCallback(&subscriber, errorMessageStream.str()); });
+                Thread _([&,this]{ m_errorMessageCallback(&subscriber, errorMessageStream.str()); });
             }
 
             if (retryInterval > 0)
@@ -400,9 +401,9 @@ void DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void DataSubscriber::RunCommandChannelResponseThread()
 {
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
-        ReadPayloadHeader(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        ReadPayloadHeader(error, bytesTransferred);
     });
 
     m_commandChannelService.run();
@@ -443,9 +444,9 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this](auto && _error, auto && _bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
     {
-        ReadPacket(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        ReadPacket(error, bytesTransferred);
     });
 }
 
@@ -480,9 +481,9 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
     ProcessServerResponse(&m_readBuffer[0], 0, ConvertUInt32(bytesTransferred));
 
     // Read next payload header
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
     {
-        ReadPayloadHeader(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        ReadPayloadHeader(error, bytesTransferred);
     });
 }
 
@@ -1482,9 +1483,9 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, const uint8_t*
             m_writeBuffer[5 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), [this](auto && _error, auto && _bytesTransferred)
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
-        WriteHandler(std::forward<decltype(_error)>(_error), std::forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        WriteHandler(error, bytesTransferred);
     });
 }
 

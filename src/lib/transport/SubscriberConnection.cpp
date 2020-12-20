@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyClangDiagnosticShadowUncapturedLocal
 #include "../filterexpressions/FilterExpressionParser.h"
 #include "SubscriberConnection.h"
 #include "DataPublisher.h"
@@ -1284,9 +1285,9 @@ void SubscriberConnection::ReadCommandChannel()
     if (m_stopped)
         return;
 
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this](auto && _error, auto && _bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
-        ReadPayloadHeader(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        ReadPayloadHeader(error, bytesTransferred);
     });
 }
 
@@ -1342,9 +1343,9 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t byte
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [&](auto && _error, auto && _bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
     {
-        ParseCommand(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        ParseCommand(error, bytesTransferred);
     });
 }
 
@@ -1455,7 +1456,7 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndex
     const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
     const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
 
-    serializationBuffer.reserve(static_cast<uint32_t>(signalIndexCache.GetBinaryLength() * 0.02));
+    serializationBuffer.reserve(static_cast<size_t>(signalIndexCache.GetBinaryLength() * 0.02));
     signalIndexCache.Serialize(*this, serializationBuffer);
 
     if (compressSignalIndexCache && useGZipCompression)
@@ -1544,9 +1545,9 @@ void SubscriberConnection::CommandChannelSendAsync()
 
     vector<uint8_t>& data = *m_tcpWriteBuffers[0];
 
-    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, [this](auto && _error, auto && _bytesTransferred)
+    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
-        CommandChannelWriteHandler(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        CommandChannelWriteHandler(error, bytesTransferred);
     }));
 }
 
@@ -1589,9 +1590,9 @@ void SubscriberConnection::DataChannelSendAsync()
 
     vector<uint8_t>& data = *m_udpWriteBuffers[0];
 
-    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, [this](auto && _error, auto && _bytesTransferred)
+    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
-        DataChannelWriteHandler(forward<decltype(_error)>(_error), forward<decltype(_bytesTransferred)>(_bytesTransferred));
+        DataChannelWriteHandler(error, bytesTransferred);
     }));
 }
 
