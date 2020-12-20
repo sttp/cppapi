@@ -109,7 +109,7 @@ ExpressionTreePtr DataRow::GetExpressionTree(const DataColumnPtr& column)
         parser->SetTrackFilteredSignalIDs(false);
         parser->SetTrackFilteredRows(false);
 
-        const auto expressionTrees = parser->GetExpressionTrees();
+        const auto& expressionTrees = parser->GetExpressionTrees();
 
         if (expressionTrees.empty())
         {
@@ -825,7 +825,7 @@ Nullable<sttp::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
 
     if (data)
     {
-        sttp::Guid value;
+        sttp::Guid value {};
         memcpy(value.data, data, 16);
         return value;
     }
