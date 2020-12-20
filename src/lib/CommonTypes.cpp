@@ -123,7 +123,7 @@ bool sttp::IsEmptyOrWhiteSpace(const string& value)
     if (value.empty())
         return true;
 
-    return all_of(value.begin(), value.end(), [](const char c)
+    return ranges::all_of(value, [](const char c)
     {
         return isspace(c);
     });
