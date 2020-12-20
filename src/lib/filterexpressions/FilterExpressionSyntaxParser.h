@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.7.1
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
 
 #pragma once
 
@@ -44,7 +44,7 @@ public:
     RuleTableName = 22, RuleColumnName = 23, RuleOrderByColumnName = 24
   };
 
-  FilterExpressionSyntaxParser(antlr4::TokenStream *input);
+  explicit FilterExpressionSyntaxParser(antlr4::TokenStream *input);
   ~FilterExpressionSyntaxParser();
 
   virtual std::string getGrammarFileName() const override;
@@ -97,7 +97,7 @@ public:
 
   class  ErrorContext : public antlr4::ParserRuleContext {
   public:
-    antlr4::Token *unexpected_charToken = nullptr;;
+    antlr4::Token *unexpected_charToken = nullptr;
     ErrorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *UNEXPECTED_CHAR();

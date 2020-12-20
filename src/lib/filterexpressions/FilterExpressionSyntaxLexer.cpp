@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.7.1
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
 
 
 #include "FilterExpressionSyntaxLexer.h"
@@ -60,27 +60,24 @@ atn::ATN FilterExpressionSyntaxLexer::_atn;
 std::vector<uint16_t> FilterExpressionSyntaxLexer::_serializedATN;
 
 std::vector<std::string> FilterExpressionSyntaxLexer::_ruleNames = {
-  u8"T__0", u8"T__1", u8"T__2", u8"T__3", u8"T__4", u8"T__5", u8"T__6", 
-  u8"T__7", u8"T__8", u8"T__9", u8"T__10", u8"T__11", u8"T__12", u8"T__13", 
-  u8"T__14", u8"T__15", u8"T__16", u8"T__17", u8"T__18", u8"T__19", u8"T__20", 
-  u8"T__21", u8"T__22", u8"T__23", u8"T__24", u8"T__25", u8"T__26", u8"T__27", 
-  u8"K_ABS", u8"K_AND", u8"K_ASC", u8"K_BINARY", u8"K_BY", u8"K_CEILING", 
-  u8"K_COALESCE", u8"K_CONVERT", u8"K_CONTAINS", u8"K_DATEADD", u8"K_DATEDIFF", 
-  u8"K_DATEPART", u8"K_DESC", u8"K_ENDSWITH", u8"K_FILTER", u8"K_FLOOR", 
-  u8"K_IIF", u8"K_IN", u8"K_INDEXOF", u8"K_IS", u8"K_ISDATE", u8"K_ISINTEGER", 
-  u8"K_ISGUID", u8"K_ISNULL", u8"K_ISNUMERIC", u8"K_LASTINDEXOF", u8"K_LEN", 
-  u8"K_LIKE", u8"K_LOWER", u8"K_MAXOF", u8"K_MINOF", u8"K_NOT", u8"K_NOW", 
-  u8"K_NTHINDEXOF", u8"K_NULL", u8"K_OR", u8"K_ORDER", u8"K_POWER", u8"K_REGEXMATCH", 
-  u8"K_REGEXVAL", u8"K_REPLACE", u8"K_REVERSE", u8"K_ROUND", u8"K_SQRT", 
-  u8"K_SPLIT", u8"K_STARTSWITH", u8"K_STRCOUNT", u8"K_STRCMP", u8"K_SUBSTR", 
-  u8"K_TOP", u8"K_TRIM", u8"K_TRIMLEFT", u8"K_TRIMRIGHT", u8"K_UPPER", u8"K_UTCNOW", 
-  u8"K_WHERE", u8"K_XOR", u8"BOOLEAN_LITERAL", u8"IDENTIFIER", u8"INTEGER_LITERAL", 
-  u8"NUMERIC_LITERAL", u8"GUID_LITERAL", u8"MEASUREMENT_KEY_LITERAL", u8"POINT_TAG_LITERAL", 
-  u8"STRING_LITERAL", u8"DATETIME_LITERAL", u8"SINGLE_LINE_COMMENT", u8"MULTILINE_COMMENT", 
-  u8"SPACES", u8"UNEXPECTED_CHAR", u8"DIGIT", u8"HEX_DIGIT", u8"ACRONYM_DIGIT", 
-  u8"GUID_VALUE", u8"A", u8"B", u8"C", u8"D", u8"E", u8"F", u8"G", u8"H", 
-  u8"I", u8"J", u8"K", u8"L", u8"M", u8"N", u8"O", u8"P", u8"Q", u8"R", 
-  u8"S", u8"T", u8"U", u8"V", u8"W", u8"X", u8"Y", u8"Z"
+  "T__0", "T__1", "T__2", "T__3", "T__4", "T__5", "T__6", "T__7", "T__8", 
+  "T__9", "T__10", "T__11", "T__12", "T__13", "T__14", "T__15", "T__16", 
+  "T__17", "T__18", "T__19", "T__20", "T__21", "T__22", "T__23", "T__24", 
+  "T__25", "T__26", "T__27", "K_ABS", "K_AND", "K_ASC", "K_BINARY", "K_BY", 
+  "K_CEILING", "K_COALESCE", "K_CONVERT", "K_CONTAINS", "K_DATEADD", "K_DATEDIFF", 
+  "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", "K_FLOOR", "K_IIF", 
+  "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", "K_ISGUID", "K_ISNULL", 
+  "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", "K_LOWER", "K_MAXOF", 
+  "K_MINOF", "K_NOT", "K_NOW", "K_NTHINDEXOF", "K_NULL", "K_OR", "K_ORDER", 
+  "K_POWER", "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", "K_REVERSE", "K_ROUND", 
+  "K_SQRT", "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", "K_STRCMP", "K_SUBSTR", 
+  "K_TOP", "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", "K_UPPER", "K_UTCNOW", 
+  "K_WHERE", "K_XOR", "BOOLEAN_LITERAL", "IDENTIFIER", "INTEGER_LITERAL", 
+  "NUMERIC_LITERAL", "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", "POINT_TAG_LITERAL", 
+  "STRING_LITERAL", "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", 
+  "SPACES", "UNEXPECTED_CHAR", "DIGIT", "HEX_DIGIT", "ACRONYM_DIGIT", "GUID_VALUE", 
+  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", 
+  "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
 };
 
 std::vector<std::string> FilterExpressionSyntaxLexer::_channelNames = {
@@ -88,33 +85,30 @@ std::vector<std::string> FilterExpressionSyntaxLexer::_channelNames = {
 };
 
 std::vector<std::string> FilterExpressionSyntaxLexer::_modeNames = {
-  u8"DEFAULT_MODE"
+  "DEFAULT_MODE"
 };
 
 std::vector<std::string> FilterExpressionSyntaxLexer::_literalNames = {
-  "", u8"';'", u8"','", u8"'-'", u8"'+'", u8"'('", u8"')'", u8"'!'", u8"'~'", 
-  u8"'==='", u8"'<'", u8"'<='", u8"'>'", u8"'>='", u8"'='", u8"'=='", u8"'!='", 
-  u8"'!=='", u8"'<>'", u8"'&&'", u8"'||'", u8"'<<'", u8"'>>'", u8"'&'", 
-  u8"'|'", u8"'^'", u8"'*'", u8"'/'", u8"'%'"
+  "", "';'", "','", "'-'", "'+'", "'('", "')'", "'!'", "'~'", "'==='", "'<'", 
+  "'<='", "'>'", "'>='", "'='", "'=='", "'!='", "'!=='", "'<>'", "'&&'", 
+  "'||'", "'<<'", "'>>'", "'&'", "'|'", "'^'", "'*'", "'/'", "'%'"
 };
 
 std::vector<std::string> FilterExpressionSyntaxLexer::_symbolicNames = {
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-  "", "", "", "", "", "", "", "", "", "", "", u8"K_ABS", u8"K_AND", u8"K_ASC", 
-  u8"K_BINARY", u8"K_BY", u8"K_CEILING", u8"K_COALESCE", u8"K_CONVERT", 
-  u8"K_CONTAINS", u8"K_DATEADD", u8"K_DATEDIFF", u8"K_DATEPART", u8"K_DESC", 
-  u8"K_ENDSWITH", u8"K_FILTER", u8"K_FLOOR", u8"K_IIF", u8"K_IN", u8"K_INDEXOF", 
-  u8"K_IS", u8"K_ISDATE", u8"K_ISINTEGER", u8"K_ISGUID", u8"K_ISNULL", u8"K_ISNUMERIC", 
-  u8"K_LASTINDEXOF", u8"K_LEN", u8"K_LIKE", u8"K_LOWER", u8"K_MAXOF", u8"K_MINOF", 
-  u8"K_NOT", u8"K_NOW", u8"K_NTHINDEXOF", u8"K_NULL", u8"K_OR", u8"K_ORDER", 
-  u8"K_POWER", u8"K_REGEXMATCH", u8"K_REGEXVAL", u8"K_REPLACE", u8"K_REVERSE", 
-  u8"K_ROUND", u8"K_SQRT", u8"K_SPLIT", u8"K_STARTSWITH", u8"K_STRCOUNT", 
-  u8"K_STRCMP", u8"K_SUBSTR", u8"K_TOP", u8"K_TRIM", u8"K_TRIMLEFT", u8"K_TRIMRIGHT", 
-  u8"K_UPPER", u8"K_UTCNOW", u8"K_WHERE", u8"K_XOR", u8"BOOLEAN_LITERAL", 
-  u8"IDENTIFIER", u8"INTEGER_LITERAL", u8"NUMERIC_LITERAL", u8"GUID_LITERAL", 
-  u8"MEASUREMENT_KEY_LITERAL", u8"POINT_TAG_LITERAL", u8"STRING_LITERAL", 
-  u8"DATETIME_LITERAL", u8"SINGLE_LINE_COMMENT", u8"MULTILINE_COMMENT", 
-  u8"SPACES", u8"UNEXPECTED_CHAR"
+  "", "", "", "", "", "", "", "", "", "", "", "K_ABS", "K_AND", "K_ASC", 
+  "K_BINARY", "K_BY", "K_CEILING", "K_COALESCE", "K_CONVERT", "K_CONTAINS", 
+  "K_DATEADD", "K_DATEDIFF", "K_DATEPART", "K_DESC", "K_ENDSWITH", "K_FILTER", 
+  "K_FLOOR", "K_IIF", "K_IN", "K_INDEXOF", "K_IS", "K_ISDATE", "K_ISINTEGER", 
+  "K_ISGUID", "K_ISNULL", "K_ISNUMERIC", "K_LASTINDEXOF", "K_LEN", "K_LIKE", 
+  "K_LOWER", "K_MAXOF", "K_MINOF", "K_NOT", "K_NOW", "K_NTHINDEXOF", "K_NULL", 
+  "K_OR", "K_ORDER", "K_POWER", "K_REGEXMATCH", "K_REGEXVAL", "K_REPLACE", 
+  "K_REVERSE", "K_ROUND", "K_SQRT", "K_SPLIT", "K_STARTSWITH", "K_STRCOUNT", 
+  "K_STRCMP", "K_SUBSTR", "K_TOP", "K_TRIM", "K_TRIMLEFT", "K_TRIMRIGHT", 
+  "K_UPPER", "K_UTCNOW", "K_WHERE", "K_XOR", "BOOLEAN_LITERAL", "IDENTIFIER", 
+  "INTEGER_LITERAL", "NUMERIC_LITERAL", "GUID_LITERAL", "MEASUREMENT_KEY_LITERAL", 
+  "POINT_TAG_LITERAL", "STRING_LITERAL", "DATETIME_LITERAL", "SINGLE_LINE_COMMENT", 
+  "MULTILINE_COMMENT", "SPACES", "UNEXPECTED_CHAR"
 };
 
 dfa::Vocabulary FilterExpressionSyntaxLexer::_vocabulary(_literalNames, _symbolicNames);

@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.7.1
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
 
 
 #include "FilterExpressionSyntaxListener.h"
@@ -70,7 +70,11 @@ FilterExpressionSyntaxParser::ParseContext* FilterExpressionSyntaxParser::parse(
   ParseContext *_localctx = _tracker.createInstance<ParseContext>(_ctx, getState());
   enterRule(_localctx, 0, FilterExpressionSyntaxParser::RuleParse);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -195,7 +199,11 @@ FilterExpressionSyntaxParser::ErrorContext* FilterExpressionSyntaxParser::error(
   ErrorContext *_localctx = _tracker.createInstance<ErrorContext>(_ctx, getState());
   enterRule(_localctx, 2, FilterExpressionSyntaxParser::RuleError);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -252,7 +260,11 @@ FilterExpressionSyntaxParser::FilterExpressionStatementListContext* FilterExpres
   enterRule(_localctx, 4, FilterExpressionSyntaxParser::RuleFilterExpressionStatementList);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -352,7 +364,11 @@ FilterExpressionSyntaxParser::FilterExpressionStatementContext* FilterExpression
   FilterExpressionStatementContext *_localctx = _tracker.createInstance<FilterExpressionStatementContext>(_ctx, getState());
   enterRule(_localctx, 6, FilterExpressionSyntaxParser::RuleFilterExpressionStatement);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -380,6 +396,8 @@ FilterExpressionSyntaxParser::FilterExpressionStatementContext* FilterExpression
       break;
     }
 
+    default:
+      break;
     }
    
   }
@@ -432,7 +450,11 @@ FilterExpressionSyntaxParser::IdentifierStatementContext* FilterExpressionSyntax
   enterRule(_localctx, 8, FilterExpressionSyntaxParser::RuleIdentifierStatement);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -528,7 +550,11 @@ FilterExpressionSyntaxParser::FilterStatementContext* FilterExpressionSyntaxPars
   enterRule(_localctx, 10, FilterExpressionSyntaxParser::RuleFilterStatement);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -618,7 +644,11 @@ FilterExpressionSyntaxParser::TopLimitContext* FilterExpressionSyntaxParser::top
   enterRule(_localctx, 12, FilterExpressionSyntaxParser::RuleTopLimit);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -699,7 +729,11 @@ FilterExpressionSyntaxParser::OrderingTermContext* FilterExpressionSyntaxParser:
   enterRule(_localctx, 14, FilterExpressionSyntaxParser::RuleOrderingTerm);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -782,7 +816,11 @@ FilterExpressionSyntaxParser::ExpressionListContext* FilterExpressionSyntaxParse
   enterRule(_localctx, 16, FilterExpressionSyntaxParser::RuleExpressionList);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -865,12 +903,17 @@ FilterExpressionSyntaxParser::ExpressionContext* FilterExpressionSyntaxParser::e
   size_t parentState = getState();
   FilterExpressionSyntaxParser::ExpressionContext *_localctx = _tracker.createInstance<ExpressionContext>(_ctx, parentState);
   FilterExpressionSyntaxParser::ExpressionContext *previousContext = _localctx;
+  (void)previousContext; // Silence compiler, in case the context is not used by generated code.
   size_t startState = 18;
   enterRecursionRule(_localctx, 18, FilterExpressionSyntaxParser::RuleExpression, precedence);
 
     
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     unrollRecursionContexts(parentContext);
   });
   try {
@@ -893,6 +936,8 @@ FilterExpressionSyntaxParser::ExpressionContext* FilterExpressionSyntaxParser::e
       break;
     }
 
+    default:
+      break;
     }
     _ctx->stop = _input->LT(-1);
     setState(143);
@@ -1003,12 +1048,17 @@ FilterExpressionSyntaxParser::PredicateExpressionContext* FilterExpressionSyntax
   size_t parentState = getState();
   FilterExpressionSyntaxParser::PredicateExpressionContext *_localctx = _tracker.createInstance<PredicateExpressionContext>(_ctx, parentState);
   FilterExpressionSyntaxParser::PredicateExpressionContext *previousContext = _localctx;
+  (void)previousContext; // Silence compiler, in case the context is not used by generated code.
   size_t startState = 20;
   enterRecursionRule(_localctx, 20, FilterExpressionSyntaxParser::RulePredicateExpression, precedence);
 
     size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     unrollRecursionContexts(parentContext);
   });
   try {
@@ -1134,6 +1184,8 @@ FilterExpressionSyntaxParser::PredicateExpressionContext* FilterExpressionSyntax
           break;
         }
 
+        default:
+          break;
         } 
       }
       setState(184);
@@ -1218,12 +1270,17 @@ FilterExpressionSyntaxParser::ValueExpressionContext* FilterExpressionSyntaxPars
   size_t parentState = getState();
   FilterExpressionSyntaxParser::ValueExpressionContext *_localctx = _tracker.createInstance<ValueExpressionContext>(_ctx, parentState);
   FilterExpressionSyntaxParser::ValueExpressionContext *previousContext = _localctx;
+  (void)previousContext; // Silence compiler, in case the context is not used by generated code.
   size_t startState = 22;
   enterRecursionRule(_localctx, 22, FilterExpressionSyntaxParser::RuleValueExpression, precedence);
 
     
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     unrollRecursionContexts(parentContext);
   });
   try {
@@ -1359,6 +1416,8 @@ FilterExpressionSyntaxParser::ValueExpressionContext* FilterExpressionSyntaxPars
           break;
         }
 
+        default:
+          break;
         } 
       }
       setState(210);
@@ -1406,7 +1465,11 @@ FilterExpressionSyntaxParser::NotOperatorContext* FilterExpressionSyntaxParser::
   enterRule(_localctx, 24, FilterExpressionSyntaxParser::RuleNotOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1465,7 +1528,11 @@ FilterExpressionSyntaxParser::UnaryOperatorContext* FilterExpressionSyntaxParser
   enterRule(_localctx, 26, FilterExpressionSyntaxParser::RuleUnaryOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1527,7 +1594,11 @@ FilterExpressionSyntaxParser::ExactMatchModifierContext* FilterExpressionSyntaxP
   enterRule(_localctx, 28, FilterExpressionSyntaxParser::RuleExactMatchModifier);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1582,7 +1653,11 @@ FilterExpressionSyntaxParser::ComparisonOperatorContext* FilterExpressionSyntaxP
   enterRule(_localctx, 30, FilterExpressionSyntaxParser::RuleComparisonOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1653,7 +1728,11 @@ FilterExpressionSyntaxParser::LogicalOperatorContext* FilterExpressionSyntaxPars
   enterRule(_localctx, 32, FilterExpressionSyntaxParser::RuleLogicalOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1714,7 +1793,11 @@ FilterExpressionSyntaxParser::BitwiseOperatorContext* FilterExpressionSyntaxPars
   enterRule(_localctx, 34, FilterExpressionSyntaxParser::RuleBitwiseOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1772,7 +1855,11 @@ FilterExpressionSyntaxParser::MathOperatorContext* FilterExpressionSyntaxParser:
   enterRule(_localctx, 36, FilterExpressionSyntaxParser::RuleMathOperator);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -1994,7 +2081,11 @@ FilterExpressionSyntaxParser::FunctionNameContext* FilterExpressionSyntaxParser:
   enterRule(_localctx, 38, FilterExpressionSyntaxParser::RuleFunctionName);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -2096,7 +2187,11 @@ FilterExpressionSyntaxParser::FunctionExpressionContext* FilterExpressionSyntaxP
   enterRule(_localctx, 40, FilterExpressionSyntaxParser::RuleFunctionExpression);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -2237,7 +2332,11 @@ FilterExpressionSyntaxParser::LiteralValueContext* FilterExpressionSyntaxParser:
   enterRule(_localctx, 42, FilterExpressionSyntaxParser::RuleLiteralValue);
   size_t _la = 0;
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -2300,7 +2399,11 @@ FilterExpressionSyntaxParser::TableNameContext* FilterExpressionSyntaxParser::ta
   TableNameContext *_localctx = _tracker.createInstance<TableNameContext>(_ctx, getState());
   enterRule(_localctx, 44, FilterExpressionSyntaxParser::RuleTableName);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -2349,7 +2452,11 @@ FilterExpressionSyntaxParser::ColumnNameContext* FilterExpressionSyntaxParser::c
   ColumnNameContext *_localctx = _tracker.createInstance<ColumnNameContext>(_ctx, getState());
   enterRule(_localctx, 46, FilterExpressionSyntaxParser::RuleColumnName);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {
@@ -2398,7 +2505,11 @@ FilterExpressionSyntaxParser::OrderByColumnNameContext* FilterExpressionSyntaxPa
   OrderByColumnNameContext *_localctx = _tracker.createInstance<OrderByColumnNameContext>(_ctx, getState());
   enterRule(_localctx, 48, FilterExpressionSyntaxParser::RuleOrderByColumnName);
 
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
   auto onExit = finally([=] {
+#endif
     exitRule();
   });
   try {

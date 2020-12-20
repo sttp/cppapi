@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.7.1
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
 
 #pragma once
 
@@ -33,7 +33,7 @@ public:
     SINGLE_LINE_COMMENT = 95, MULTILINE_COMMENT = 96, SPACES = 97, UNEXPECTED_CHAR = 98
   };
 
-  FilterExpressionSyntaxLexer(antlr4::CharStream *input);
+  explicit FilterExpressionSyntaxLexer(antlr4::CharStream *input);
   ~FilterExpressionSyntaxLexer();
 
   virtual std::string getGrammarFileName() const override;
