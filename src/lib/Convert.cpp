@@ -34,6 +34,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
 #include <boost/algorithm/string.hpp>
+#include "utf8.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -318,14 +319,24 @@ string sttp::ToString(const decimal_t& value)
 
 wstring sttp::ToUTF16(const string& value)
 {
-    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(value);
+    // wstring_convert is deprecated in C++17.
+    //wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    //return converter.from_bytes(value);
+
+    wstring wide;
+    utf8::utf8to32(value.begin(), value.end(), std::back_inserter(wide));
+    return wide;
 }
 
 string sttp::ToUTF8(const wstring& value)
 {
-    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.to_bytes(value);
+    // wstring_convert is deprecated in C++17.
+    //wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    //return converter.to_bytes(value);
+
+    string narrow;
+    utf8::utf32to8(value.begin(), value.end(), std::back_inserter(narrow));
+    return narrow;
 }
 
 bool sttp::ParseBoolean(const string& value)
@@ -537,8 +548,6 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
         locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S%F")),
         locale(locale::classic(), new time_input_facet("%Y%m%dT%H%M%S%F"))
     };
-
-    static const int32_t formatsCount = sizeof(formats) / sizeof(formats[0]);
 
     TimeSpan utcOffset{};
     const string cleanTimestamp = PreparseTimestamp(time, utcOffset);

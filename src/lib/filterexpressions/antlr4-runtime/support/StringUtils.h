@@ -8,7 +8,7 @@
 #include "antlr4-common.h"
 
 #ifdef USE_UTF8_INSTEAD_OF_CODECVT
-#include "utf8.h"
+#include "../../utf8.h"
 #endif
 
 namespace antlrcpp {

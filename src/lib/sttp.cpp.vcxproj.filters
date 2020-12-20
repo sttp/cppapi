@@ -1081,6 +1081,11 @@
     <ClInclude Include="ThreadSafeQueue.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Version.h" />
+    <ClInclude Include="utf8\unchecked.h" />
+    <ClInclude Include="utf8\checked.h" />
+    <ClInclude Include="utf8\core.h" />
+    <ClInclude Include="utf8\cpp11.h" />
+    <ClInclude Include="utf8.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

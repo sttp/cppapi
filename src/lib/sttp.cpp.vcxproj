@@ -402,6 +402,11 @@
     <ClInclude Include="transport\tssc\TSSCDecoder.h" />
     <ClInclude Include="transport\tssc\TSSCEncoder.h" />
     <ClInclude Include="transport\tssc\TSSCPointMetadata.h" />
+    <ClInclude Include="utf8.h" />
+    <ClInclude Include="utf8\checked.h" />
+    <ClInclude Include="utf8\core.h" />
+    <ClInclude Include="utf8\cpp11.h" />
+    <ClInclude Include="utf8\unchecked.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
@@ -537,7 +542,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -557,7 +562,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -577,7 +582,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -597,7 +602,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -619,7 +624,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -645,7 +650,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;BOOST_ASIO_ENABLE_CANCELIO;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -671,7 +676,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -697,7 +702,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE;USE_UTF8_INSTEAD_OF_CODECVT;_HAS_AUTO_PTR_ETC;ANTLR4CPP_STATIC;SWIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
