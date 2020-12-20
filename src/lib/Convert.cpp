@@ -404,6 +404,28 @@ bool sttp::TryParseInt32(const string& value, int32_t& result, const int32_t def
     }
 }
 
+bool sttp::TryParseUInt32(const string& value, uint32_t& result, const uint32_t defaultValue)
+{
+    try
+    {
+        const auto conversion = stoul(value);
+
+        if (conversion > UInt32::MaxValue)
+        {
+            result = defaultValue;
+            return false;
+        }
+
+        result = static_cast<uint32_t>(conversion);
+        return true;
+    }
+    catch (...)
+    {
+        result = defaultValue;
+        return false;
+    }
+}
+
 bool sttp::TryParseInt64(const string& value, int64_t& result, const int64_t defaultValue)
 {
     try
