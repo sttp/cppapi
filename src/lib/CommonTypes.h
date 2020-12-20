@@ -44,6 +44,10 @@
 #pragma warning(disable:26495)
 #pragma warning(disable:26498)
 #pragma warning(disable:26812)
+#if _WIN32 || _WIN64
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+#pragma diag_suppress 70
+#endif
 
 #include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
