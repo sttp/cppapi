@@ -1015,9 +1015,6 @@
     <ClInclude Include="filterexpressions\FilterExpressionParser.h">
       <Filter>filterexpressions</Filter>
     </ClInclude>
-    <ClInclude Include="filterexpressions\FilterExpressions.h">
-      <Filter>filterexpressions</Filter>
-    </ClInclude>
     <ClInclude Include="filterexpressions\FilterExpressionSyntaxBaseListener.h">
       <Filter>filterexpressions</Filter>
     </ClInclude>
