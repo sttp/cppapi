@@ -392,7 +392,7 @@ void TSSCEncoder::WriteTimestampChange(const int64_t timestamp)
 
 void TSSCEncoder::WriteQualityChange(const uint32_t quality, const TSSCPointMetadataPtr& point)
 {
-    // Quality flags deviate very little, so the value is only encoded when it deviates
+    // Quality flags deviate very little, so the value is only encoded when it changes
     // from previous value. When value is added to the stream, the value is compressed
     // using 7-bit variable-length quantity encoding. More specifically, the algorithm
     // writes out an integer 7-bits at a time with the high-bit of the current output
