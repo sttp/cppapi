@@ -22,12 +22,10 @@
 //******************************************************************************************************
 
 // ReSharper disable CppClangTidyPerformanceNoAutomaticMove
-// ReSharper disable once CppUnusedIncludeDirective
-#include "../filterexpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 #include "DataPublisher.h"
 #include "MetadataSchema.h"
 #include "ActiveMeasurementsSchema.h"
-#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace boost::asio::ip;

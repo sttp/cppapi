@@ -27,12 +27,10 @@
 // ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 // ReSharper disable CppExpressionWithoutSideEffects
-// ReSharper disable once CppUnusedIncludeDirective
-#include "../filterexpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 #include "DataRow.h"
 #include "DataTable.h"
 #include "DataSet.h"
-#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace sttp;

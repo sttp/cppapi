@@ -24,8 +24,14 @@
 #pragma once
 
 // ReSharper disable CppClangTidyCppcoreguidelinesMacroUsage
-#include "FilterExpressions.h"
+#include "FilterExpressionSyntaxBaseListener.h"
 #include "FilterExpressionSyntaxLexer.h"
+
+// For some reason this symbol gets undefined? So, we re-define it...
+#ifndef EOF
+#define EOF (-1)
+#endif
+
 #include "../../CommonTypes.h"
 #include "../../data/DataSet.h"
 #include "ExpressionTree.h"

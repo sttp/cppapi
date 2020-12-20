@@ -21,15 +21,13 @@
 //
 //******************************************************************************************************
 
-// ReSharper disable once CppUnusedIncludeDirective
-#include "../filterexpressions/FilterExpressions.h"
+#include "../filterexpressions/FilterExpressionParser.h"
 #include "SubscriberConnection.h"
 #include "DataPublisher.h"
 #include "CompactMeasurement.h"
 #include "ActiveMeasurementsSchema.h"
 #include "../EndianConverter.h"
 #include "../data/DataSet.h"
-#include "../filterexpressions/FilterExpressionParser.h"
 
 using namespace std;
 using namespace boost::asio;
