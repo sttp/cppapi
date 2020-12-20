@@ -1924,7 +1924,7 @@ ValueExpressionPtr ExpressionTree::Reverse(const ValueExpressionPtr& sourceValue
         return sourceValue;
 
     string value = sourceValue->ValueAsString();
-    value.reserve();
+    ranges::reverse(value); 
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::String, value);
 }
