@@ -1,3 +1,4 @@
+// lgtm [cpp/missing-header-guard]
 /**
  * pugixml parser - version 1.11
  * --------------------------------------------------------

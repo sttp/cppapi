@@ -46,6 +46,14 @@
 #	pragma warning(disable: 4324) // structure was padded due to __declspec(align())
 #	pragma warning(disable: 4702) // unreachable code
 #	pragma warning(disable: 4996) // this function or variable may be unsafe
+#   pragma warning(disable: 6054)
+#   pragma warning(disable: 6386)
+#   pragma warning(disable:26451)
+#   pragma warning(disable:26495)
+#   pragma warning(disable:26812)
+#   pragma warning(disable:26819)
+#   pragma warning(disable:28182)
+//lint –save –w0 
 #endif
 
 #if defined(_MSC_VER) && defined(__c2__)
@@ -1921,7 +1929,7 @@ PUGI__NS_BEGIN
 	#define PUGI__SCANCHARTYPE(ct) { while (offset < size && PUGI__IS_CHARTYPE(data[offset], ct)) offset++; }
 
 		// check if we have a non-empty XML declaration
-		if (size < 6 || !((data[0] == '<') & (data[1] == '?') & (data[2] == 'x') & (data[3] == 'm') & (data[4] == 'l') && PUGI__IS_CHARTYPE(data[5], ct_space)))
+		if (size < 6 || !((data[0] == '<') & (data[1] == '?') & (data[2] == 'x') & (data[3] == 'm') & (data[4] == 'l') && PUGI__IS_CHARTYPE(data[5], ct_space))) // NOLINT
 			return false;
 
 		// scan XML declaration until the encoding field
@@ -4665,7 +4673,7 @@ PUGI__NS_BEGIN
 	template <typename U, typename String, typename Header>
 	PUGI__FN bool set_value_integer(String& dest, Header& header, uintptr_t header_mask, U value, bool negative)
 	{
-		char_t buf[64];
+		char_t buf[64]; // NOLINT
 		char_t* end = buf + sizeof(buf) / sizeof(buf[0]);
 		char_t* begin = integer_to_string(buf, end, value, negative);
 
@@ -7549,7 +7557,7 @@ PUGI__NS_BEGIN
 			I median = median3(begin, middle, end - 1, pred);
 
 			// partition in three chunks (< = >)
-			I eqbeg, eqend;
+			I eqbeg, eqend; // NOLINT
 			partition3(begin, end, *median, pred, &eqbeg, &eqend);
 
 			// loop on larger half
@@ -8197,7 +8205,7 @@ PUGI__NS_BEGIN
 	#if defined(__STDC_IEC_559__) || ((FLT_RADIX - 0 == 2) && (FLT_MAX_EXP - 0 == 128) && (FLT_MANT_DIG - 0 == 24))
 		PUGI__STATIC_ASSERT(sizeof(float) == sizeof(uint32_t));
 		typedef uint32_t UI; // BCC5 workaround
-		union { float f; UI i; } u;
+		union { float f; UI i; } u; // NOLINT
 		u.i = 0x7fc00000;
 		return double(u.f);
 	#else
@@ -9958,7 +9966,7 @@ PUGI__NS_BEGIN
 			case axis_attribute:
 			{
 				for (xml_attribute_struct* a = n->first_attribute; a; a = a->next_attribute)
-					if (step_push(ns, a, n, alloc) & once)
+					if (step_push(ns, a, n, alloc) & once) // NOLINT
 						return;
 
 				break;
@@ -9967,7 +9975,7 @@ PUGI__NS_BEGIN
 			case axis_child:
 			{
 				for (xml_node_struct* c = n->first_child; c; c = c->next_sibling)
-					if (step_push(ns, c, alloc) & once)
+					if (step_push(ns, c, alloc) & once) // NOLINT
 						return;
 
 				break;
@@ -9977,14 +9985,14 @@ PUGI__NS_BEGIN
 			case axis_descendant_or_self:
 			{
 				if (axis == axis_descendant_or_self)
-					if (step_push(ns, n, alloc) & once)
+					if (step_push(ns, n, alloc) & once) // NOLINT
 						return;
 
 				xml_node_struct* cur = n->first_child;
 
 				while (cur)
 				{
-					if (step_push(ns, cur, alloc) & once)
+					if (step_push(ns, cur, alloc) & once) // NOLINT
 						return;
 
 					if (cur->first_child)
@@ -10008,7 +10016,7 @@ PUGI__NS_BEGIN
 			case axis_following_sibling:
 			{
 				for (xml_node_struct* c = n->next_sibling; c; c = c->next_sibling)
-					if (step_push(ns, c, alloc) & once)
+					if (step_push(ns, c, alloc) & once) // NOLINT
 						return;
 
 				break;
@@ -10017,7 +10025,7 @@ PUGI__NS_BEGIN
 			case axis_preceding_sibling:
 			{
 				for (xml_node_struct* c = n->prev_sibling_c; c->next_sibling; c = c->prev_sibling_c)
-					if (step_push(ns, c, alloc) & once)
+					if (step_push(ns, c, alloc) & once) // NOLINT
 						return;
 
 				break;
@@ -10039,7 +10047,7 @@ PUGI__NS_BEGIN
 
 				while (cur)
 				{
-					if (step_push(ns, cur, alloc) & once)
+					if (step_push(ns, cur, alloc) & once) // NOLINT
 						return;
 
 					if (cur->first_child)
@@ -10081,7 +10089,7 @@ PUGI__NS_BEGIN
 					else
 					{
 						// leaf node, can't be ancestor
-						if (step_push(ns, cur, alloc) & once)
+						if (step_push(ns, cur, alloc) & once) // NOLINT
 							return;
 
 						while (!cur->prev_sibling_c->next_sibling)
@@ -10091,7 +10099,7 @@ PUGI__NS_BEGIN
 							if (!cur) return;
 
 							if (!node_is_ancestor(cur, n))
-								if (step_push(ns, cur, alloc) & once)
+								if (step_push(ns, cur, alloc) & once) // NOLINT
 									return;
 						}
 
@@ -10106,14 +10114,14 @@ PUGI__NS_BEGIN
 			case axis_ancestor_or_self:
 			{
 				if (axis == axis_ancestor_or_self)
-					if (step_push(ns, n, alloc) & once)
+					if (step_push(ns, n, alloc) & once) // NOLINT
 						return;
 
 				xml_node_struct* cur = n->parent;
 
 				while (cur)
 				{
-					if (step_push(ns, cur, alloc) & once)
+					if (step_push(ns, cur, alloc) & once) // NOLINT
 						return;
 
 					cur = cur->parent;
@@ -10152,14 +10160,14 @@ PUGI__NS_BEGIN
 			case axis_ancestor_or_self:
 			{
 				if (axis == axis_ancestor_or_self && _test == nodetest_type_node) // reject attributes based on principal node type test
-					if (step_push(ns, a, p, alloc) & once)
+					if (step_push(ns, a, p, alloc) & once) // NOLINT
 						return;
 
 				xml_node_struct* cur = p;
 
 				while (cur)
 				{
-					if (step_push(ns, cur, alloc) & once)
+					if (step_push(ns, cur, alloc) & once) // NOLINT
 						return;
 
 					cur = cur->parent;
@@ -10197,7 +10205,7 @@ PUGI__NS_BEGIN
 						cur = cur->next_sibling;
 					}
 
-					if (step_push(ns, cur, alloc) & once)
+					if (step_push(ns, cur, alloc) & once) // NOLINT
 						return;
 				}
 
