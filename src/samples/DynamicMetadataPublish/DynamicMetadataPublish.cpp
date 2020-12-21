@@ -35,7 +35,7 @@ int32_t deviceCount = 1;
 int main(int argc, char* argv[])
 {
     uint16_t port;
-    bool autoUpdateMetadata;
+    bool autoUpdateMetadata = false;
 
     // Ensure that the necessary
     // command line arguments are given.
@@ -50,9 +50,7 @@ int main(int argc, char* argv[])
     stringstream(argv[1]) >> port;
 
     if (argc > 2)
-        autoUpdateMetadata = ParseBoolean(argv[2]);
-    else
-        autoUpdateMetadata = false;
+        TryParseBoolean(argv[2], autoUpdateMetadata);
 
     PublisherHandler* publisher = new PublisherHandler("Publisher");
     string line;

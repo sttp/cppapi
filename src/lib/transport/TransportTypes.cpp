@@ -153,7 +153,7 @@ SignalReference::SignalReference(const string& signal) : SignalID(Guid())
             Kind = ParseSignalKind(signalType.substr(0, 2));
 
             if (Kind != SignalKind::Unknown)
-                Index = stoi(signalType.substr(2));
+                TryParseUInt16(signalType.substr(2), Index);
         }
         else
         {
@@ -272,7 +272,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
     if (length == 2)
     {
         source =  parts[0];
-        id = static_cast<uint64_t>(stoull(parts[1]));
+        TryParseUInt64(parts[1], id);
     }
     else if (length > 2)
     {
@@ -287,7 +287,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
         }
 
         source =  sourceParts.str();
-        id = static_cast<uint64_t>(stoull(parts[length - 1]));
+        TryParseUInt64(parts[length - 1], id);
     }
     else
     {

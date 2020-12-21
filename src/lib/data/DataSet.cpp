@@ -497,63 +497,77 @@ void DataSet::ParseXml(const xml_document& document)
                 continue;
 
             const int32_t columnIndex = column->Index();
-            const xml_text nodeText = fieldNode.text();
+            const string nodeText = string(fieldNode.text().as_string(""));
+            float64_t dblVal;
+            int32_t i32Val;
+            uint32_t ui32Val;
             
             switch (column->Type())
             {
                 case DataType::String:                    
-                    row->SetStringValue(columnIndex, string(nodeText.as_string("")));
+                    row->SetStringValue(columnIndex, nodeText);
                     break;
                 case DataType::Boolean:
-                    row->SetBooleanValue(columnIndex, nodeText.as_bool());
+                    bool boolVal;
+                    TryParseBoolean(nodeText, boolVal);
+                    row->SetBooleanValue(columnIndex, boolVal);
                     break;
                 case DataType::DateTime:
-                    if (nodeText.empty())
-                        row->SetDateTimeValue(columnIndex, Empty::DateTime);
-                    else
-                        row->SetDateTimeValue(columnIndex, ParseTimestamp(nodeText.as_string()));
+                    datetime_t dtVal;
+                    TryParseTimestamp(nodeText.c_str(), dtVal);
+                    row->SetDateTimeValue(columnIndex, dtVal);
                     break;
                 case DataType::Single:
-                    row->SetSingleValue(columnIndex, nodeText.as_float());
+                    TryParseDouble(nodeText, dblVal);
+                    row->SetSingleValue(columnIndex, static_cast<float32_t>(dblVal));
                     break;
                 case DataType::Double:
-                    row->SetDoubleValue(columnIndex, nodeText.as_double());
+                    TryParseDouble(nodeText, dblVal);
+                    row->SetDoubleValue(columnIndex, dblVal);
                     break;
                 case DataType::Decimal:
-                    if (nodeText.empty())
-                        row->SetDecimalValue(columnIndex, decimal_t(0));
-                    else
-                        row->SetDecimalValue(columnIndex, decimal_t(nodeText.as_string()));
+                    decimal_t decVal;
+                    TryParseDecimal(nodeText, decVal);
+                    row->SetDecimalValue(columnIndex, decVal);
                     break;
                 case DataType::Guid:
-                    if (nodeText.empty())
-                        row->SetGuidValue(columnIndex, Empty::Guid);
-                    else
-                        row->SetGuidValue(columnIndex, ParseGuid(nodeText.as_string()));
+                    Guid guidVal;
+                    TryParseGuid(nodeText, guidVal);
+                    row->SetGuidValue(columnIndex, guidVal);
                     break;
                 case DataType::Int8:
-                    row->SetInt8Value(columnIndex, static_cast<int8_t>(nodeText.as_int()));
+                    TryParseInt32(nodeText, i32Val);
+                    row->SetInt8Value(columnIndex, static_cast<int8_t>(i32Val));
                     break;
                 case DataType::Int16:
-                    row->SetInt16Value(columnIndex, static_cast<int16_t>(nodeText.as_int()));
+                    TryParseInt32(nodeText, i32Val);
+                    row->SetInt16Value(columnIndex, static_cast<int16_t>(i32Val));
                     break;
                 case DataType::Int32:
-                    row->SetInt32Value(columnIndex, nodeText.as_int());
+                    TryParseInt32(nodeText, i32Val);
+                    row->SetInt32Value(columnIndex, i32Val);
                     break;
                 case DataType::Int64:
-                    row->SetInt64Value(columnIndex, nodeText.as_llong());
+                    int64_t i64Val;
+                    TryParseInt64(nodeText, i64Val);
+                    row->SetInt64Value(columnIndex, i64Val);
                     break;
                 case DataType::UInt8:
-                    row->SetUInt8Value(columnIndex, static_cast<uint8_t>(nodeText.as_uint()));
+                    TryParseUInt32(nodeText, ui32Val);
+                    row->SetUInt8Value(columnIndex, static_cast<uint8_t>(ui32Val));
                     break;
                 case DataType::UInt16:
-                    row->SetUInt16Value(columnIndex, static_cast<uint16_t>(nodeText.as_uint()));
+                    TryParseUInt32(nodeText, ui32Val);
+                    row->SetUInt16Value(columnIndex, static_cast<uint16_t>(ui32Val));
                     break;
                 case DataType::UInt32:
-                    row->SetUInt32Value(columnIndex, nodeText.as_uint());
+                    TryParseUInt32(nodeText, ui32Val);
+                    row->SetUInt32Value(columnIndex, ui32Val);
                     break;
                 case DataType::UInt64:
-                    row->SetUInt64Value(columnIndex, nodeText.as_ullong());
+                    uint64_t ui64Val;
+                    TryParseUInt64(nodeText, ui64Val);
+                    row->SetUInt64Value(columnIndex, ui64Val);
                     break;
                 default:
                     throw DataSetException("Unexpected column data type encountered");

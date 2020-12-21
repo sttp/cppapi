@@ -720,17 +720,17 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
         deviceMetadata->Acronym = device.child_value("Acronym");
         deviceMetadata->Name = device.child_value("Name");
-        deviceMetadata->UniqueID = ParseGuid(device.child_value("UniqueID"));
-        deviceMetadata->AccessID = stoi(Coalesce(device.child_value("AccessID"), "0"));
+        TryParseGuid(device.child_value("UniqueID"), deviceMetadata->UniqueID);
+        TryParseUInt16(Coalesce(device.child_value("AccessID"), "0"), deviceMetadata->AccessID);
         deviceMetadata->ParentAcronym = device.child_value("ParentAcronym");
         deviceMetadata->ProtocolName = device.child_value("ProtocolName");
-        deviceMetadata->FramesPerSecond = stoi(Coalesce(device.child_value("FramesPerSecond"), "30"));
+        TryParseUInt16(Coalesce(device.child_value("FramesPerSecond"), "30"), deviceMetadata->FramesPerSecond);
         deviceMetadata->CompanyAcronym = device.child_value("CompanyAcronym");
         deviceMetadata->VendorAcronym = device.child_value("vendorAcronym");
         deviceMetadata->VendorDeviceName = device.child_value("VendorDeviceName");
-        deviceMetadata->Longitude = stod(Coalesce(device.child_value("Longitude"), "0.0"));
-        deviceMetadata->Latitude = stod(Coalesce(device.child_value("Latitude"), "0.0"));
-        deviceMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
+        TryParseDouble(Coalesce(device.child_value("Longitude"), "0.0"), deviceMetadata->Longitude);
+        TryParseDouble(Coalesce(device.child_value("Latitude"), "0.0"), deviceMetadata->Latitude);
+        TryParseTimestamp(device.child_value("UpdatedOn"), deviceMetadata->UpdatedOn);
 
         devices.insert_or_assign(deviceMetadata->Acronym, deviceMetadata);
     }
@@ -744,12 +744,12 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
         measurementMetadata->DeviceAcronym = device.child_value("DeviceAcronym");
         measurementMetadata->ID = device.child_value("ID");
-        measurementMetadata->SignalID = ParseGuid(device.child_value("SignalID"));
+        TryParseGuid(device.child_value("SignalID"), measurementMetadata->SignalID);
         measurementMetadata->PointTag = device.child_value("PointTag");
         measurementMetadata->Reference = SignalReference(string(device.child_value("SignalReference")));
-        measurementMetadata->PhasorSourceIndex = stoi(Coalesce(device.child_value("PhasorSourceIndex"), "0"));
+        TryParseUInt16(Coalesce(device.child_value("PhasorSourceIndex"), "0"), measurementMetadata->PhasorSourceIndex);
         measurementMetadata->Description = device.child_value("Description");
-        measurementMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
+        TryParseTimestamp(device.child_value("UpdatedOn"), measurementMetadata->UpdatedOn);
 
         measurements.insert_or_assign(measurementMetadata->SignalID, measurementMetadata);
 
@@ -775,8 +775,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         phasorMetadata->Label = device.child_value("Label");
         phasorMetadata->Type = device.child_value("Type");
         phasorMetadata->Phase = device.child_value("Phase");
-        phasorMetadata->SourceIndex = stoi(Coalesce(device.child_value("SourceIndex"), "0"));
-        phasorMetadata->UpdatedOn = ParseTimestamp(device.child_value("UpdatedOn"));
+        TryParseUInt16(Coalesce(device.child_value("SourceIndex"), "0"), phasorMetadata->SourceIndex);
+        TryParseTimestamp(device.child_value("UpdatedOn"), phasorMetadata->UpdatedOn);
 
         // Create a new phasor reference
         PhasorReferencePtr phasorReference = NewSharedPtr<PhasorReference>();

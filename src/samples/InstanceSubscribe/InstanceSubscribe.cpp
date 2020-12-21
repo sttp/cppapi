@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     stringstream(argv[2]) >> port;
 
     if (argc > 3)
-        usePortOffset = ParseBoolean(argv[3]);
+        TryParseBoolean(argv[3], usePortOffset);
 
     // Initialize the subscribers.
     for (uint32_t i = 0; i < TotalInstances; i++)

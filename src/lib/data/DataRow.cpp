@@ -333,39 +333,96 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
             case ExpressionValueType::String:
             {
                 const string value = sourceValue->ValueAsString();
+                float64_t dblVal;
+                int32_t i32Val;
+                uint32_t ui32Val;
 
                 switch (targetType)
                 {
                     case DataType::String:
                         return value;
                     case DataType::Boolean:
-                        return ParseBoolean(value);
+                        bool boolVal;
+
+                        if (TryParseBoolean(value, boolVal))
+                            return boolVal;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::DateTime:
-                        return ParseTimestamp(value.c_str());
+                        datetime_t dtVal;
+
+                        if (TryParseTimestamp(value.c_str(), dtVal))
+                            return dtVal;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Single:
-                        return static_cast<float32_t>(stod(value));
+                        if (TryParseDouble(value, dblVal))
+                            return static_cast<float32_t>(dblVal);
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Double:
-                        return static_cast<float64_t>(stod(value));
+                        if (TryParseDouble(value, dblVal))
+                            return dblVal;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Decimal:
-                        return decimal_t(value);
+                        decimal_t decVal;
+
+                        if (TryParseDecimal(value, decVal))
+                            return decVal;  // NOLINT
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Guid:
-                        return ParseGuid(value.c_str());
+                        Guid guidVal;
+
+                        if (TryParseGuid(value, guidVal))
+                            return guidVal;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Int8:
-                        return static_cast<int8_t>(stoi(value));
+                        if (TryParseInt32(value, i32Val))
+                            return static_cast<int8_t>(i32Val);
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Int16:
-                        return static_cast<int16_t>(stoi(value));
+                        if (TryParseInt32(value, i32Val))
+                            return static_cast<int16_t>(i32Val);
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Int32:
-                        return static_cast<int32_t>(stoi(value));
+                        if (TryParseInt32(value, i32Val))
+                            return i32Val;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::Int64:
-                        return static_cast<int64_t>(stoll(value));
+                        int64_t i64Val;
+
+                        if (TryParseInt64(value, i64Val))
+                            return i64Val;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::UInt8:
-                        return static_cast<uint8_t>(stoul(value));
+                        if (TryParseUInt32(value, ui32Val))
+                            return static_cast<uint8_t>(ui32Val);
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::UInt16:
-                        return static_cast<uint16_t>(stoul(value));
+                        if (TryParseUInt32(value, ui32Val))
+                            return static_cast<uint16_t>(ui32Val);
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::UInt32:
-                        return static_cast<uint32_t>(stoul(value));
+                        if (TryParseUInt32(value, ui32Val))
+                            return ui32Val;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     case DataType::UInt64:
-                        return static_cast<uint64_t>(stoull(value));
+                        uint64_t ui64Val;
+
+                        if (TryParseUInt64(value, ui64Val))
+                            return ui64Val;
+
+                        throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
                     default:
                         throw DataSetException("Unexpected column data type encountered");
                 }

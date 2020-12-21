@@ -585,12 +585,12 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     string setting;
 
                     if (TryGetValue(settings, "includeTime", setting))
-                        m_includeTime = ParseBoolean(setting);
+                        TryParseBoolean(setting, m_includeTime);
                     else
                         m_includeTime = true;
 
                     if (TryGetValue(settings, "useLocalClockAsRealTime", setting))
-                        m_useLocalClockAsRealTime = ParseBoolean(setting);
+                        TryParseBoolean(setting, m_useLocalClockAsRealTime);
                     else
                         m_useLocalClockAsRealTime = false;
 
@@ -610,12 +610,12 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_publishInterval = DefaultPublishInterval;
 
                     if (TryGetValue(settings, "useMillisecondResolution", setting))
-                        m_useMillisecondResolution = ParseBoolean(setting);
+                        TryParseBoolean(setting, m_useMillisecondResolution);
                     else
                         m_useMillisecondResolution = false;
 
                     if (TryGetValue(settings, "throttled", setting))
-                        m_trackLatestMeasurements = ParseBoolean(setting);
+                        TryParseBoolean(setting, m_trackLatestMeasurements);
                     else
                         m_trackLatestMeasurements = false;
 

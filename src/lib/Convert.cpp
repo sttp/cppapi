@@ -148,7 +148,12 @@ string PreparseTimestamp(const string& timestamp, TimeSpan& utcOffset)
     }
 
     if (timeZoneOffset.size() == 5)
-        utcOffset = TimeSpan(stoi(timeZoneOffset.substr(0, 3)), stoi(timeZoneOffset.substr(3)), 0);
+    {
+        int32_t hour, minute;
+
+        if (TryParseInt32(timeZoneOffset.substr(0, 3), hour) && TryParseInt32(timeZoneOffset.substr(3), minute))
+            utcOffset = TimeSpan(hour, minute, 0);
+    }
 
     return updatedTimestamp;
 }
@@ -341,31 +346,56 @@ string sttp::ToUTF8(const wstring& value)
 
 bool sttp::ParseBoolean(const string& value)
 {
+    bool result;
+    TryParseBoolean(value, result);
+    return result;
+}
+
+bool sttp::TryParseBoolean(const string& value, bool& result, const bool defaultValue)
+{
     if (value.empty())
-        return false;
-
-    const string result = Trim(value);
-
-    if (!result.empty())
     {
-        if (IsEqual(result, "true"))
-            return true;
-
-        if (IsEqual(result, "false"))
-            return false;
-
-        try
-        {
-            return stoi(result) != 0;
-        }
-        catch (...)
-        {
-            const char first = static_cast<char>(toupper(result[0]));
-            return first == 'T' || first == 'Y';
-        }
+        result = defaultValue;
+        return false;
     }
 
-    return false;
+    if (IsEqual(value, "true"))
+    {
+        result = true;
+        return true;
+    }
+
+    if (IsEqual(value, "false"))
+    {
+        result = false;
+        return true;
+    }
+
+    int32_t i32Val;
+
+    if (TryParseInt32(value, i32Val))
+    {
+        result = i32Val != 0;
+        return true;
+    }
+
+    const char first = static_cast<char>(toupper(value[0]));
+    return first == 'T' || first == 'Y';
+}
+
+bool sttp::IsInteger(const string& value)
+{
+    int64_t i64Val;
+    uint64_t ui64Val;
+
+    return TryParseInt64(value, i64Val) || TryParseUInt64(value, ui64Val);
+}
+
+bool sttp::IsNumeric(const string& value)
+{
+    float64_t f64Val;
+
+    return TryParseDouble(value, f64Val);
 }
 
 bool sttp::TryParseUInt16(const string& value, uint16_t& result, const uint16_t defaultValue)
@@ -408,15 +438,7 @@ bool sttp::TryParseUInt32(const string& value, uint32_t& result, const uint32_t 
 {
     try
     {
-        const auto conversion = stoul(value);
-
-        if (conversion > UInt32::MaxValue)
-        {
-            result = defaultValue;
-            return false;
-        }
-
-        result = static_cast<uint32_t>(conversion);
+        result = stoul(value);
         return true;
     }
     catch (...)
@@ -468,9 +490,18 @@ bool sttp::TryParseDouble(const string& value, float64_t& result, const float64_
     }
 }
 
-decimal_t sttp::ParseDecimal(const string& value)
+bool sttp::TryParseDecimal(const string& value, decimal_t& result, const decimal_t defaultValue)
 {
-    return decimal_t(value);
+    try
+    {
+        result = decimal_t(value);;
+        return true;
+    }
+    catch (...)
+    {
+        result = defaultValue;
+        return false;
+    }
 }
 
 string sttp::RegExEncode(const char value)
@@ -478,6 +509,13 @@ string sttp::RegExEncode(const char value)
     stringstream stream;
     stream << std::hex << static_cast<int>(value);
     return "\\u" + PadLeft(stream.str(), 4, '0');
+}
+
+bool sttp::IsGuid(const string& value)
+{
+    Guid guidVal;
+
+    return TryParseGuid(value, guidVal);
 }
 
 Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
@@ -527,6 +565,20 @@ Guid sttp::ParseGuid(const char* data)
 {
     const string_generator generator;
     return generator(data);
+}
+
+bool sttp::TryParseGuid(const string& value, Guid& result, const Guid defaultValue)
+{
+    try
+    {
+        result = ParseGuid(value.c_str());
+        return true;
+    }
+    catch (...)
+    {
+        result = defaultValue;
+        return false;
+    }
 }
 
 void sttp::SwapGuidEndianness(Guid& value)
@@ -621,7 +673,9 @@ datetime_t sttp::ParseRelativeTimestamp(const char* time, const datetime_t& defa
 
     if (regex_search(timetag, match, expression) && match.size() == 3)
     {
-        const int32_t offset = stoi(match.str(1));
+        int32_t offset;
+        TryParseInt32(match.str(1), offset);
+
         const char unit = ToLower(Trim(match.str(2)))[0];
 
         switch (unit)

@@ -436,7 +436,7 @@ void FilterExpressionParser::enterFilterStatement(FilterExpressionSyntaxParser::
     m_expressionTrees.push_back(m_activeExpressionTree);
 
     if (context->K_TOP() != nullptr)
-        m_activeExpressionTree->TopLimit = stoi(context->topLimit()->getText());
+        TryParseInt32(context->topLimit()->getText(), m_activeExpressionTree->TopLimit, -1);
 
     if (context->K_ORDER() != nullptr && context->K_BY() != nullptr)
     {
@@ -981,37 +981,41 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
 
     if (context->INTEGER_LITERAL())
     {
-        const float64_t value = stod(context->INTEGER_LITERAL()->getText());
+        const string& literal = context->INTEGER_LITERAL()->getText();
+        int64_t i64Val;
+        uint64_t ui64Val;
 
-        if (value > static_cast<float64_t>(Int64::MaxValue) - 1.0)
-            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, value);
-        else if (value > Int32::MaxValue)
-            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, static_cast<int64_t>(value));
+        if (TryParseInt64(literal, i64Val))
+        {
+            if (i64Val < Int32::MinValue || i64Val > Int32::MaxValue)
+                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, i64Val);
+            else
+                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, static_cast<int32_t>(i64Val));
+        }
+        else if (TryParseUInt64(literal, ui64Val))
+        {
+            if (ui64Val > Int64::MaxValue)
+                result = ParseNumericLiteral(literal);
+            else if (ui64Val > Int32::MaxValue)
+                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, static_cast<int64_t>(ui64Val));
+            else
+                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, static_cast<int32_t>(ui64Val));
+        }
         else
-            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, static_cast<int32_t>(value));
+        {
+            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, decimal_t(literal));
+        }
     }
     else if (context->NUMERIC_LITERAL())
     {
         const string& literal = context->NUMERIC_LITERAL()->getText();
+        float64_t dblVal;
         
-        if (Contains(literal, "E"))
-        {
-            // Real literals using scientific notation are parsed as double
-            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, stod(literal));
-        }
+        // Real literals using scientific notation are parsed as double
+        if (Contains(literal, "E") && TryParseDouble(literal, dblVal))
+            result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, dblVal);
         else
-        {
-            // Real literals without scientific notation are parsed as decimal, if
-            // the number fails to parse as decimal, then it is parsed as a double
-            try
-            {
-                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, decimal_t(literal));
-            }
-            catch (const runtime_error&)
-            {
-                result = NewSharedPtr<ValueExpression>(ExpressionValueType::Double, stod(literal));
-            }
-        }
+            result = ParseNumericLiteral(literal);
     }
     else if (context->STRING_LITERAL())
     {
@@ -1036,6 +1040,21 @@ void FilterExpressionParser::exitLiteralValue(FilterExpressionSyntaxParser::Lite
 
     if (result)
         AddExpr(context, CastSharedPtr<Expression>(result));
+}
+
+ValueExpressionPtr FilterExpressionParser::ParseNumericLiteral(const string& literal)
+{
+    decimal_t decVal;
+
+    if (TryParseDecimal(literal, decVal))
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, decVal);
+
+    float64_t dblVal;
+
+    if (TryParseDouble(literal, dblVal))
+        return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, dblVal);
+
+    return NewSharedPtr<ValueExpression>(ExpressionValueType::String, literal);
 }
 
 /*

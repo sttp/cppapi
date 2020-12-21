@@ -115,6 +115,8 @@ namespace filterexpressions
         inline void MapMatchedFieldRow(const sttp::data::DataTablePtr& primaryTable, const std::string& columnName, const std::string& matchValue, int32_t signalIDColumnIndex);
         inline bool TryGetExpr(const antlr4::ParserRuleContext* context, ExpressionPtr& expression) const;
         inline void AddExpr(const antlr4::ParserRuleContext* context, const ExpressionPtr& expression);
+
+        static ValueExpressionPtr ParseNumericLiteral(const std::string& literal);
     public:
         FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
         ~FilterExpressionParser() override;

@@ -1647,17 +1647,7 @@ ValueExpressionPtr ExpressionTree::IsInteger(const ValueExpressionPtr& testValue
         return ExpressionTree::True;
 
     if (testValue->ValueType == ExpressionValueType::String)
-    {
-        try
-        {
-            stoll(testValue->ValueAsString());
-            return ExpressionTree::True;
-        }
-        catch (...)
-        {
-            return ExpressionTree::False;
-        }
-    }
+        return sttp::IsInteger(testValue->ValueAsString()) ? ExpressionTree::True : ExpressionTree::False;
 
     return ExpressionTree::False;
 }
@@ -1671,17 +1661,7 @@ ValueExpressionPtr ExpressionTree::IsGuid(const ValueExpressionPtr& testValue) c
         return ExpressionTree::True;
 
     if (testValue->ValueType == ExpressionValueType::String)
-    {
-        try
-        {
-            ParseGuid(testValue->ValueAsString().c_str());
-            return ExpressionTree::True;
-        }
-        catch (...)
-        {
-            return ExpressionTree::False;
-        }
-    }
+        return sttp::IsGuid(testValue->ValueAsString()) ? ExpressionTree::True : ExpressionTree::False;
 
     return ExpressionTree::False;
 }
@@ -1706,17 +1686,7 @@ ValueExpressionPtr ExpressionTree::IsNumeric(const ValueExpressionPtr& testValue
         return ExpressionTree::True;
 
     if (testValue->ValueType == ExpressionValueType::String)
-    {
-        try
-        {
-            stod(testValue->ValueAsString());
-            return ExpressionTree::True;
-        }
-        catch (...)
-        {
-            return ExpressionTree::False;
-        }
-    }
+        return sttp::IsNumeric(testValue->ValueAsString()) ? ExpressionTree::True : ExpressionTree::False;
 
     return ExpressionTree::False;
 }
@@ -3071,28 +3041,63 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
-                    targetValue = ParseBoolean(value);
+                    bool boolVal;
+
+                    if (TryParseBoolean(value, boolVal))
+                        targetValue = boolVal;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::Int32:
-                    targetValue = stoi(value);
+                    int32_t i32Val;
+
+                    if (TryParseInt32(value, i32Val))
+                        targetValue = i32Val;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::Int64:
-                    targetValue = stoll(value);
+                    int64_t i64Val;
+
+                    if (TryParseInt64(value, i64Val))
+                        targetValue = i64Val;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::Decimal:
-                    targetValue = decimal_t(value);
+                    decimal_t decVal;
+
+                    if (TryParseDecimal(value, decVal))
+                        targetValue = decVal;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::Double:
-                    targetValue = stod(value);
+                    float64_t dblVal;
+
+                    if (TryParseDouble(value, dblVal))
+                        targetValue = dblVal;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::String:
                     targetValue = value;
                     break;
                 case ExpressionValueType::Guid:
-                    targetValue = ParseGuid(value.c_str());
+                    Guid guidVal;
+
+                    if (TryParseGuid(value, guidVal))
+                        targetValue = guidVal;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 case ExpressionValueType::DateTime:
-                    targetValue = ParseTimestamp(value.c_str());
+                    datetime_t dtVal;
+
+                    if (TryParseTimestamp(value.c_str(), dtVal))
+                        targetValue = dtVal;
+                    else
+                        throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
                 default:
                     throw ExpressionTreeException("Unexpected expression value type encountered");

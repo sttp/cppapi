@@ -87,11 +87,17 @@ namespace sttp
 
     bool ParseBoolean(const std::string& value);
 
+    bool TryParseBoolean(const std::string& value, bool& result, bool defaultValue = false);
+
+    bool IsInteger(const std::string& value);
+
+    bool IsNumeric(const std::string& value);
+
     bool TryParseUInt16(const std::string& value, uint16_t& result, uint16_t defaultValue = 0);
 
     bool TryParseInt32(const std::string& value, int32_t& result, int32_t defaultValue = 0);
 
-    bool TryParseUInt32(const std::string& value, uint32_t& result, const uint32_t defaultValue = 0U);
+    bool TryParseUInt32(const std::string& value, uint32_t& result, uint32_t defaultValue = 0U);
 
     bool TryParseInt64(const std::string& value, int64_t& result, int64_t defaultValue = 0LL);
     
@@ -99,14 +105,19 @@ namespace sttp
 
     bool TryParseDouble(const std::string& value, float64_t& result, float64_t defaultValue = 0.0);
 
-    decimal_t ParseDecimal(const std::string& value);
+    bool TryParseDecimal(const std::string& value, decimal_t& result, decimal_t defaultValue = decimal_t(0));
 
     // Encodes a character value into an escaped RegEx value
     std::string RegExEncode(char value);
 
+    bool IsGuid(const std::string& value);
+
     // Converts 16 contiguous bytes of character data into a globally unique identifier
     Guid ParseGuid(const uint8_t* data, bool swapEndianness = false);
+
     Guid ParseGuid(const char* data);
+
+    bool TryParseGuid(const std::string& value, Guid& result, Guid defaultValue = Empty::Guid);
     
     // Convert RFC encoding to Microsoft or vice versa
     void SwapGuidEndianness(Guid& value);
