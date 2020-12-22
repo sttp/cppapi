@@ -499,7 +499,7 @@ bool sttp::TryParseDecimal(const string& value, decimal_t& result, const decimal
 {
     try
     {
-        result = decimal_t(value);;
+        result = decimal_t(value);
         return true;
     }
     catch (...)
