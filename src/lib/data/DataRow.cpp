@@ -333,96 +333,139 @@ Object DataRow::GetComputedValue(const DataColumnPtr& column, const DataType tar
             case ExpressionValueType::String:
             {
                 const string value = sourceValue->ValueAsString();
-                float64_t dblVal;
-                int32_t i32Val;
-                uint32_t ui32Val;
 
                 switch (targetType)
                 {
                     case DataType::String:
+                    {
                         return value;
+                    }
                     case DataType::Boolean:
+                    {
                         bool boolVal;
 
                         if (TryParseBoolean(value, boolVal))
                             return boolVal;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::DateTime:
+                    {
                         datetime_t dtVal;
 
                         if (TryParseTimestamp(value.c_str(), dtVal))
                             return dtVal;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Single:
+                    {
+                        float64_t dblVal;
+
                         if (TryParseDouble(value, dblVal))
                             return static_cast<float32_t>(dblVal);
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Double:
+                    {
+                        float64_t dblVal;
+
                         if (TryParseDouble(value, dblVal))
                             return dblVal;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Decimal:
+                    {
                         decimal_t decVal;
 
                         if (TryParseDecimal(value, decVal))
                             return decVal;  // NOLINT
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Guid:
+                    {
                         Guid guidVal;
 
                         if (TryParseGuid(value, guidVal))
                             return guidVal;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Int8:
+                    {
+                        int32_t i32Val;
+
                         if (TryParseInt32(value, i32Val))
                             return static_cast<int8_t>(i32Val);
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Int16:
+                    {
+                        int32_t i32Val;
+
                         if (TryParseInt32(value, i32Val))
                             return static_cast<int16_t>(i32Val);
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Int32:
+                    {
+                        int32_t i32Val;
+
                         if (TryParseInt32(value, i32Val))
                             return i32Val;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::Int64:
+                    {
                         int64_t i64Val;
 
                         if (TryParseInt64(value, i64Val))
                             return i64Val;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::UInt8:
+                    {
+                        uint32_t ui32Val;
+
                         if (TryParseUInt32(value, ui32Val))
                             return static_cast<uint8_t>(ui32Val);
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::UInt16:
+                    {
+                        uint32_t ui32Val;
+
                         if (TryParseUInt32(value, ui32Val))
                             return static_cast<uint16_t>(ui32Val);
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::UInt32:
+                    {
+                        uint32_t ui32Val;
+
                         if (TryParseUInt32(value, ui32Val))
                             return ui32Val;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     case DataType::UInt64:
+                    {
                         uint64_t ui64Val;
 
                         if (TryParseUInt64(value, ui64Val))
                             return ui64Val;
 
                         throw DataSetException("Cannot convert \"" + value + "\" expression value to \"" + string(EnumName(targetType)) + "\" column");
+                    }
                     default:
                         throw DataSetException("Unexpected column data type encountered");
                 }

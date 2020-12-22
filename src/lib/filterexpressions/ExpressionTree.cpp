@@ -3041,6 +3041,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
             switch (targetValueType)
             {
                 case ExpressionValueType::Boolean:
+                {
                     bool boolVal;
 
                     if (TryParseBoolean(value, boolVal))
@@ -3048,7 +3049,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::Int32:
+                {
                     int32_t i32Val;
 
                     if (TryParseInt32(value, i32Val))
@@ -3056,7 +3059,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::Int64:
+                {
                     int64_t i64Val;
 
                     if (TryParseInt64(value, i64Val))
@@ -3064,7 +3069,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::Decimal:
+                {
                     decimal_t decVal;
 
                     if (TryParseDecimal(value, decVal))
@@ -3072,7 +3079,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::Double:
+                {
                     float64_t dblVal;
 
                     if (TryParseDouble(value, dblVal))
@@ -3080,10 +3089,14 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::String:
+                {
                     targetValue = value;
                     break;
+                }
                 case ExpressionValueType::Guid:
+                {
                     Guid guidVal;
 
                     if (TryParseGuid(value, guidVal))
@@ -3091,7 +3104,9 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 case ExpressionValueType::DateTime:
+                {
                     datetime_t dtVal;
 
                     if (TryParseTimestamp(value.c_str(), dtVal))
@@ -3099,6 +3114,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
                     else
                         throw ExpressionTreeException("Cannot convert \"" + value + "\" to \"" + string(EnumName(targetValueType)) + "\"");
                     break;
+                }
                 default:
                     throw ExpressionTreeException("Unexpected expression value type encountered");
             }
