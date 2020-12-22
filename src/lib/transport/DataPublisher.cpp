@@ -849,6 +849,8 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     // Let any pending start operation complete before possible stop - prevents destruction stop before start is completed
     ScopeLock lock(m_connectActionMutex);
 
+    m_stopped = false;
+
 #if BOOST_LEGACY
     m_commandChannelService.reset();
 #else
