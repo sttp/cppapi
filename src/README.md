@@ -153,7 +153,7 @@ To make a debug build, use the following:
 At the top level of the build directory, type the following command.
 
 ```
-    make -j
+    make -j6
 ```
 
 In addition to the library itself, there are sample applications which
@@ -161,7 +161,7 @@ demonstrate the proper use of the STTP library API. To build all samples,
 type the following command:
 
 ```
-    make -j samples
+    make -j6 samples
 ```
 
 Individual sample applications can be built as follows:
