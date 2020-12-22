@@ -35,6 +35,7 @@
 #include <bitset>
 #include <condition_variable>
 #include <functional>
+#include <locale>
 
 #ifndef USE_UTF8_INSTEAD_OF_CODECVT
   #include <codecvt>
