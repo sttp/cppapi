@@ -46,6 +46,11 @@ using namespace sttp;
 const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
 const auto DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
 
+inline int GetRadix(const string& value)
+{
+    return StartsWith(value, "0x") ? 16 : 10;
+}
+
 string PreparseTimestamp(const string& timestamp, TimeSpan& utcOffset)
 {
     // 2018-03-14T19:23:11.665-04:00
@@ -402,7 +407,7 @@ bool sttp::TryParseUInt16(const string& value, uint16_t& result, const uint16_t 
 {
     try
     {
-        const auto conversion = stoul(value);
+        const auto conversion = stoul(value, nullptr, GetRadix(value));
 
         if (conversion > UInt16::MaxValue)
         {
@@ -424,7 +429,7 @@ bool sttp::TryParseInt32(const string& value, int32_t& result, const int32_t def
 {
     try
     {
-        result = stoi(value);
+        result = stoi(value, nullptr, GetRadix(value));
         return true;
     }
     catch (...)
@@ -438,7 +443,7 @@ bool sttp::TryParseUInt32(const string& value, uint32_t& result, const uint32_t 
 {
     try
     {
-        result = stoul(value);
+        result = stoul(value, nullptr, GetRadix(value));
         return true;
     }
     catch (...)
@@ -452,7 +457,7 @@ bool sttp::TryParseInt64(const string& value, int64_t& result, const int64_t def
 {
     try
     {
-        result = stoll(value);
+        result = stoll(value, nullptr, GetRadix(value));
         return true;
     }
     catch (...)
