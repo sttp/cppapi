@@ -50,7 +50,11 @@ PublisherInstance::PublisherInstance() :
     m_publisher->RegisterUserCommandCallback(&HandleReceivedUserCommand);
 }
 
-PublisherInstance::~PublisherInstance() = default;
+PublisherInstance::~PublisherInstance()
+{
+    if (m_publisher != nullptr)
+        m_publisher->ShutDown(true);
+}
 
 void PublisherInstance::HandleStatusMessage(DataPublisher* source, const string& message)
 {

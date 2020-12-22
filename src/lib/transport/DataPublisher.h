@@ -78,7 +78,9 @@ namespace transport
         uint32_t m_cipherKeyRotationPeriod;
         std::atomic_bool m_started;
         std::atomic_bool m_shuttingDown;
+        std::atomic_bool m_stopped;
         sttp::Mutex m_connectActionMutex;
+        Thread m_shutdownThread;
         void* m_userData;
 
         // Dispatch reference - unordered map needed to manage reference
@@ -262,6 +264,7 @@ namespace transport
         void DisconnectSubscriber(const sttp::Guid& instanceID);
 
         friend class SubscriberConnection;
+        friend class PublisherInstance;
     };
 
     typedef SharedPtr<DataPublisher> DataPublisherPtr;

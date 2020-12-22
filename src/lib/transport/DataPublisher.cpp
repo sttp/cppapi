@@ -53,6 +53,7 @@ DataPublisher::DataPublisher() :
     m_cipherKeyRotationPeriod(60000),
     m_started(false),
     m_shuttingDown(false),
+    m_stopped(false),
     m_userData(nullptr),
     m_clientAcceptor(m_commandChannelService)
 {
@@ -100,7 +101,7 @@ void DataPublisher::StartAccept()
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
 {
-    if (m_shuttingDown)
+    if (m_shuttingDown || m_stopped)
         return;
 
     if (!error)
@@ -863,7 +864,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
         {
             m_callbackQueue.WaitForData();
 
-            if (m_shuttingDown)
+            if (m_shuttingDown || m_stopped)
                 break;
 
             const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
@@ -893,7 +894,7 @@ void DataPublisher::Start(const string& networkInterfaceIP, const uint16_t port)
 
 void DataPublisher::Stop()
 {
-    if (!m_started || m_shuttingDown)
+    if (!m_started || m_shuttingDown || m_stopped)
         return;
 
     // Stop method executes shutdown on a separate thread without stopping to prevent
@@ -903,11 +904,21 @@ void DataPublisher::Stop()
 
 void DataPublisher::ShutDown(const bool joinThread)
 {
-    // Notify running threads that the publisher is shutting down
+    // Check if shutdown thread is running or publisher has already stopped
+    if (m_shuttingDown || m_stopped)
+    {
+        if (joinThread && !m_stopped)
+            m_shutdownThread.join();
+
+        return;
+    }
+
+    // Notify running threads that the publisher is shutting down, i.e., shutdown thread is active
     m_shuttingDown = true;
     m_started = false;
 
-    Thread shutdownThread([this]{
+    m_shutdownThread = Thread([this]
+    {
         try
         {
             // Let any pending start operation complete before continuing stop - prevents destruction stop before start is completed
@@ -962,11 +973,12 @@ void DataPublisher::ShutDown(const bool joinThread)
         }
 
         // Shutdown complete
+        m_stopped = true;
         m_shuttingDown = false;
     });
 
     if (joinThread)
-        shutdownThread.join();
+        m_shutdownThread.join();
 }
 
 bool DataPublisher::IsStarted() const
