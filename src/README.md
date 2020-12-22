@@ -4,7 +4,7 @@ Code includes STTP functionality for both "subscribers" and "publishers".
 
 Build instructions follow:
 
-* [Windows](#compiling-in-visual-studio) (using [Visual Studio](https://visualstudio.microsoft.com/))
+* [Windows](#compiling-in-visual-studio) (using [Visual Studio 2019](https://visualstudio.microsoft.com/vs/community/))
 * [Unix Variants](#compiling-in-linux) (using [CMake](https://cmake.org/))
 
 ## Compiling in Visual Studio
@@ -39,7 +39,7 @@ link to the folder, e.g.:
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with version v1.66, v1.71 and v1.75 of Boost.
+has been tested with v1.66, v1.71 and v1.75 of Boost.
 
 Note that you will need to compile Boost in order to execute the sample
 applications found in:
@@ -72,6 +72,8 @@ Earlier versions of the libraries listed may not work properly.
 
 * GNU Make (http://www.gnu.org/software/make/)
 
+* gcc v10.2 (for C++20 support)
+
 * zlib Library, e.g.: `sudo apt install zlib1g-dev`
 
 * bzip2 Library, e.g.: `sudo apt install libbz2-dev`
@@ -93,6 +95,8 @@ For Ubuntu, here are some common steps (don't type `$`; that represents the shel
 $ sudo apt update
 $ sudo apt install build-essential
 $ sudo apt install cmake
+$ sudo apt install gcc-10 g++-10
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
 
 $ sudo apt install zlib1g-dev
 $ sudo apt install libbz2-dev
