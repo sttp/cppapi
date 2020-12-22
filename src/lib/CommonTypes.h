@@ -23,7 +23,6 @@
 
 // ReSharper disable CppClangTidyCppcoreguidelinesMacroUsage
 // ReSharper disable CppClangTidyBugproneReservedIdentifier
-
 #pragma once
 
 #include <climits>
@@ -33,10 +32,12 @@
 
 // Reduce boost code analysis warnings
 #pragma warning(push)
+#pragma warning(disable:4068)
 #pragma warning(disable:6001)
 #pragma warning(disable:6031)
 #pragma warning(disable:6255)
 #pragma warning(disable:6258)
+#pragma warning(disable:6386)
 #pragma warning(disable:6387)
 #pragma warning(disable:26439)
 #pragma warning(disable:26444)
@@ -44,11 +45,12 @@
 #pragma warning(disable:26495)
 #pragma warning(disable:26498)
 #pragma warning(disable:26812)
+#pragma warning(disable:26819)
 
 #if defined(_MSC_VER)
-#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma diag_suppress 70
+#pragma diag_suppress 1440
 #endif
 
 #include <boost/any.hpp>
@@ -58,6 +60,12 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
+
+// Fix boost v1.75 duplicate symbol issue for MSVC
+#if defined(_MSC_VER) && BOOST_VERSION == 107500
+#include "boost/use_awaitable.hpp"
+#endif
+
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -66,10 +74,6 @@
 #include <boost/iostreams/device/array.hpp>
 
 #pragma warning(pop)
-
-#if defined(_MSC_VER)
-#pragma clang diagnostic pop
-#endif
 
 #if _WIN32 || _WIN64
 #if _WIN64
@@ -81,7 +85,7 @@
 #endif
 #endif
 
-#if __GNUC__
+#if __GNUC__ // NOLINT
 #if __x86_64__ || __ppc64__
 #define _32BIT 0
 #define _64BIT 1

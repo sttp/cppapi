@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="boost\use_awaitable.hpp" />
     <ClInclude Include="CommonTypes.h" />
     <ClCompile Include="CommonTypes.cpp" />
     <ClInclude Include="Convert.h" />

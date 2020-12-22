@@ -1094,6 +1094,9 @@
     <ClInclude Include="utf8\unchecked.h">
       <Filter>utf8</Filter>
     </ClInclude>
+    <ClInclude Include="boost\use_awaitable.hpp">
+      <Filter>boost</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
@@ -1134,6 +1137,9 @@
     </Filter>
     <Filter Include="utf8">
       <UniqueIdentifier>{310acc35-38d5-4b71-8669-56c7540e6d28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="boost">
+      <UniqueIdentifier>{fcb08002-54a7-4e80-95e4-b19e67b99f04}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
