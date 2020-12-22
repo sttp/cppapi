@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 // ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
-
 #include "Convert.h"
 #include <iomanip>
 #include <sstream>
@@ -44,7 +43,7 @@ using namespace boost::gregorian;
 using namespace sttp;
 
 const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
-const auto DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
+const int64_t DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
 
 inline int GetRadix(const string& value)
 {
@@ -181,18 +180,17 @@ datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
 
 datetime_t sttp::FromTicks(const int64_t ticks)
 {
-    static float64_t ticksPerSecondF = static_cast<float64_t>(Ticks::PerSecond);
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
-    const int64_t pticks = static_cast<int64_t>(ticks % Ticks::PerSecond / ticksPerSecondF * DateTimeTicksPerSecond); // NOLINT
+    const int64_t pticks = static_cast<int64_t>(ticks % Ticks::PerSecond * DateTimeTicksPerSecond / Ticks::PerSecond);
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
 int64_t sttp::ToTicks(const datetime_t& time)
 {
-    static int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
+    static const int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
     const TimeSpan offset = time - DateTimeEpoch;
     return Ticks::PTimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
-        static_cast<int64_t>(offset.fractional_seconds() / tickInterval * Ticks::PerSecond);
+        static_cast<int64_t>(offset.fractional_seconds() * Ticks::PerSecond / tickInterval);
 }
 
 bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
@@ -471,7 +469,7 @@ bool sttp::TryParseUInt64(const string& value, uint64_t& result, const uint64_t 
 {
     try
     {
-        result = stoull(value);
+        result = stoull(value, nullptr, GetRadix(value));
         return true;
     }
     catch (...)
@@ -495,7 +493,7 @@ bool sttp::TryParseDouble(const string& value, float64_t& result, const float64_
     }
 }
 
-bool sttp::TryParseDecimal(const string& value, decimal_t& result, const decimal_t defaultValue)
+bool sttp::TryParseDecimal(const string& value, decimal_t& result, const decimal_t defaultValue) // NOLINT
 {
     try
     {

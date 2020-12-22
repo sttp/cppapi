@@ -24,7 +24,6 @@
 // ReSharper disable CppClangTidyClangDiagnosticExitTimeDestructors
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 // ReSharper disable CppClangTidyClangDiagnosticCoveredSwitchDefault
-
 #include "CommonTypes.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -394,9 +393,9 @@ int32_t sttp::DateDiff(const datetime_t& startTime, const datetime_t& endTime, c
     }
 }
 
-int32_t sttp::DatePart(const datetime_t& value, TimeInterval interval)
+int32_t sttp::DatePart(const datetime_t& value, const TimeInterval interval)
 {
-    static int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
+    static const int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
 
     switch (interval)
     {
@@ -419,7 +418,7 @@ int32_t sttp::DatePart(const datetime_t& value, TimeInterval interval)
         case TimeInterval::Second:
             return static_cast<int32_t>(value.time_of_day().seconds());
         case TimeInterval::Millisecond:
-            return static_cast<int32_t>(value.time_of_day().fractional_seconds() / tickInterval * 1000LL);
+            return static_cast<int32_t>(value.time_of_day().fractional_seconds() * 1000LL / tickInterval);
         default:
             throw runtime_error("Unexpected time interval encountered");
     }
