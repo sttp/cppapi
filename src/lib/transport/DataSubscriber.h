@@ -89,6 +89,7 @@ namespace transport
         int32_t m_connectAttempt;
         bool m_connectionRefused;
         bool m_autoReconnect;
+    	Thread m_autoReconnectThread;
         std::atomic_bool m_cancel;
 
         // Auto-reconnect handler.

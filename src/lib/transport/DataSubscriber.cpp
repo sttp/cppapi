@@ -25,6 +25,7 @@
 
 // ReSharper disable CppClangTidyPerformanceNoAutomaticMove
 // ReSharper disable CppClangTidyClangDiagnosticShadowUncapturedLocal
+// ReSharper disable CppClangTidyClangDiagnosticMisleadingIndentation
 #include "DataSubscriber.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
@@ -92,56 +93,62 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     if (connector.m_cancel || subscriber->m_disposing)
         return;
 
-    // Reset connection attempt counter if last attempt was not refused
-    if (!connector.m_connectionRefused)
-        connector.ResetConnection();
+	// Make sure to wait on any running reconnect to complete...
+	connector.m_autoReconnectThread.join();
 	
-    if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
+    connector.m_autoReconnectThread = Thread([&connector,subscriber]
     {
+	    // Reset connection attempt counter if last attempt was not refused
+	    if (!connector.m_connectionRefused)
+	        connector.ResetConnection();
+		
+	    if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
+	    {
+		    if (connector.m_errorMessageCallback != nullptr)
+    			connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
+    		return;
+	    }
+
+	    // Apply exponential back-off algorithm for retry attempt delays
+	    const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
+	    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
+
+	    if (retryInterval > connector.m_maxRetryInterval)
+	        retryInterval = connector.m_maxRetryInterval;
+
+	    // Notify the user that we are attempting to reconnect.
 	    if (connector.m_errorMessageCallback != nullptr)
-    		connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
-    	return;
-    }
+	    {
+	        stringstream errorMessageStream;
 
-    // Apply exponential back-off algorithm for retry attempt delays
-    const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
-    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
+    		errorMessageStream << "Connection";
 
-    if (retryInterval > connector.m_maxRetryInterval)
-        retryInterval = connector.m_maxRetryInterval;
+	        if (connector.m_connectAttempt > 0)
+	            errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
 
-    // Notify the user that we are attempting to reconnect.
-    if (connector.m_errorMessageCallback != nullptr)
-    {
-        stringstream errorMessageStream;
+	        errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
+	       
+	        if (retryInterval > 0)
+	            errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
+	        else
+	            errorMessageStream << "Attempting to reconnect...";
 
-    	errorMessageStream << "Connection";
+    		connector.m_errorMessageCallback(subscriber, errorMessageStream.str());
+	    }
 
-        if (connector.m_connectAttempt > 0)
-            errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
+	    connector.m_timer = Timer::WaitTimer(retryInterval);
+	    connector.m_timer->Wait();
 
-        errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
-       
-        if (retryInterval > 0)
-            errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
-        else
-            errorMessageStream << "Attempting to reconnect...";
+	    if (connector.m_cancel || subscriber->m_disposing)
+	        return;
 
-    	connector.m_errorMessageCallback(subscriber, errorMessageStream.str());
-    }
+	    if (connector.Connect(*subscriber, true) == ConnectCanceled)
+	        return;
 
-    connector.m_timer = Timer::WaitTimer(retryInterval);
-    connector.m_timer->Wait();
-
-    if (connector.m_cancel || subscriber->m_disposing)
-        return;
-
-    if (connector.Connect(*subscriber, true) == ConnectCanceled)
-        return;
-
-    // Notify the user that reconnect attempt was completed.
-    if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
-        connector.m_reconnectCallback(subscriber);
+	    // Notify the user that reconnect attempt was completed.
+	    if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
+	        connector.m_reconnectCallback(subscriber);
+    });	
 }
 
 // Registers a callback to provide error messages each time
@@ -261,6 +268,8 @@ void SubscriberConnector::Cancel()
     // Cancel any waiting timer operations by setting immediate timer expiration
     if (m_timer != nullptr)
         m_timer->Stop();
+
+	m_autoReconnectThread.join();
 }
 
 // Sets the hostname of the publisher to connect to.
@@ -395,6 +404,7 @@ DataSubscriber::~DataSubscriber() noexcept
 	try
 	{
 	    m_disposing = true;
+		m_connector.Cancel();
 	    Disconnect(true, false);
 	}
 	catch (...)
