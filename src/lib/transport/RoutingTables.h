@@ -54,7 +54,7 @@ namespace transport
 
     public:
         RoutingTables();
-        ~RoutingTables();
+        ~RoutingTables() noexcept;
 
         void UpdateRoutes(const SubscriberConnectionPtr& destination, const std::unordered_set<sttp::Guid>& routes);
         void RemoveRoutes(const SubscriberConnectionPtr& destination);
