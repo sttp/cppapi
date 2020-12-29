@@ -36,7 +36,7 @@ namespace sttp
     class Timer // NOLINT
     {
     private:
-        SharedPtr<sttp::Thread> m_timerThread;
+        ThreadPtr m_timerThread;
         int32_t m_interval;
         TimerElapsedCallback m_callback;
         void* m_userData;
@@ -51,7 +51,20 @@ namespace sttp
             {
                 try
                 {
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(m_interval));
+	                const int32_t interval = m_interval;
+                	
+                	if (interval > 0)
+                	{
+                		static const int32_t MaxSleepDuration = 500;
+	                    const int32_t waits = interval / MaxSleepDuration;
+	                    const int32_t remainder = interval % MaxSleepDuration;
+
+	                    for (int32_t i = 0; i < waits && m_running; i++)
+							ThreadSleep(MaxSleepDuration);
+
+                		if (remainder > 0 && m_running)
+							ThreadSleep(remainder);
+                    }
                 }
                 catch (boost::thread_interrupted&)
                 {
@@ -82,9 +95,17 @@ namespace sttp
         {
         }
 
-        ~Timer()
+        ~Timer() noexcept
         {
-            Stop();
+	        try
+	        {
+				Stop();
+	        }
+	        catch (...)
+	        {
+		        // ReSharper disable once CppRedundantControlFlowJump
+		        return;
+	        }
         }
 
         bool IsRunning() const
@@ -99,16 +120,16 @@ namespace sttp
 
         void SetInterval(const int32_t value)
         {
-            if (value != m_interval)
-            {
-                const bool restart = m_running;
-                Stop();
+            if (value == m_interval)
+	            return;
+        	
+            const bool restart = m_running;
+            Stop();
 
-                m_interval = value;
+        	m_interval = value;
 
-                if (restart)
-                    Start();
-            }
+            if (restart)
+	            Start();
         }
 
         TimerElapsedCallback GetCallback() const
@@ -149,7 +170,7 @@ namespace sttp
             if (m_running)
                 Stop();
 
-            m_timerThread = NewSharedPtr<sttp::Thread>(boost::bind(&Timer::TimerThread, this));
+            m_timerThread = NewSharedPtr<sttp::Thread>([this] { TimerThread(); });
         }
 
         void Stop()
@@ -161,10 +182,15 @@ namespace sttp
 
             if (m_timerThread != nullptr)
             {
-                m_timerThread->interrupt();
+            	ThreadPtr timerThread = m_timerThread;
 
-                if (boost::this_thread::get_id() != m_timerThread->get_id())
-                    m_timerThread->join();
+            	if (timerThread != nullptr)
+            	{
+	                timerThread->interrupt();
+
+	                if (boost::this_thread::get_id() != timerThread->get_id())
+	                    timerThread->join();
+                }
             }
 
             m_timerThread.reset();
@@ -172,15 +198,28 @@ namespace sttp
 
         void Wait() const
         {
-            if (m_timerThread != nullptr)
-                m_timerThread->join();
+	        try
+	        {
+	            if (m_running && m_timerThread != nullptr)
+	            {
+	            	ThreadPtr timerThread = m_timerThread;
+
+	            	if (timerThread != nullptr)
+						timerThread->join();
+                }	        	
+	        }
+	        catch (...)
+	        {
+		        // ReSharper disable once CppRedundantControlFlowJump
+		        return;
+	        }
         }
 
         static void EmptyCallback(Timer*, void*)
         {            
         }
 
-        static TimerPtr WaitTimer(const int32_t interval, bool autoStart = true)
+        static TimerPtr WaitTimer(const int32_t interval, const bool autoStart = true)
         {
             TimerPtr waitTimer = NewSharedPtr<Timer>(interval, EmptyCallback);
 
@@ -192,4 +231,17 @@ namespace sttp
     };
 
     typedef sttp::SharedPtr<Timer> TimerPtr;
+}
+
+// Setup standard hash code for TimerPtr
+namespace std  // NOLINT
+{
+    template<>
+    struct hash<sttp::TimerPtr>
+    {
+        size_t operator () (const sttp::TimerPtr& timer) const noexcept
+        {
+            return boost::hash<sttp::TimerPtr>()(timer);
+        }
+    };
 }
