@@ -183,8 +183,8 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
         	break;
         }
 
-        bool connected = false;
 		string errorMessage;
+        bool connected = false;
 
         try
         {
@@ -616,13 +616,12 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
             // message, but rather the metadata itself.
             HandleMetadataRefresh(data, offset, length);
             break;
-
         case ServerCommand::Subscribe:
         case ServerCommand::Unsubscribe:
             // Do not break on these messages because there is
             // still an associated message to be processed.
-            m_subscribed = (commandCode == ServerCommand::Subscribe); //-V796
-
+            m_subscribed = (commandCode == ServerCommand::Subscribe);
+            [[fallthrough]];
         case ServerCommand::UpdateProcessingInterval:
         case ServerCommand::RotateCipherKeys:
             // Each of these responses come with a message that will
@@ -639,7 +638,6 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
                 DispatchStatusMessage(messageStream.str());
             }
             break;
-
         default:
             // If we don't know what the message is, we can't interpret
             // the data sent with the packet. Deliver an error message
@@ -1368,17 +1366,17 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         m_disconnecting = false;
 
 		if (autoReconnecting)
-	    {
-	        // Handling auto-connect callback separately from connection terminated callback
-	        // since they serve two different use cases and current implementation does not
-	        // support multiple callback registrations
-	        if (m_autoReconnectCallback != nullptr && !m_disposing)
-	            m_autoReconnectCallback(this);
-	    }
-	    else
-	    {
-	        m_connectActionMutex.unlock();
-	    }
+		{
+			// Handling auto-connect callback separately from connection terminated callback
+			// since they serve two different use cases and current implementation does not
+			// support multiple callback registrations
+			if (m_autoReconnectCallback != nullptr && !m_disposing)
+				m_autoReconnectCallback(this);
+		}
+		else
+		{
+			m_connectActionMutex.unlock();
+		}
     });
 
     if (joinThread)
