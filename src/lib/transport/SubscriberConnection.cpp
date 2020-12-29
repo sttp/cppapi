@@ -1634,7 +1634,7 @@ bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_
     return SendResponse(responseCode, commandCode, vector<uint8_t>(0));
 }
 
-bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_t commandCode, const string& message) -> bool
+bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_t commandCode, const string& message)
 {
     const vector<uint8_t> data = EncodeString(message);
     return SendResponse(responseCode, commandCode, data);
