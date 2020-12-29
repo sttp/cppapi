@@ -524,6 +524,7 @@
     <ClCompile Include="Convert.cpp" />
     <ClCompile Include="EndianConverter.cpp" />
     <ClCompile Include="pugixml.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data\DataColumn.h">
@@ -1097,6 +1098,7 @@
     <ClInclude Include="boost\use_awaitable.hpp">
       <Filter>boost</Filter>
     </ClInclude>
+    <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
