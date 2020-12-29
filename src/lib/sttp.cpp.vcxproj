@@ -40,7 +40,9 @@
     <ClCompile Include="CommonTypes.cpp" />
     <ClInclude Include="Convert.h" />
     <ClCompile Include="Convert.cpp" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="EndianConverter.h" />
+    <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="EndianConverter.cpp" />
     <ClInclude Include="Nullable.h" />
     <ClInclude Include="pugiconfig.hpp" />
