@@ -25,6 +25,7 @@
 
 #include "../CommonTypes.h"
 #include "../ThreadSafeQueue.h"
+#include "../ThreadPool.h"
 #include "../data/DataSet.h"
 #include "SubscriberConnection.h"
 #include "RoutingTables.h"
@@ -35,7 +36,7 @@ namespace sttp {
 namespace filterexpressions
 {
     class ExpressionTree;
-    typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
+    typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
 }}
 
 namespace sttp {
@@ -62,12 +63,12 @@ namespace transport
             CallbackDispatcher();
         };
 
-        sttp::Guid m_nodeID;
-        sttp::data::DataSetPtr m_metadata;
-        sttp::data::DataSetPtr m_filteringMetadata;
+        Guid m_nodeID;
+        data::DataSetPtr m_metadata;
+        data::DataSetPtr m_filteringMetadata;
         RoutingTables m_routingTables;
         std::unordered_set<SubscriberConnectionPtr> m_subscriberConnections;
-        sttp::SharedMutex m_subscriberConnectionsLock;
+        SharedMutex m_subscriberConnectionsLock;
         SecurityMode m_securityMode;
         int32_t m_maximumAllowedConnections;
         bool m_isMetadataRefreshAllowed;
@@ -79,14 +80,15 @@ namespace transport
         std::atomic_bool m_started;
         std::atomic_bool m_shuttingDown;
         std::atomic_bool m_stopped;
-        sttp::Mutex m_connectActionMutex;
+        Mutex m_connectActionMutex;
         Thread m_shutdownThread;
+    	ThreadPool m_threadPool;
         void* m_userData;
 
         // Dispatch reference - unordered map needed to manage reference
         // counts on subscriber connections since these are persisted
         std::unordered_map<SubscriberConnectionPtr, uint32_t> m_subscriberConnectionDispatchRefs;
-        sttp::Mutex m_subscriberConnectionDispatchRefsLock;
+        Mutex m_subscriberConnectionDispatchRefsLock;
 
         // Callback queue
         Thread m_callbackThread;
@@ -94,15 +96,14 @@ namespace transport
 
         // Command channel
         Thread m_commandChannelAcceptThread;
-        sttp::IOContext m_commandChannelService;
-        sttp::TcpAcceptor m_clientAcceptor;
+        IOContext m_commandChannelService;
+        TcpAcceptor m_clientAcceptor;
 
         // Command channel handlers
         void StartAccept();
         void AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error);
         void ConnectionTerminated(const SubscriberConnectionPtr& connection);
         void RemoveConnection(const SubscriberConnectionPtr& connection);
-        void ShutDown(bool joinThread);
 
         // Callbacks
         MessageCallback m_statusMessageCallback;
@@ -137,19 +138,23 @@ namespace transport
         static void TemporalSubscriptionRequestedDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void TemporalSubscriptionCanceledDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
-        static int32_t GetColumnIndex(const sttp::data::DataTablePtr& table, const std::string& columnName);
+        static int32_t GetColumnIndex(const data::DataTablePtr& table, const std::string& columnName);
+
+        void ShutDown(bool joinThread);
+        bool IsShuttingDown() const { return m_shuttingDown || m_stopped; }
+    
     public:
         // Creates a new instance of the data publisher.
         DataPublisher();
 
         // The following constructors will auto-start DataPublisher using specified connection info
-        DataPublisher(const sttp::TcpEndPoint& endpoint);
+        DataPublisher(const TcpEndPoint& endpoint);
         DataPublisher(uint16_t port, bool ipV6 = false);                        // Bind to default NIC
         DataPublisher(const std::string& networkInterfaceIP, uint16_t port);    // Bind to specified NIC IP, format determines IP version
 
         // Releases all threads and sockets
         // tied up by the publisher.
-        ~DataPublisher(); // NOLINT
+        ~DataPublisher() noexcept;
 
         // Iterator handler delegates
         typedef std::function<void(SubscriberConnectionPtr, void* userData)> SubscriberConnectionIteratorHandlerFunction;
@@ -158,22 +163,22 @@ namespace transport
         void DefineMetadata(const std::vector<DeviceMetadataPtr>& deviceMetadata, const std::vector<MeasurementMetadataPtr>& measurementMetadata, const std::vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber = 0);
 
         // Defines metadata from an existing dataset
-        void DefineMetadata(const sttp::data::DataSetPtr& metadata);
+        void DefineMetadata(const data::DataSetPtr& metadata);
 
         // Gets primary metadata. This dataset contains all the normalized metadata tables that define
         // the available detail about the data points that can be subscribed to by clients.
-        const sttp::data::DataSetPtr& GetMetadata() const;
+        const data::DataSetPtr& GetMetadata() const;
 
         // Gets filtering metadata. This dataset, derived from primary metadata, contains a flattened
         // table used to subscribe to a filtered set of points with an expression, e.g.:
         // FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA'
-        const sttp::data::DataSetPtr& GetFilteringMetadata() const;
+        const data::DataSetPtr& GetFilteringMetadata() const;
 
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
         // Starts or restarts DataPublisher using specified connection info
-        void Start(const sttp::TcpEndPoint& endpoint);
+        void Start(const TcpEndPoint& endpoint);
         void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
         
@@ -192,8 +197,8 @@ namespace transport
         // Node ID defines a unique identification for the DataPublisher
         // instance that gets included in published metadata so that clients
         // can easily distinguish the source of the measurements
-        const sttp::Guid& GetNodeID() const;
-        void SetNodeID(const sttp::Guid& value);
+        const Guid& GetNodeID() const;
+        void SetNodeID(const Guid& value);
 
         SecurityMode GetSecurityMode() const;
         void SetSecurityMode(SecurityMode value);
@@ -261,7 +266,7 @@ namespace transport
         void IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData);
 
         void DisconnectSubscriber(const SubscriberConnectionPtr& connection);
-        void DisconnectSubscriber(const sttp::Guid& instanceID);
+        void DisconnectSubscriber(const Guid& instanceID);
 
         friend class SubscriberConnection;
         friend class PublisherInstance;
