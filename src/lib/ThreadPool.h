@@ -29,6 +29,7 @@
 
 namespace sttp
 {
+	// Defines a simple thread queue that allows actions to be executed with an optional delay
 	class ThreadPool // NOLINT
 	{
 	private:
