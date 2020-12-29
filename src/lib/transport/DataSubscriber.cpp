@@ -95,7 +95,7 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     // Reset connection attempt counter if last attempt was not refused
     if (!connector.m_connectionRefused)
         connector.ResetConnection();
-
+	
     if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
     {
 	    if (connector.m_errorMessageCallback != nullptr)
@@ -439,7 +439,7 @@ void DataSubscriber::RunCommandChannelResponseThread()
 }
 
 // Callback for async read of the payload header.
-void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
+void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t bytesTransferred)
 {
     if (IsDisconnecting())
         return;
@@ -480,7 +480,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, size_t bytesTrans
 }
 
 // Callback for async read of packets.
-void DataSubscriber::ReadPacket(const ErrorCode& error, size_t bytesTransferred)
+void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransferred)
 {
     if (IsDisconnecting())
         return;
@@ -1551,7 +1551,7 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, const uint8_t*
     });
 }
 
-void DataSubscriber::WriteHandler(const ErrorCode& error, size_t bytesTransferred)
+void DataSubscriber::WriteHandler(const ErrorCode& error, const size_t bytesTransferred)
 {
     if (IsDisconnecting())
         return;
