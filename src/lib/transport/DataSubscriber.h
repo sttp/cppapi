@@ -25,11 +25,12 @@
 
 #pragma once
 
+#include "../Timer.h"
+#include "../ThreadSafeQueue.h"
+#include "../ThreadPool.h"
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "tssc/TSSCDecoder.h"
-#include "../Timer.h"
-#include "../ThreadSafeQueue.h"
 
 namespace sttp {
 namespace transport
@@ -69,7 +70,7 @@ namespace transport
     };
 
     // Helper class to provide retry and auto-reconnect functionality to the subscriber.
-    class SubscriberConnector
+    class SubscriberConnector // NOLINT
     {
     private:
         typedef std::function<void(DataSubscriber*, const std::string&)> ErrorMessageCallback;
@@ -80,7 +81,7 @@ namespace transport
 
         std::string m_hostname;
         uint16_t m_port;
-        sttp::TimerPtr m_timer;
+        TimerPtr m_timer;
 
         int32_t m_maxRetries;
         int32_t m_retryInterval;
@@ -102,6 +103,7 @@ namespace transport
 
         // Creates a new instance.
         SubscriberConnector();
+    	~SubscriberConnector() noexcept;
 
         // Registers a callback to provide error messages each time
         // the subscriber fails to connect during a connection sequence.
@@ -187,17 +189,19 @@ namespace transport
         bool m_compressPayloadData;
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
+        std::atomic_bool m_connected;
+        std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
-        std::atomic_bool m_disposing;
-        sttp::Mutex m_connectActionMutex;
+        std::atomic_bool m_disconnected;
+    	std::atomic_bool m_disposing;
+        Mutex m_connectActionMutex;
+        Thread m_disconnectThread;
         void* m_userData;
 
         // Statistics counters
         uint64_t m_totalCommandChannelBytesReceived;
         uint64_t m_totalDataChannelBytesReceived;
         uint64_t m_totalMeasurementsReceived;
-        std::atomic_bool m_connected;
-        std::atomic_bool m_subscribed;
 
         // Assembly info
         std::string m_assemblySource;
@@ -294,7 +298,8 @@ namespace transport
         void ConnectionTerminatedDispatcher();
 
         void Connect(const std::string& hostname, const uint16_t port, bool autoReconnecting);
-        void Disconnect(bool autoReconnecting);
+        void Disconnect(bool joinThread, bool autoReconnecting);
+        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
 
     public:
         // Creates a new instance of the data subscriber.
@@ -302,7 +307,7 @@ namespace transport
 
         // Releases all threads and sockets
         // tied up by the subscriber.
-        ~DataSubscriber();
+        ~DataSubscriber() noexcept;
 
         // Callback registration
         //
