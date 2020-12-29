@@ -70,9 +70,7 @@ SubscriberInstance::~SubscriberInstance() noexcept
         m_connectThread.join();
     }
     catch (...)
-    {
-	    // ReSharper disable once CppRedundantControlFlowJump
-	    return;
+    {        
     }
 }
 

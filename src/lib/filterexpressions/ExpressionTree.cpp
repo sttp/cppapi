@@ -1020,8 +1020,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
                     if (operationType == ExpressionOperatorType::Add)
-                        return ExpressionValueType::String;
-                    [[fallthrough]];
+                        return ExpressionValueType::String; //-V796
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Boolean\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1042,8 +1041,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
                     if (operationType == ExpressionOperatorType::Add)
-                        return ExpressionValueType::String;
-            		[[fallthrough]];
+                        return ExpressionValueType::String; //-V796
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int32\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1063,8 +1061,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
                     if (operationType == ExpressionOperatorType::Add)
-                        return ExpressionValueType::String;
-            		[[fallthrough]];
+                        return ExpressionValueType::String; //-V796
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Int64\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1083,8 +1080,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
                     if (operationType == ExpressionOperatorType::Add)
-                        return ExpressionValueType::String;
-            		[[fallthrough]];
+                        return ExpressionValueType::String; //-V796
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Decimal\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1102,8 +1098,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
                     return ExpressionValueType::Double;
                 case ExpressionValueType::String:
                     if (operationType == ExpressionOperatorType::Add)
-                        return ExpressionValueType::String;
-            		[[fallthrough]];
+                        return ExpressionValueType::String; //-V796
                 case ExpressionValueType::Guid:
                 case ExpressionValueType::DateTime:
                     throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"Double\" and \"" + string(EnumName(rightValueType)) + "\"");
@@ -1112,8 +1107,7 @@ ExpressionValueType ExpressionTree::DeriveArithmeticOperationValueType(const Exp
             }
         case ExpressionValueType::String:
             if (operationType == ExpressionOperatorType::Add)
-                return ExpressionValueType::String;
-    		[[fallthrough]];
+                return ExpressionValueType::String; //-V796
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
             throw ExpressionTreeException("Cannot perform \"" + string(EnumName(operationType)) + "\" operation on \"" + string(EnumName(leftValueType)) + "\" and \"" + string(EnumName(rightValueType)) + "\"");

@@ -437,11 +437,10 @@ void SubscriberConnection::Start(const bool connectionAccepted)
     if (m_hostName.empty())
         m_hostName = m_ipAddress.to_string();
 
-    m_stopped = false;
-
     if (m_connectionAccepted)
-	    m_pingTimer.Start();
+        m_pingTimer.Start();
 
+    m_stopped = false;
     ReadCommandChannel();
 }
 
@@ -728,7 +727,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                                 m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
                                 m_dataChannelActive = true;
                                 
-                                m_parent->m_threadPool.Queue([this]
+                                Thread _([this]
                                 {
                                     UniqueLock lock(m_dataChannelMutex);
 
@@ -1004,7 +1003,7 @@ void SubscriberConnection::HandleRotateCipherKeys()
 {
 }
 
-void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length)
 {
     // Make sure there is enough buffer for new processing interval value
     if (length >= 4)
@@ -1022,7 +1021,7 @@ void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, c
     }
 }
 
-void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, uint32_t length)
 {
     if (length < 4)
         return;
@@ -1035,7 +1034,7 @@ void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, const uin
     SetOperationalModes(operationalModes);
 }
 
-void SubscriberConnection::HandleUserCommand(const uint32_t command, uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length)
 {
     m_parent->DispatchUserCommand(m_parent->AddDispatchReference(GetReference()), command, data, length);
 }
@@ -1234,7 +1233,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
         PublishTSSCDataPacket(count);
 }
 
-void SubscriberConnection::PublishTSSCDataPacket(const int32_t count)
+void SubscriberConnection::PublishTSSCDataPacket(int32_t count)
 {
     const uint32_t length = m_tsscEncoder.FinishBlock();
     vector<uint8_t> buffer;
@@ -1269,7 +1268,7 @@ void SubscriberConnection::PublishTSSCDataPacket(const int32_t count)
     m_totalMeasurementsSent += count;
 }
 
-bool SubscriberConnection::SendDataStartTime(const uint64_t timestamp)
+bool SubscriberConnection::SendDataStartTime(uint64_t timestamp)
 {
     vector<uint8_t> buffer;
     EndianConverter::WriteBigEndianBytes(buffer, timestamp);
@@ -1292,7 +1291,7 @@ void SubscriberConnection::ReadCommandChannel()
     });
 }
 
-void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_t bytesTransferred)
+void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred)
 {
     if (m_stopped)
         return;
@@ -1327,11 +1326,11 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
         // TODO: Consider allowing "continued" subscribes to overcome a fixed packet limit
         if (packetSize > static_cast<uint32_t>(UInt16::MaxValue * 4U))
         {
-            m_parent->m_threadPool.Queue([this, packetSize]
+            Thread _([this, packetSize]
             {
                 m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
                 SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
-                ThreadSleep(500);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
                 Stop();
             });
             
@@ -1552,7 +1551,7 @@ void SubscriberConnection::CommandChannelSendAsync()
     }));
 }
 
-void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, const size_t bytesTransferred)
+void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
 {
     if (m_stopped)
         return;
@@ -1597,7 +1596,7 @@ void SubscriberConnection::DataChannelSendAsync()
     }));
 }
 
-void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const size_t bytesTransferred)
+void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred)
 {
     if (m_stopped)
         return;
@@ -1629,18 +1628,18 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
         DataChannelSendAsync();
 }
 
-bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_t commandCode)
+bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode)
 {
     return SendResponse(responseCode, commandCode, vector<uint8_t>(0));
 }
 
-auto SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_t commandCode, const string& message) -> bool
+bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode, const string& message)
 {
     const vector<uint8_t> data = EncodeString(message);
     return SendResponse(responseCode, commandCode, data);
 }
 
-bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_t commandCode, const vector<uint8_t>& data)
+bool SubscriberConnection::SendResponse(uint8_t responseCode, uint8_t commandCode, const vector<uint8_t>& data)
 {
     bool success = false;
 
@@ -1721,7 +1720,7 @@ bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_
     return success;
 }
 
-string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t offset, const uint32_t length) const
+string SubscriberConnection::DecodeString(const uint8_t* data, uint32_t offset, uint32_t length) const
 {
     // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
     // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
@@ -1734,8 +1733,7 @@ string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t of
             return string(reinterpret_cast<char*>(const_cast<uint8_t*>(&data[offset])), length / sizeof(char));
         case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
-            swapBytes = !swapBytes;
-    		[[fallthrough]];
+            swapBytes = !swapBytes; //-V796
         case OperationalEncoding::UTF16LE:
         {
             wstring value(length / enc_sizeof_wchar, L'\0');
@@ -1775,8 +1773,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
             break;
         case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
-            swapBytes = !swapBytes;
-    		[[fallthrough]];
+            swapBytes = !swapBytes; //-V796
         case OperationalEncoding::UTF16LE:
         {
             const wstring utf16 = ToUTF16(value);            

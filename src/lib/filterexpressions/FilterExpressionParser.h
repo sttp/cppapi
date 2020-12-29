@@ -46,14 +46,14 @@ namespace sttp {
 namespace filterexpressions
 {
     // Simple exception type thrown by the filter expression parser
-    class FilterExpressionParserException final : public Exception, public std::exception
+    class FilterExpressionParserException : public Exception
     {
     private:
         std::string m_message;
 
     public:
         FilterExpressionParserException(std::string message) noexcept;
-        const char* what() const noexcept override;
+        const char* what() const noexcept;
     };
 
     struct TableIDFields

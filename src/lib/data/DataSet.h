@@ -35,14 +35,14 @@ namespace sttp {
 namespace data
 {
     // Simple exception type thrown by data set operations
-    class DataSetException final : public sttp::Exception, public std::exception
+    class DataSetException : public sttp::Exception
     {
     private:
         std::string m_message;
 
     public:
         DataSetException(std::string message) noexcept;
-        const char* what() const noexcept override;
+        const char* what() const noexcept;
     };
 
     class DataSet;

@@ -31,25 +31,25 @@ namespace sttp {
 namespace transport
 {
     // Simple exception type thrown by the data subscriber
-    class SubscriberException final : public Exception, public std::exception
+    class SubscriberException : public Exception
     {
     private:
         std::string m_message;
 
     public:
         SubscriberException(std::string message) noexcept;
-        const char* what() const noexcept override;
+        const char* what() const noexcept;
     };
 
     // Simple exception type thrown by the data publisher
-    class PublisherException final : public Exception, public std::exception
+    class PublisherException : public Exception
     {
     private:
         std::string m_message;
 
     public:
         PublisherException(std::string message) noexcept;
-        const char* what() const noexcept override;
+        const char* what() const noexcept;
     };
 
     // Fundamental POD type representing a measurement in STTP
@@ -106,10 +106,10 @@ namespace transport
 
         // Returns the value after applying the
         // multiplicative and additive value modifiers.
-        [[nodiscard]] float64_t AdjustedValue() const;
+        float64_t AdjustedValue() const;
 
         // Gets Timestamp as DateTime
-        [[nodiscard]] datetime_t GetDateTime() const;
+        datetime_t GetDateTime() const;
 
         // Gets Timestamp in Unix second of century and milliseconds
         void GetUnixTime(time_t& unixSOC, uint16_t& milliseconds) const;

@@ -77,18 +77,9 @@ DataPublisher::DataPublisher(const string& networkInterfaceIP, uint16_t port) :
     Start(networkInterfaceIP, port);
 }
 
-DataPublisher::~DataPublisher() noexcept
+DataPublisher::~DataPublisher() // NOLINT
 {
-	try
-	{
-		m_threadPool.ShutDown();
-		ShutDown(true);
-	}
-	catch (...)
-	{
-	    // ReSharper disable once CppRedundantControlFlowJump
-	    return;
-	}
+    ShutDown(true);
 }
 
 DataPublisher::CallbackDispatcher::CallbackDispatcher() :
@@ -110,44 +101,32 @@ void DataPublisher::StartAccept()
 
 void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, const ErrorCode& error)
 {
-    if (IsShuttingDown())
+    if (m_shuttingDown || m_stopped)
         return;
 
     if (!error)
     {
         WriterLock writeLock(m_subscriberConnectionsLock);
-
-    	// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
         const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
-		m_subscriberConnections.insert(connection);
+        m_subscriberConnections.insert(connection);
 
-    	// Initiate connection, if connection is not accepted, at least resolve connection info
-    	connection->Start(connectionAccepted);
-    	
-    	if (connectionAccepted)
-    	{
-	        DispatchClientConnected(AddDispatchReference(connection));
-        }
-    	else
+        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        connection->Start(connectionAccepted);
+
+        if (connectionAccepted)
         {
-			stringstream errorMessageStream;
-
-    		errorMessageStream << "Subscriber connection from \"";
-            errorMessageStream << connection->GetConnectionID();
-    		errorMessageStream << "\" refused: connection would exceed " ;
-    		errorMessageStream << m_maximumAllowedConnections;
-    		errorMessageStream << " maximum allowed connections.";
-    		
-	        DispatchErrorMessage(errorMessageStream.str());
-
-			connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
-
-    		// Allow a moment for response to be received before stopping connection
-            m_threadPool.Queue(1000, AddDispatchReference(connection), [&,this](void* state)
+            DispatchClientConnected(AddDispatchReference(connection));
+        }
+        else
+        {
+            DispatchErrorMessage("Subscriber connection refused: connection would exceed " + ToString(m_maximumAllowedConnections) + " maximum allowed connections.");
+            
+            Thread _([connection]
             {
-            	SubscriberConnection* connectionPtr = static_cast<SubscriberConnection*>(state);
-            	SubscriberConnectionPtr connectionRef = ReleaseDispatchReference(connectionPtr);
-	            connectionRef->Stop();
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+                connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                connection->Stop();
             });
         }
     }
@@ -887,7 +866,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
         {
             m_callbackQueue.WaitForData();
 
-            if (IsShuttingDown())
+            if (m_shuttingDown || m_stopped)
                 break;
 
             const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
@@ -917,7 +896,7 @@ void DataPublisher::Start(const string& networkInterfaceIP, const uint16_t port)
 
 void DataPublisher::Stop()
 {
-    if (!m_started || IsShuttingDown())
+    if (!m_started || m_shuttingDown || m_stopped)
         return;
 
     // Stop method executes shutdown on a separate thread without stopping to prevent
@@ -928,7 +907,7 @@ void DataPublisher::Stop()
 void DataPublisher::ShutDown(const bool joinThread)
 {
     // Check if shutdown thread is running or publisher has already stopped
-    if (IsShuttingDown())
+    if (m_shuttingDown || m_stopped)
     {
         if (joinThread && !m_stopped)
             m_shutdownThread.join();

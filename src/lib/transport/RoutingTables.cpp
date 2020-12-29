@@ -46,19 +46,11 @@ RoutingTables::RoutingTables() :
     });
 }
 
-RoutingTables::~RoutingTables() noexcept
+RoutingTables::~RoutingTables() // NOLINT
 {
-	try
-	{
-	    m_enabled = false;
-	    m_routingTableOperations.Release();
-	    m_routingTablesThread.join();
-	}
-	catch (...)
-	{
-		// ReSharper disable once CppRedundantControlFlowJump
-		return;
-	}
+    m_enabled = false;
+    m_routingTableOperations.Release();
+    m_routingTablesThread.join();
 }
 
 RoutingTables::RoutingTablePtr RoutingTables::CloneActiveRoutes()

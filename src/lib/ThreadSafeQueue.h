@@ -52,7 +52,7 @@ namespace sttp
         }
 
         // Releases all threads waiting for data.
-        ~ThreadSafeQueue() noexcept;
+        ~ThreadSafeQueue();
 
         // Inserts an item into the queue.
         void Enqueue(const T& item);
@@ -60,11 +60,7 @@ namespace sttp
         // Removes an item from the
         // queue and returns that item.
         T Dequeue();
-        
-        // Gets first item from the
-        // queue without removing it.
-        T Peek();
-    	
+
         // Empties the queue.
         void Clear();
 
@@ -92,17 +88,9 @@ namespace sttp
 
     // Releases all threads waiting for data.
     template<class T>
-    ThreadSafeQueue<T>::~ThreadSafeQueue() noexcept
+    ThreadSafeQueue<T>::~ThreadSafeQueue()
     {
-	    try
-	    {
-			Release();
-	    }
-	    catch (...)
-	    {
-		    // ReSharper disable once CppRedundantControlFlowJump
-		    return;
-	    }
+        Release();
     }
 
     // Inserts an item into the queue.
@@ -123,15 +111,6 @@ namespace sttp
         T item = m_queue.front();
         m_queue.pop();
         return item;
-    }
-
-    // Gets first item from the
-    // queue without removing it.
-    template<class T>
-    T ThreadSafeQueue<T>::Peek()
-    {
-        ScopeLock lock(m_mutex);
-        return m_queue.front();
     }
 
     // Empties the queue.
