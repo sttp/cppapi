@@ -292,6 +292,9 @@ namespace sttp
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;
     typedef boost::iostreams::gzip_compressor GZipCompressor;
 
+	typedef SharedPtr<Thread> ThreadPtr;
+    #define ThreadSleep(ms) boost::this_thread::sleep(boost::posix_time::milliseconds(ms))
+
     #if BOOST_LEGACY
     #define bind_executor(ex, ...) ex.wrap(__VA_ARGS__)
     #define post(ex, ...) ex.post(__VA_ARGS__)
@@ -320,7 +323,7 @@ namespace sttp
     };
 
     template<class T>
-    using StringMap = std::unordered_map<std::string, T, sttp::StringHash, sttp::StringEqual>;
+    using StringMap = std::unordered_map<std::string, T, StringHash, StringEqual>;
 
     // std::map string comparer
     struct StringComparer : std::binary_function<std::string, std::string, bool>
@@ -329,7 +332,7 @@ namespace sttp
     };
 
     template<class T>
-    using SortedStringMap = std::map<std::string, T, sttp::StringComparer>;
+    using SortedStringMap = std::map<std::string, T, StringComparer>;
 
     template<class TKey, class TValue>
     bool TryGetValue(const std::map<TKey, TValue>& dictionary, const TKey& key, TValue& value, const TValue& defaultValue)
@@ -460,7 +463,7 @@ namespace sttp
     std::string TrimLeft(const std::string& value, const std::string& trimValues);
     std::string PadLeft(const std::string& value, uint32_t count, char padChar);
     std::string PadRight(const std::string& value, uint32_t count, char padChar);
-
+	
     #ifndef __STDC_WANT_SECURE_LIB__
     #define strcpy_s(dest, size, src) strncpy(dest, src, size)
     #endif
