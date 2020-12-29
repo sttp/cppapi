@@ -30,14 +30,14 @@ namespace sttp {
 namespace filterexpressions
 {
     // Simple exception type thrown by the expression tree
-    class ExpressionTreeException : public Exception
+    class ExpressionTreeException final : public Exception, public std::exception
     {
     private:
         std::string m_message;
 
     public:
         ExpressionTreeException(std::string message) noexcept;
-        const char* what() const noexcept;
+        const char* what() const noexcept override;
     };
 
     enum class ExpressionType
