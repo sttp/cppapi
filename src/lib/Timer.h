@@ -72,7 +72,7 @@ namespace sttp
                     return;
                 }
 
-                if (m_running)
+                if (m_running && m_callback != nullptr)
                     m_callback(this, m_userData);
             }
             while (m_autoReset && m_running);

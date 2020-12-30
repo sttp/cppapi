@@ -109,7 +109,8 @@ void ThreadPool::Queue(const uint32_t delay, void* state, const std::function<vo
 	        return;
 
 		// Execute action after specified delay (zero for immediate execution)
-        action(state);
+		if (action != nullptr)
+			action(state);
 
         ScopeLock lock(m_waitTimersLock);
 		

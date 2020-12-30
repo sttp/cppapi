@@ -432,7 +432,9 @@ void DataSubscriber::RunCallbackThread()
             break;
 
         const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
-        dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+
+    	if (dispatcher.Function != nullptr)
+			dispatcher.Function(dispatcher.Source, *dispatcher.Data);
     }
 }
 
@@ -1091,7 +1093,7 @@ void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, cons
     const ConfigurationChangedCallback configurationChangedCallback = source->m_configurationChangedCallback;
 
     if (configurationChangedCallback != nullptr)
-        source->m_configurationChangedCallback(source);
+        configurationChangedCallback(source);
 }
 
 // Dispatcher for connection terminated. This is called from its own separate thread

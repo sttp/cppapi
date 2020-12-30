@@ -313,6 +313,9 @@ bool SubscriberInstance::IsSubscribed() const
 
 void SubscriberInstance::IterateDeviceMetadata(const DeviceMetadataIteratorHandlerFunction& iteratorHandler, void* userData)
 {
+	if (iteratorHandler == nullptr)
+        return;
+	
     m_configurationUpdateLock.lock();
 
     for (auto const& item : m_devices)
@@ -323,6 +326,9 @@ void SubscriberInstance::IterateDeviceMetadata(const DeviceMetadataIteratorHandl
 
 void SubscriberInstance::IterateMeasurementMetadata(const MeasurementMetadataIteratorHandlerFunction& iteratorHandler, void* userData)
 {
+	if (iteratorHandler == nullptr)
+        return;
+	
     m_configurationUpdateLock.lock();
 
     for (auto const& item : m_measurements)
@@ -333,6 +339,9 @@ void SubscriberInstance::IterateMeasurementMetadata(const MeasurementMetadataIte
 
 void SubscriberInstance::IterateConfigurationFrames(const ConfigurationFrameIteratorHandlerFunction& iteratorHandler, void* userData)
 {
+	if (iteratorHandler == nullptr)
+        return;
+	
     m_configurationUpdateLock.lock();
 
     for (auto const& item : m_configurationFrames)

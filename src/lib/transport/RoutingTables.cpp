@@ -41,7 +41,9 @@ RoutingTables::RoutingTables() :
                 break;
 
             const auto [handler, routes] = m_routingTableOperations.Dequeue();
-            handler(*this, routes);
+
+        	if (handler != nullptr)
+				handler(*this, routes);
         }
     });
 }

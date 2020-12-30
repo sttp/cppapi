@@ -891,7 +891,9 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
                 break;
 
             const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
-            dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+
+        	if (dispatcher.Function != nullptr)
+				dispatcher.Function(dispatcher.Source, *dispatcher.Data);
         }
     });
 
@@ -1217,6 +1219,9 @@ void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& userC
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
 {
+	if (iteratorHandler == nullptr)
+        return;
+	
     ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)

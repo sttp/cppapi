@@ -145,7 +145,7 @@ building as a shared library or changing the installation directory.
 To make a debug build, use the following:
 
 ```
-    cmake -DCMAKE_BUILD_TYPE=Debug
+    cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wno-unknown-pragmas"
 ```
 
 ### Build
@@ -163,6 +163,7 @@ type the following command:
 ```
     make -j6 samples
 ```
+> Hint: You can start with samples and this will auto-build STTP library depdendency.
 
 Individual sample applications can be built as follows:
 
