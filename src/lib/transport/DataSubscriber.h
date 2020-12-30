@@ -19,7 +19,7 @@
 //  03/26/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //  03/22/2018 - J. Ritchie Carroll
-//         Updated DataSubscriber callback function signatures to always include instance reference.
+//       Updated DataSubscriber callback function signatures to always include instance reference.
 //
 //******************************************************************************************************
 

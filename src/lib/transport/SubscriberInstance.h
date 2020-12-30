@@ -151,11 +151,11 @@ namespace transport
         //
         // - Signal ID list -
         // subscriber.SetFilterExpression("7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255;"
-        //                        "93673c68-d59d-4926-b7e9-e7678f9f66b4;"
-        //                        "65ac9cf6-ae33-4ece-91b6-bb79343855d5;"
-        //                        "3647f729-d0ed-4f79-85ad-dae2149cd432;"
-        //                        "069c5e29-f78a-46f6-9dff-c92cb4f69371;"
-        //                        "25355a7b-2a9d-4ef2-99ba-4dd791461379");
+        //                                "93673c68-d59d-4926-b7e9-e7678f9f66b4;"
+        //                                "65ac9cf6-ae33-4ece-91b6-bb79343855d5;"
+        //                                "3647f729-d0ed-4f79-85ad-dae2149cd432;"
+        //                                "069c5e29-f78a-46f6-9dff-c92cb4f69371;"
+        //                                "25355a7b-2a9d-4ef2-99ba-4dd791461379");
         //
         // - Measurement key list pattern -
         // subscriber.SetFilterExpression("PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14");
