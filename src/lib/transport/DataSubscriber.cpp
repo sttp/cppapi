@@ -1255,11 +1255,10 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     if (m_connected)
         throw SubscriberException("Subscriber is already connected; disconnect first");
 
-    // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+    // Let any pending connect or disconnect operation complete before new connect - prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
     const DnsResolver::query dnsQuery(hostname, to_string(port));
-    const DnsResolver::iterator endpointIterator = resolver.resolve(dnsQuery);
     ErrorCode error;
 
     m_disconnected = false;
@@ -1272,7 +1271,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
 
     m_connector.SetConnectionRefused(false);
 
-    const DnsResolver::iterator hostEndpoint = connect(m_commandChannelSocket, endpointIterator, error);
+    const TcpEndPoint hostEndpoint = connect(m_commandChannelSocket, resolver.resolve(dnsQuery), error);
 
     if (error)
         throw SystemError(error);
@@ -1280,7 +1279,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     if (!m_commandChannelSocket.is_open())
         throw SubscriberException("Failed to connect to host");
 
-    m_hostAddress = hostEndpoint->endpoint().address();
+    m_hostAddress = hostEndpoint.address();
 
 #if BOOST_LEGACY
     m_commandChannelService.reset();
