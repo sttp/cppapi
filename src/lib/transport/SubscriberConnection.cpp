@@ -440,7 +440,7 @@ void SubscriberConnection::Start(const bool connectionAccepted)
     m_stopped = false;
 
     if (m_connectionAccepted)
-	    m_pingTimer.Start();
+        m_pingTimer.Start();
 
     ReadCommandChannel();
 }
@@ -1735,7 +1735,7 @@ string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t of
         case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
-    		[[fallthrough]];
+            [[fallthrough]];
         case OperationalEncoding::UTF16LE:
         {
             wstring value(length / enc_sizeof_wchar, L'\0');
@@ -1776,7 +1776,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
         case OperationalEncoding::UTF16BE:
             // UTF16 in C++ is encoded as big-endian
             swapBytes = !swapBytes;
-    		[[fallthrough]];
+            [[fallthrough]];
         case OperationalEncoding::UTF16LE:
         {
             const wstring utf16 = ToUTF16(value);            

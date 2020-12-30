@@ -64,7 +64,7 @@ namespace sttp
         // Gets first item from the
         // queue without removing it.
         T Peek();
-    	
+        
         // Empties the queue.
         void Clear();
 
@@ -94,15 +94,15 @@ namespace sttp
     template<class T>
     ThreadSafeQueue<T>::~ThreadSafeQueue() noexcept
     {
-	    try
-	    {
-			Release();
-	    }
-	    catch (...)
-	    {
-		    // ReSharper disable once CppRedundantControlFlowJump
-		    return;
-	    }
+        try
+        {
+            Release();
+        }
+        catch (...)
+        {
+            // ReSharper disable once CppRedundantControlFlowJump
+            return;
+        }
     }
 
     // Inserts an item into the queue.

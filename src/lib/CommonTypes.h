@@ -292,7 +292,7 @@ namespace sttp
     typedef boost::iostreams::gzip_decompressor GZipDecompressor;
     typedef boost::iostreams::gzip_compressor GZipCompressor;
 
-	typedef SharedPtr<Thread> ThreadPtr;
+    typedef SharedPtr<Thread> ThreadPtr;
     #define ThreadSleep(ms) boost::this_thread::sleep(boost::posix_time::milliseconds(ms))
 
     #if BOOST_LEGACY
@@ -463,7 +463,7 @@ namespace sttp
     std::string TrimLeft(const std::string& value, const std::string& trimValues);
     std::string PadLeft(const std::string& value, uint32_t count, char padChar);
     std::string PadRight(const std::string& value, uint32_t count, char padChar);
-	
+    
     #ifndef __STDC_WANT_SECURE_LIB__
     #define strcpy_s(dest, size, src) strncpy(dest, src, size)
     #endif

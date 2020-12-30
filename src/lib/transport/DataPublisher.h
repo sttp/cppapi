@@ -82,7 +82,7 @@ namespace transport
         std::atomic_bool m_stopped;
         Mutex m_connectActionMutex;
         Thread m_shutdownThread;
-    	ThreadPool m_threadPool;
+        ThreadPool m_threadPool;
         void* m_userData;
 
         // Dispatch reference - unordered map needed to manage reference

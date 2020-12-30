@@ -305,7 +305,7 @@ void sttp::transport::ParseMeasurementKey(const std::string& key, std::string& s
 
 // Gets the "SignalKind" enum for the specified "acronym".
 //  params:
-//	   acronym: Acronym of the desired "SignalKind"
+//       acronym: Acronym of the desired "SignalKind"
 //  returns: The "SignalKind" for the specified "acronym".
 SignalKind sttp::transport::ParseSignalKind(const string& acronym)
 {

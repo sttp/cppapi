@@ -129,8 +129,8 @@ FilterExpressionParser::CallbackErrorListener::CallbackErrorListener(FilterExpre
 
 void FilterExpressionParser::CallbackErrorListener::syntaxError(Recognizer* recognizer, Token* offendingSymbol, size_t line, size_t charPositionInLine, const string &msg, std::exception_ptr e)
 {
-	if (m_parsingExceptionCallback != nullptr)
-		m_parsingExceptionCallback(m_filterExpressionParser, msg);
+    if (m_parsingExceptionCallback != nullptr)
+        m_parsingExceptionCallback(m_filterExpressionParser, msg);
 }
 
 void FilterExpressionParser::VisitParseTreeNodes()

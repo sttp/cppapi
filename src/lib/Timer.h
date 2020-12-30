@@ -51,19 +51,19 @@ namespace sttp
             {
                 try
                 {
-	                const int32_t interval = m_interval;
-                	
-                	if (interval > 0)
-                	{
-                		static const int32_t MaxSleepDuration = 500;
-	                    const int32_t waits = interval / MaxSleepDuration;
-	                    const int32_t remainder = interval % MaxSleepDuration;
+                    const int32_t interval = m_interval;
+                    
+                    if (interval > 0)
+                    {
+                        static const int32_t MaxSleepDuration = 500;
+                        const int32_t waits = interval / MaxSleepDuration;
+                        const int32_t remainder = interval % MaxSleepDuration;
 
-	                    for (int32_t i = 0; i < waits && m_running; i++)
-							ThreadSleep(MaxSleepDuration);
+                        for (int32_t i = 0; i < waits && m_running; i++)
+                            ThreadSleep(MaxSleepDuration);
 
-                		if (remainder > 0 && m_running)
-							ThreadSleep(remainder);
+                        if (remainder > 0 && m_running)
+                            ThreadSleep(remainder);
                     }
                 }
                 catch (boost::thread_interrupted&)
@@ -97,15 +97,15 @@ namespace sttp
 
         ~Timer() noexcept
         {
-	        try
-	        {
-				Stop();
-	        }
-	        catch (...)
-	        {
-		        // ReSharper disable once CppRedundantControlFlowJump
-		        return;
-	        }
+            try
+            {
+                Stop();
+            }
+            catch (...)
+            {
+                // ReSharper disable once CppRedundantControlFlowJump
+                return;
+            }
         }
 
         bool IsRunning() const
@@ -121,15 +121,15 @@ namespace sttp
         void SetInterval(const int32_t value)
         {
             if (value == m_interval)
-	            return;
-        	
+                return;
+            
             const bool restart = m_running;
             Stop();
 
-        	m_interval = value;
+            m_interval = value;
 
             if (restart)
-	            Start();
+                Start();
         }
 
         TimerElapsedCallback GetCallback() const
@@ -182,14 +182,14 @@ namespace sttp
 
             if (m_timerThread != nullptr)
             {
-            	ThreadPtr timerThread = m_timerThread;
+                ThreadPtr timerThread = m_timerThread;
 
-            	if (timerThread != nullptr)
-            	{
-	                timerThread->interrupt();
+                if (timerThread != nullptr)
+                {
+                    timerThread->interrupt();
 
-	                if (boost::this_thread::get_id() != timerThread->get_id())
-	                    timerThread->join();
+                    if (boost::this_thread::get_id() != timerThread->get_id())
+                        timerThread->join();
                 }
             }
 
@@ -198,21 +198,21 @@ namespace sttp
 
         void Wait() const
         {
-	        try
-	        {
-	            if (m_running && m_timerThread != nullptr)
-	            {
-	            	ThreadPtr timerThread = m_timerThread;
+            try
+            {
+                if (m_running && m_timerThread != nullptr)
+                {
+                    ThreadPtr timerThread = m_timerThread;
 
-	            	if (timerThread != nullptr)
-						timerThread->join();
-                }	        	
-	        }
-	        catch (...)
-	        {
-		        // ReSharper disable once CppRedundantControlFlowJump
-		        return;
-	        }
+                    if (timerThread != nullptr)
+                        timerThread->join();
+                }                
+            }
+            catch (...)
+            {
+                // ReSharper disable once CppRedundantControlFlowJump
+                return;
+            }
         }
 
         static void EmptyCallback(Timer*, void*)

@@ -125,18 +125,18 @@ namespace transport
 
     enum class SignalKind : int16_t
     {
-        Angle,			// Phase angle
-        Magnitude,		// Phase magnitude
-        Frequency,		// Line frequency
-        DfDt,			// Frequency delta over time (dF/dt)
-        Status,			// Status flags
-        Digital,		// Digital value
-        Analog,			// Analog value
-        Calculation,	// Calculated value
-        Statistic,		// Statistical value
-        Alarm,			// Alarm value
-        Quality,		// Quality flags
-        Unknown			// Undetermined signal type
+        Angle,            // Phase angle
+        Magnitude,        // Phase magnitude
+        Frequency,        // Line frequency
+        DfDt,            // Frequency delta over time (dF/dt)
+        Status,            // Status flags
+        Digital,        // Digital value
+        Analog,            // Analog value
+        Calculation,    // Calculated value
+        Statistic,        // Statistical value
+        Alarm,            // Alarm value
+        Quality,        // Quality flags
+        Unknown            // Undetermined signal type
     };
 
     extern const char* SignalKindDescription[];
@@ -180,14 +180,14 @@ namespace transport
 
     struct MeasurementMetadata
     {
-        std::string DeviceAcronym;	    // Associated (parent) device for measurement (key to DeviceMetadata.Acronym)
-        std::string ID;				    // Measurement key string, format: "Source:ID" (if useful)
+        std::string DeviceAcronym;        // Associated (parent) device for measurement (key to DeviceMetadata.Acronym)
+        std::string ID;                    // Measurement key string, format: "Source:ID" (if useful)
         Guid SignalID { Empty::Guid };  // Unique UUID of this individual measurement (lookup key!)
-        std::string PointTag;		    // Well formatted tag name for historians, e.g., OSI-PI, etc.
-        SignalReference Reference;	    // Parsed signal reference structure
+        std::string PointTag;            // Well formatted tag name for historians, e.g., OSI-PI, etc.
+        SignalReference Reference;        // Parsed signal reference structure
         uint16_t PhasorSourceIndex {};  // Measurement phasor index, if measurement represents a "Phasor"
         std::string Description;        // Detailed measurement description (free-form)
-        datetime_t UpdatedOn;		    // Time of last meta-data update
+        datetime_t UpdatedOn;            // Time of last meta-data update
     };
 
     typedef SharedPtr<MeasurementMetadata> MeasurementMetadataPtr;
@@ -195,19 +195,19 @@ namespace transport
     struct PhasorMetadata
     {
         std::string DeviceAcronym;      // Associated (parent) device for phasor (key to DeviceMetadata.Acronym)
-        std::string Label;			    // Channel name for "phasor" (covers two measurements)
-        std::string Type;			    // Phasor type, i.e., "V" for voltage or "I" for current
-        std::string Phase;			    // Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
-        uint16_t SourceIndex {};	    // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
-        datetime_t UpdatedOn;		    // Time of last meta-data update
+        std::string Label;                // Channel name for "phasor" (covers two measurements)
+        std::string Type;                // Phasor type, i.e., "V" for voltage or "I" for current
+        std::string Phase;                // Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
+        uint16_t SourceIndex {};        // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
+        datetime_t UpdatedOn;            // Time of last meta-data update
     };
 
     typedef SharedPtr<PhasorMetadata> PhasorMetadataPtr;
 
     struct PhasorReference
     {
-        PhasorMetadataPtr Phasor;			// Phasor metadata, includes phasor type, i.e., voltage or current
-        MeasurementMetadataPtr Angle;		// Angle measurement metadata for phasor
+        PhasorMetadataPtr Phasor;            // Phasor metadata, includes phasor type, i.e., voltage or current
+        MeasurementMetadataPtr Angle;        // Angle measurement metadata for phasor
         MeasurementMetadataPtr Magnitude;   // Magnitude measurement metadata for phasor
     };
 
@@ -215,19 +215,19 @@ namespace transport
 
     struct DeviceMetadata
     {
-        std::string Acronym;			// Alpha-numeric device acronym, e.g., PMU/station name (all-caps - no spaces)
-        std::string Name;				// User-defined device name / description (free-form)
+        std::string Acronym;            // Alpha-numeric device acronym, e.g., PMU/station name (all-caps - no spaces)
+        std::string Name;                // User-defined device name / description (free-form)
         Guid UniqueID { Empty::Guid };  // Device unique UUID (used for C37.118 v3 config frame)
-        uint16_t AccessID {};			// ID code used for device connection / reference
-        std::string ParentAcronym;		// Original PDC name (if useful / not assigned for directly connected devices)
-        std::string ProtocolName;		// Original protocol name (if useful)
-        uint16_t FramesPerSecond {};	// Device reporting rate, e.g., 30 fps
-        std::string CompanyAcronym;		// Original device company name (if useful)
-        std::string VendorAcronym;		// Original device vendor name (if useful / provided)
+        uint16_t AccessID {};            // ID code used for device connection / reference
+        std::string ParentAcronym;        // Original PDC name (if useful / not assigned for directly connected devices)
+        std::string ProtocolName;        // Original protocol name (if useful)
+        uint16_t FramesPerSecond {};    // Device reporting rate, e.g., 30 fps
+        std::string CompanyAcronym;        // Original device company name (if useful)
+        std::string VendorAcronym;        // Original device vendor name (if useful / provided)
         std::string VendorDeviceName;   // Original vendor device name, e.g., PMU brand (if useful / provided)
-        float64_t Longitude {};	        // Device longitude (if reported)
-        float64_t Latitude {};		    // Device latitude (if reported)
-        datetime_t UpdatedOn;			// Time of last meta-data update
+        float64_t Longitude {};            // Device longitude (if reported)
+        float64_t Latitude {};            // Device latitude (if reported)
+        datetime_t UpdatedOn;            // Time of last meta-data update
 
         // Associated measurement and phasor meta-data
         std::vector<MeasurementMetadataPtr> Measurements;   // DataPublisher does not need to assign
@@ -294,21 +294,21 @@ namespace transport
 
     //struct Phasor
     //{
-    //	Measurement Angle;
-    //	Measurement Magnitude;
+    //    Measurement Angle;
+    //    Measurement Magnitude;
     //};
     
     // Holds the actual values, in order, for a device frame at a specific timestamp
     //struct DataFrame
     //{
-    //	string DeviceAcronym;
-    //	DateTime SOC;
-    //	int milliseconds;
-    //	Measurement StatusFlags;
+    //    string DeviceAcronym;
+    //    DateTime SOC;
+    //    int milliseconds;
+    //    Measurement StatusFlags;
     //  Measurement QualityFlags;
-    //	Measurement Frequency;
-    //	vector<Phasor> Phasors;
-    //	vector<Measurement> Analogs;
-    //	vector<Measurement> Digitals;
+    //    Measurement Frequency;
+    //    vector<Phasor> Phasors;
+    //    vector<Measurement> Analogs;
+    //    vector<Measurement> Digitals;
     //};
 }}

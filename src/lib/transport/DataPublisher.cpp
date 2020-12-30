@@ -79,16 +79,16 @@ DataPublisher::DataPublisher(const string& networkInterfaceIP, uint16_t port) :
 
 DataPublisher::~DataPublisher() noexcept
 {
-	try
-	{
-		m_threadPool.ShutDown();
-		ShutDown(true);
-	}
-	catch (...)
-	{
-	    // ReSharper disable once CppRedundantControlFlowJump
-	    return;
-	}
+    try
+    {
+        m_threadPool.ShutDown();
+        ShutDown(true);
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
 }
 
 DataPublisher::CallbackDispatcher::CallbackDispatcher() :
@@ -117,37 +117,37 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
     {
         WriterLock writeLock(m_subscriberConnectionsLock);
 
-    	// TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
         const bool connectionAccepted = m_maximumAllowedConnections == -1 || static_cast<int32_t>(m_subscriberConnections.size()) < m_maximumAllowedConnections;
-		m_subscriberConnections.insert(connection);
+        m_subscriberConnections.insert(connection);
 
-    	// Initiate connection, if connection is not accepted, at least resolve connection info
-    	connection->Start(connectionAccepted);
-    	
-    	if (connectionAccepted)
-    	{
-	        DispatchClientConnected(AddDispatchReference(connection));
-        }
-    	else
+        // Initiate connection, if connection is not accepted, at least resolve connection info
+        connection->Start(connectionAccepted);
+        
+        if (connectionAccepted)
         {
-			stringstream errorMessageStream;
+            DispatchClientConnected(AddDispatchReference(connection));
+        }
+        else
+        {
+            stringstream errorMessageStream;
 
-    		errorMessageStream << "Subscriber connection from \"";
+            errorMessageStream << "Subscriber connection from \"";
             errorMessageStream << connection->GetConnectionID();
-    		errorMessageStream << "\" refused: connection would exceed " ;
-    		errorMessageStream << m_maximumAllowedConnections;
-    		errorMessageStream << " maximum allowed connections.";
-    		
-	        DispatchErrorMessage(errorMessageStream.str());
+            errorMessageStream << "\" refused: connection would exceed " ;
+            errorMessageStream << m_maximumAllowedConnections;
+            errorMessageStream << " maximum allowed connections.";
+            
+            DispatchErrorMessage(errorMessageStream.str());
 
-			connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
+            connection->SendResponse(ServerResponse::Failed, ServerCommand::Connect, "Connection refused: too many active connections.");
 
-    		// Allow a moment for response to be received before stopping connection
+            // Allow a moment for response to be received before stopping connection
             m_threadPool.Queue(1000, AddDispatchReference(connection), [&,this](void* state)
             {
-            	SubscriberConnection* connectionPtr = static_cast<SubscriberConnection*>(state);
-            	SubscriberConnectionPtr connectionRef = ReleaseDispatchReference(connectionPtr);
-	            connectionRef->Stop();
+                SubscriberConnection* connectionPtr = static_cast<SubscriberConnection*>(state);
+                SubscriberConnectionPtr connectionRef = ReleaseDispatchReference(connectionPtr);
+                connectionRef->Stop();
             });
         }
     }
@@ -892,8 +892,8 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
 
             const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
 
-        	if (dispatcher.Function != nullptr)
-				dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+            if (dispatcher.Function != nullptr)
+                dispatcher.Function(dispatcher.Source, *dispatcher.Data);
         }
     });
 
@@ -1219,9 +1219,9 @@ void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& userC
 
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
 {
-	if (iteratorHandler == nullptr)
+    if (iteratorHandler == nullptr)
         return;
-	
+    
     ReaderLock readLock(m_subscriberConnectionsLock);
 
     for (const auto& connection : m_subscriberConnections)

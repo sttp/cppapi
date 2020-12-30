@@ -19,7 +19,7 @@
 //  03/26/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //  03/22/2018 - J. Ritchie Carroll
-//		 Updated DataSubscriber callback function signatures to always include instance reference.
+//         Updated DataSubscriber callback function signatures to always include instance reference.
 //
 //******************************************************************************************************
 
@@ -74,15 +74,15 @@ SubscriberConnector::SubscriberConnector() :
 
 SubscriberConnector::~SubscriberConnector() noexcept
 {
-	try
-	{
-		Cancel();
-	}
-	catch (...)
-	{
-		// ReSharper disable once CppRedundantControlFlowJump
-		return;
-	}
+    try
+    {
+        Cancel();
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
 }
 
 // Auto-reconnect handler.
@@ -93,62 +93,62 @@ void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
     if (connector.m_cancel || subscriber->m_disposing)
         return;
 
-	// Make sure to wait on any running reconnect to complete...
-	connector.m_autoReconnectThread.join();
-	
+    // Make sure to wait on any running reconnect to complete...
+    connector.m_autoReconnectThread.join();
+    
     connector.m_autoReconnectThread = Thread([&connector,subscriber]
     {
-	    // Reset connection attempt counter if last attempt was not refused
-	    if (!connector.m_connectionRefused)
-	        connector.ResetConnection();
-		
-	    if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
-	    {
-		    if (connector.m_errorMessageCallback != nullptr)
-    			connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
-    		return;
-	    }
+        // Reset connection attempt counter if last attempt was not refused
+        if (!connector.m_connectionRefused)
+            connector.ResetConnection();
+        
+        if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
+        {
+            if (connector.m_errorMessageCallback != nullptr)
+                connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
+            return;
+        }
 
-	    // Apply exponential back-off algorithm for retry attempt delays
-	    const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
-	    int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
+        // Apply exponential back-off algorithm for retry attempt delays
+        const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
+        int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
 
-	    if (retryInterval > connector.m_maxRetryInterval)
-	        retryInterval = connector.m_maxRetryInterval;
+        if (retryInterval > connector.m_maxRetryInterval)
+            retryInterval = connector.m_maxRetryInterval;
 
-	    // Notify the user that we are attempting to reconnect.
-	    if (connector.m_errorMessageCallback != nullptr)
-	    {
-	        stringstream errorMessageStream;
+        // Notify the user that we are attempting to reconnect.
+        if (connector.m_errorMessageCallback != nullptr)
+        {
+            stringstream errorMessageStream;
 
-    		errorMessageStream << "Connection";
+            errorMessageStream << "Connection";
 
-	        if (connector.m_connectAttempt > 0)
-	            errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
+            if (connector.m_connectAttempt > 0)
+                errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
 
-	        errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
-	       
-	        if (retryInterval > 0)
-	            errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
-	        else
-	            errorMessageStream << "Attempting to reconnect...";
+            errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
+           
+            if (retryInterval > 0)
+                errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
+            else
+                errorMessageStream << "Attempting to reconnect...";
 
-    		connector.m_errorMessageCallback(subscriber, errorMessageStream.str());
-	    }
+            connector.m_errorMessageCallback(subscriber, errorMessageStream.str());
+        }
 
-	    connector.m_timer = Timer::WaitTimer(retryInterval);
-	    connector.m_timer->Wait();
+        connector.m_timer = Timer::WaitTimer(retryInterval);
+        connector.m_timer->Wait();
 
-	    if (connector.m_cancel || subscriber->m_disposing)
-	        return;
+        if (connector.m_cancel || subscriber->m_disposing)
+            return;
 
-	    if (connector.Connect(*subscriber, true) == ConnectCanceled)
-	        return;
+        if (connector.Connect(*subscriber, true) == ConnectCanceled)
+            return;
 
-	    // Notify the user that reconnect attempt was completed.
-	    if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
-	        connector.m_reconnectCallback(subscriber);
-    });	
+        // Notify the user that reconnect attempt was completed.
+        if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
+            connector.m_reconnectCallback(subscriber);
+    });    
 }
 
 // Registers a callback to provide error messages each time
@@ -185,12 +185,12 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
     {
         if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
         {
-        	if (m_errorMessageCallback != nullptr)
+            if (m_errorMessageCallback != nullptr)
                 m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
-        	break;
+            break;
         }
 
-		string errorMessage;
+        string errorMessage;
         bool connected = false;
 
         try
@@ -231,19 +231,19 @@ int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecti
             if (m_errorMessageCallback != nullptr)
             {
                 stringstream errorMessageStream;
-				errorMessageStream << "Connection";
+                errorMessageStream << "Connection";
 
-            	if (m_connectAttempt > 0)
-            		errorMessageStream << " attempt " << m_connectAttempt + 1;
+                if (m_connectAttempt > 0)
+                    errorMessageStream << " attempt " << m_connectAttempt + 1;
 
-            	errorMessageStream << " to \"" << m_hostname << ":" << m_port << "\" failed: " << errorMessage << ". ";
+                errorMessageStream << " to \"" << m_hostname << ":" << m_port << "\" failed: " << errorMessage << ". ";
        
                 if (retryInterval > 0)
                     errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
                 else
                     errorMessageStream << "Attempting to reconnect...";
 
-            	m_errorMessageCallback(&subscriber, errorMessageStream.str());
+                m_errorMessageCallback(&subscriber, errorMessageStream.str());
             }
 
             if (retryInterval > 0)
@@ -269,7 +269,7 @@ void SubscriberConnector::Cancel()
     if (m_timer != nullptr)
         m_timer->Stop();
 
-	m_autoReconnectThread.join();
+    m_autoReconnectThread.join();
 }
 
 // Sets the hostname of the publisher to connect to.
@@ -378,7 +378,7 @@ DataSubscriber::DataSubscriber() :
     m_subscribed(false),
     m_disconnecting(false),
     m_disconnected(false),
-	m_disposing(false),
+    m_disposing(false),
     m_userData(nullptr),
     m_totalCommandChannelBytesReceived(0UL),
     m_totalDataChannelBytesReceived(0UL),
@@ -401,17 +401,17 @@ DataSubscriber::DataSubscriber() :
 // Destructor calls disconnect to clean up after itself.
 DataSubscriber::~DataSubscriber() noexcept
 {
-	try
-	{
-	    m_disposing = true;
-		m_connector.Cancel();
-	    Disconnect(true, false);
-	}
-	catch (...)
-	{
-	    // ReSharper disable once CppRedundantControlFlowJump
-	    return;
-	}
+    try
+    {
+        m_disposing = true;
+        m_connector.Cancel();
+        Disconnect(true, false);
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
 }
 
 DataSubscriber::CallbackDispatcher::CallbackDispatcher() :
@@ -433,8 +433,8 @@ void DataSubscriber::RunCallbackThread()
 
         const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
 
-    	if (dispatcher.Function != nullptr)
-			dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+        if (dispatcher.Function != nullptr)
+            dispatcher.Function(dispatcher.Source, *dispatcher.Data);
     }
 }
 
@@ -1262,7 +1262,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     const DnsResolver::iterator endpointIterator = resolver.resolve(dnsQuery);
     ErrorCode error;
 
-	m_disconnected = false;
+    m_disconnected = false;
     m_totalCommandChannelBytesReceived = 0UL;
     m_totalDataChannelBytesReceived = 0UL;
     m_totalMeasurementsReceived = 0UL;    
@@ -1299,30 +1299,30 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
 // public:
 void DataSubscriber::Disconnect()
 {
-	if (IsDisconnecting())
+    if (IsDisconnecting())
         return;
 
     // Disconnect method executes shutdown on a separate thread without stopping to prevent
     // issues where user may call disconnect method from a dispatched event thread. Also,
-	// user requests to disconnect are not an auto-reconnect attempt
+    // user requests to disconnect are not an auto-reconnect attempt
     Disconnect(false, false);
 }
 
 // private:
 void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecting)
 {
-	// Check if disconnect thread is running or subscriber has already disconnected
+    // Check if disconnect thread is running or subscriber has already disconnected
     if (IsDisconnecting())
     {
         if (!autoReconnecting && m_disconnecting && !m_disconnected)
-			m_connector.Cancel();
-    	
+            m_connector.Cancel();
+        
         if (joinThread && !m_disconnected)
             m_disconnectThread.join();
 
         return;
     }
-	
+    
     // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
     m_disconnecting = true;
     m_connected = false;
@@ -1332,37 +1332,37 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     {
         try
         {
-		    // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
-		    if (!autoReconnecting)
-		    {
-		        m_connector.Cancel();
-		        m_connectionTerminationThread.join();
-		        m_connectActionMutex.lock();
-		    }
+            // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+            if (!autoReconnecting)
+            {
+                m_connector.Cancel();
+                m_connectionTerminationThread.join();
+                m_connectActionMutex.lock();
+            }
 
-		    ErrorCode error;
+            ErrorCode error;
 
-		    // Release queues and close sockets so that threads can shut down gracefully
-		    m_callbackQueue.Release();
-		    m_commandChannelSocket.close(error);
-		    m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
-		    m_dataChannelSocket.close(error);
+            // Release queues and close sockets so that threads can shut down gracefully
+            m_callbackQueue.Release();
+            m_commandChannelSocket.close(error);
+            m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
+            m_dataChannelSocket.close(error);
 
-		    // Join with all threads to guarantee their completion before returning control to the caller
-		    m_callbackThread.join();
-		    m_commandChannelResponseThread.join();
-		    m_dataChannelResponseThread.join();
+            // Join with all threads to guarantee their completion before returning control to the caller
+            m_callbackThread.join();
+            m_commandChannelResponseThread.join();
+            m_dataChannelResponseThread.join();
 
-		    // Empty queues and reset them so they can be used again later if the user decides to reconnect
-		    m_callbackQueue.Clear();
-		    m_callbackQueue.Reset();
+            // Empty queues and reset them so they can be used again later if the user decides to reconnect
+            m_callbackQueue.Clear();
+            m_callbackQueue.Reset();
 
-		    // Notify consumers of disconnect
-		    if (m_connectionTerminatedCallback != nullptr)
-		        m_connectionTerminatedCallback(this);
+            // Notify consumers of disconnect
+            if (m_connectionTerminatedCallback != nullptr)
+                m_connectionTerminatedCallback(this);
 
-		    if (!autoReconnecting)
-			    m_commandChannelService.stop();
+            if (!autoReconnecting)
+                m_commandChannelService.stop();
         }
         catch (SystemError& ex)
         {
@@ -1377,18 +1377,18 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         m_disconnected = true;
         m_disconnecting = false;
 
-		if (autoReconnecting)
-		{
-			// Handling auto-connect callback separately from connection terminated callback
-			// since they serve two different use cases and current implementation does not
-			// support multiple callback registrations
-			if (m_autoReconnectCallback != nullptr && !m_disposing)
-				m_autoReconnectCallback(this);
-		}
-		else
-		{
-			m_connectActionMutex.unlock();
-		}
+        if (autoReconnecting)
+        {
+            // Handling auto-connect callback separately from connection terminated callback
+            // since they serve two different use cases and current implementation does not
+            // support multiple callback registrations
+            if (m_autoReconnectCallback != nullptr && !m_disposing)
+                m_autoReconnectCallback(this);
+        }
+        else
+        {
+            m_connectActionMutex.unlock();
+        }
     });
 
     if (joinThread)

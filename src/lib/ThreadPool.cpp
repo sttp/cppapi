@@ -27,9 +27,9 @@ using namespace std;
 using namespace sttp;
 
 ThreadPool::ThreadPool() :
-	m_disposing(false)
+    m_disposing(false)
 {
-	m_removeCompletedTimersThread = Thread([this]()
+    m_removeCompletedTimersThread = Thread([this]()
     {
         while (!m_disposing)
         {
@@ -38,113 +38,113 @@ ThreadPool::ThreadPool() :
             if (m_disposing)
                 break;
 
-        	// Dequeue next completed timer
+            // Dequeue next completed timer
             const TimerPtr timer = m_completedTimers.Dequeue();
 
-			while (timer->IsRunning() && !m_disposing)
-				ThreadSleep(10);
+            while (timer->IsRunning() && !m_disposing)
+                ThreadSleep(10);
 
-        	if (m_disposing)
+            if (m_disposing)
                 break;
-			
-        	// Remove timer from reference set
-			ScopeLock lock(m_waitTimersLock);
-        	m_waitTimers.erase(timer);
+            
+            // Remove timer from reference set
+            ScopeLock lock(m_waitTimersLock);
+            m_waitTimers.erase(timer);
         }
     });
 }
 
 ThreadPool::~ThreadPool() noexcept
 {
-	try
+    try
     {
-		ShutDown();
-	}
-	catch (...)
+        ShutDown();
+    }
+    catch (...)
     {
-	    // ReSharper disable once CppRedundantControlFlowJump
-	    return;
-	}
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
 }
 
 void ThreadPool::ShutDown()
 {
-	if (m_disposing)
-		return;
-	
-	m_disposing = true;
+    if (m_disposing)
+        return;
+    
+    m_disposing = true;
 
-	m_completedTimers.Release();
-	m_removeCompletedTimersThread.join();
-	
+    m_completedTimers.Release();
+    m_removeCompletedTimersThread.join();
+    
     ScopeLock lock(m_waitTimersLock);
-	
-	for (const auto& currentTimer : m_waitTimers)
+    
+    for (const auto& currentTimer : m_waitTimers)
         currentTimer->Stop(); // This joins thread if running
 }
 
 void ThreadPool::Queue(const std::function<void()>& action)
 {
-	Queue(0, nullptr, [action](void*){ action(); });
+    Queue(0, nullptr, [action](void*){ action(); });
 }
 
 void ThreadPool::Queue(void* state, const std::function<void(void*)>& action)
 {
-	Queue(0, state, action);
+    Queue(0, state, action);
 }
 
 void ThreadPool::Queue(const uint32_t delay, const std::function<void()>& action)
 {
-	Queue(delay, nullptr, [action](void*){ action(); });
+    Queue(delay, nullptr, [action](void*){ action(); });
 }
 
 void ThreadPool::Queue(const uint32_t delay, void* state, const std::function<void(void*)>& action)
 {
-	if (m_disposing)
+    if (m_disposing)
         return;
-	
-	TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](Timer* timer, void*)
-    {		
-		if (m_disposing)
-	        return;
+    
+    TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](Timer* timer, void*)
+    {        
+        if (m_disposing)
+            return;
 
-		// Execute action after specified delay (zero for immediate execution)
-		if (action != nullptr)
-			action(state);
+        // Execute action after specified delay (zero for immediate execution)
+        if (action != nullptr)
+            action(state);
 
         ScopeLock lock(m_waitTimersLock);
-		
-		if (m_disposing)
-	        return;
+        
+        if (m_disposing)
+            return;
 
-		TimerPtr targetTimer = nullptr;
-    	
-    	// Find this timer in reference set
+        TimerPtr targetTimer = nullptr;
+        
+        // Find this timer in reference set
         for (const auto& currentTimer : m_waitTimers)
         {
             if (currentTimer.get() == timer)
             {
-            	targetTimer = currentTimer;
-            	break;
+                targetTimer = currentTimer;
+                break;
             }
         }
 
-		if (targetTimer == nullptr || m_disposing)
+        if (targetTimer == nullptr || m_disposing)
             return;
 
-		// Queue timer for removal from reference set which will cause its immediate
-		// destruction - cannot remove here before timer callback completes
-		m_completedTimers.Enqueue(targetTimer);
+        // Queue timer for removal from reference set which will cause its immediate
+        // destruction - cannot remove here before timer callback completes
+        m_completedTimers.Enqueue(targetTimer);
     });
 
-	ScopeLock lock(m_waitTimersLock);
+    ScopeLock lock(m_waitTimersLock);
 
-	if (m_disposing)
+    if (m_disposing)
         return;
-	
-	// Keep a reference to timer in a set so it will have scope beyond this function
+    
+    // Keep a reference to timer in a set so it will have scope beyond this function
     m_waitTimers.insert(waitTimer);
 
     // Start timer
-	waitTimer->Start();
+    waitTimer->Start();
 }

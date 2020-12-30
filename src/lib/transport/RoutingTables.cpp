@@ -42,25 +42,25 @@ RoutingTables::RoutingTables() :
 
             const auto [handler, routes] = m_routingTableOperations.Dequeue();
 
-        	if (handler != nullptr)
-				handler(*this, routes);
+            if (handler != nullptr)
+                handler(*this, routes);
         }
     });
 }
 
 RoutingTables::~RoutingTables() noexcept
 {
-	try
-	{
-	    m_enabled = false;
-	    m_routingTableOperations.Release();
-	    m_routingTablesThread.join();
-	}
-	catch (...)
-	{
-		// ReSharper disable once CppRedundantControlFlowJump
-		return;
-	}
+    try
+    {
+        m_enabled = false;
+        m_routingTableOperations.Release();
+        m_routingTablesThread.join();
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
 }
 
 RoutingTables::RoutingTablePtr RoutingTables::CloneActiveRoutes()

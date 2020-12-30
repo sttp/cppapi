@@ -50,8 +50,8 @@ namespace transport
 #else
     protected:
 #endif
-        virtual void StatusMessage(const std::string& message);	// Defaults output to cout
-        virtual void ErrorMessage(const std::string& message);	// Defaults output to cerr
+        virtual void StatusMessage(const std::string& message);    // Defaults output to cout
+        virtual void ErrorMessage(const std::string& message);    // Defaults output to cerr
         virtual void ClientConnected(const SubscriberConnectionPtr& connection);
         virtual void ClientDisconnected(const SubscriberConnectionPtr& connection);
         virtual void ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);

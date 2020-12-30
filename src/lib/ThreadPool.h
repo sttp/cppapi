@@ -29,25 +29,25 @@
 
 namespace sttp
 {
-	// Defines a simple thread queue that allows actions to be executed with an optional delay
-	class ThreadPool // NOLINT
-	{
-	private:
-		std::unordered_set<TimerPtr> m_waitTimers;
-		Mutex m_waitTimersLock;
+    // Defines a simple thread queue that allows actions to be executed with an optional delay
+    class ThreadPool // NOLINT
+    {
+    private:
+        std::unordered_set<TimerPtr> m_waitTimers;
+        Mutex m_waitTimersLock;
         Thread m_removeCompletedTimersThread;
         ThreadSafeQueue<TimerPtr> m_completedTimers;
-		std::atomic_bool m_disposing;
+        std::atomic_bool m_disposing;
 
-	public:
-		ThreadPool();
-		~ThreadPool() noexcept;
+    public:
+        ThreadPool();
+        ~ThreadPool() noexcept;
 
-		void ShutDown();
+        void ShutDown();
 
-		void Queue(const std::function<void()>& action);
-		void Queue(void* state, const std::function<void(void*)>& action);
-		void Queue(uint32_t delay, const std::function<void()>& action);
-		void Queue(uint32_t delay, void* state, const std::function<void(void*)>& action);
-	};
+        void Queue(const std::function<void()>& action);
+        void Queue(void* state, const std::function<void(void*)>& action);
+        void Queue(uint32_t delay, const std::function<void()>& action);
+        void Queue(uint32_t delay, void* state, const std::function<void(void*)>& action);
+    };
 }

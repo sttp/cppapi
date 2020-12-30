@@ -19,7 +19,7 @@
 //  03/26/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //  03/22/2018 - J. Ritchie Carroll
-//		 Updated DataSubscriber callback function signatures to always include instance reference.
+//         Updated DataSubscriber callback function signatures to always include instance reference.
 //
 //******************************************************************************************************
 
@@ -89,7 +89,7 @@ namespace transport
         int32_t m_connectAttempt;
         bool m_connectionRefused;
         bool m_autoReconnect;
-    	Thread m_autoReconnectThread;
+        Thread m_autoReconnectThread;
         std::atomic_bool m_cancel;
 
         // Auto-reconnect handler.
@@ -104,7 +104,7 @@ namespace transport
 
         // Creates a new instance.
         SubscriberConnector();
-    	~SubscriberConnector() noexcept;
+        ~SubscriberConnector() noexcept;
 
         // Registers a callback to provide error messages each time
         // the subscriber fails to connect during a connection sequence.
@@ -194,7 +194,7 @@ namespace transport
         std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
-    	std::atomic_bool m_disposing;
+        std::atomic_bool m_disposing;
         Mutex m_connectActionMutex;
         Thread m_disconnectThread;
         void* m_userData;
