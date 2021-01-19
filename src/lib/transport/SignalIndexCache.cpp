@@ -150,12 +150,12 @@ bool SignalIndexCache::GetMeasurementKey(const int32_t signalIndex, Guid& signal
 int32_t SignalIndexCache::GetSignalIndex(const Guid& signalID) const
 {
     const auto result = m_signalIDCache.find(signalID);
-    int32_t signalIndex = Int32::MaxValue;
+    int32_t runtimeID = -1;
 
     if (result != m_signalIDCache.end())
-        signalIndex = result->second;
+        runtimeID = result->second;
 
-    return signalIndex;
+    return runtimeID;
 }
 
 uint32_t SignalIndexCache::Count() const
@@ -250,9 +250,13 @@ void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<
     for (size_t i = 0; i < m_signalIDList.size(); i++)
     {
         const Guid signalID = m_signalIDList[i];
+    	const int32_t runtimeID = GetSignalIndex(signalID);
+
+    	if (runtimeID == -1)
+            continue;
 
         // Encode run-time signal index
-        EndianConverter::WriteBigEndianBytes(buffer, GetSignalIndex(signalID));
+        EndianConverter::WriteBigEndianBytes(buffer, runtimeID);
 
         // Encode signal ID
         WriteBytes(buffer, signalID);

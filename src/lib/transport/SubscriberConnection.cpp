@@ -1140,7 +1140,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
         const int64_t timestamp = measurement.Timestamp;
         const int32_t runtimeID = signalIndexCache->GetSignalIndex(measurement.SignalID);
 
-        if (runtimeID == Int32::MaxValue)
+        if (runtimeID == -1)
             continue;
 
         if (m_isNaNFiltered && isnan(measurement.Value))
@@ -1217,14 +1217,17 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
     for (const auto& measurement : measurements)
     {
-        const int32_t index = signalIndexCache->GetSignalIndex(measurement->SignalID);
+        const int32_t runtimeID = signalIndexCache->GetSignalIndex(measurement->SignalID);
 
-        if (!m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue())))
+    	if (runtimeID == -1)
+            continue;
+    	
+        if (!m_tsscEncoder.TryAddMeasurement(runtimeID, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue())))
         {
             PublishTSSCDataPacket(count);
             count = 0;
             m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
-            m_tsscEncoder.TryAddMeasurement(index, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue()));
+            m_tsscEncoder.TryAddMeasurement(runtimeID, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue()));
         }
 
         count++; //-V127
