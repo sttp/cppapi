@@ -1084,7 +1084,7 @@ void DataSubscriber::ProcessingCompleteDispatcher(DataSubscriber* source, const 
     }
 }
 
-// Dispatcher for processing complete message that is sent by the server at the end of a temporal session.
+// Dispatcher for processing configuration changed message that is sent by the server when measurement availability has changed
 void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, const vector<uint8_t>& buffer)
 {
     if (source == nullptr) // Empty buffer OK
