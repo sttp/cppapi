@@ -1415,14 +1415,14 @@ void DataSubscriber::Subscribe()
     m_totalMeasurementsReceived = 0UL;
 
     connectionStream << "throttled=" << m_subscriptionInfo.Throttled << ";";
-    connectionStream << "publishInterval" << m_subscriptionInfo.PublishInterval << ";";
+    connectionStream << "publishInterval=" << m_subscriptionInfo.PublishInterval << ";";
     connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";
     connectionStream << "lagTime=" << m_subscriptionInfo.LagTime << ";";
     connectionStream << "leadTime=" << m_subscriptionInfo.LeadTime << ";";
     connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
-    connectionStream << "requestNaNValueFilter" << m_subscriptionInfo.RequestNaNValueFilter << ";";
+    connectionStream << "requestNaNValueFilter=" << m_subscriptionInfo.RequestNaNValueFilter << ";";
     connectionStream << "assemblyInfo={source=" << m_assemblySource << "; version="<< m_assemblyVersion <<"; updatedOn=" << m_assemblyUpdatedOn << "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
