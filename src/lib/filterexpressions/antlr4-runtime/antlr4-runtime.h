@@ -5,8 +5,8 @@
 
 #pragma once
 
-// JRC: Keep this change - macro added for multi-language target grammar expression support
-#define panic(expr) throw RuntimeException(expr)
+// JRC: Keep this change - macro added for multi-language target grammar exception support
+#define panic(expr) throw RuntimeException(expr) // NOLINT
 
 // This is the umbrella header for all ANTLR4 C++ runtime headers.
 

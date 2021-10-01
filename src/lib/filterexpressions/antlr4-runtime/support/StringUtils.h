@@ -8,7 +8,7 @@
 #include "antlr4-common.h"
 
 #ifdef USE_UTF8_INSTEAD_OF_CODECVT
-// JRC: Keep this change- this is local location of utf8 header
+// JRC: Keep this change - this is local location of utf8 header
 #include "../../../utf8.h"
 #endif
 
