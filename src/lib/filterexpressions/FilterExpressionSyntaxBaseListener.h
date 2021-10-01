@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9.2
 
 #pragma once
 
@@ -19,8 +19,8 @@ public:
   virtual void enterParse(FilterExpressionSyntaxParser::ParseContext * /*ctx*/) override { }
   virtual void exitParse(FilterExpressionSyntaxParser::ParseContext * /*ctx*/) override { }
 
-  virtual void enterError(FilterExpressionSyntaxParser::ErrorContext * /*ctx*/) override { }
-  virtual void exitError(FilterExpressionSyntaxParser::ErrorContext * /*ctx*/) override { }
+  virtual void enterErr(FilterExpressionSyntaxParser::ErrContext * /*ctx*/) override { }
+  virtual void exitErr(FilterExpressionSyntaxParser::ErrContext * /*ctx*/) override { }
 
   virtual void enterFilterExpressionStatementList(FilterExpressionSyntaxParser::FilterExpressionStatementListContext * /*ctx*/) override { }
   virtual void exitFilterExpressionStatementList(FilterExpressionSyntaxParser::FilterExpressionStatementListContext * /*ctx*/) override { }

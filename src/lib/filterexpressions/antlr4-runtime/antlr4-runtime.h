@@ -5,6 +5,9 @@
 
 #pragma once
 
+// Added for multi-language target grammar expression support
+#define panic(expr) throw RuntimeException(expr)
+
 // This is the umbrella header for all ANTLR4 C++ runtime headers.
 
 #include "antlr4-common.h"

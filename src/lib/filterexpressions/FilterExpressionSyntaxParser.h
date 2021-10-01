@@ -1,5 +1,5 @@
 
-// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9
+// Generated from FilterExpressionSyntax.g4 by ANTLR 4.9.2
 
 #pragma once
 
@@ -34,14 +34,14 @@ public:
   };
 
   enum {
-    RuleParse = 0, RuleError = 1, RuleFilterExpressionStatementList = 2, 
-    RuleFilterExpressionStatement = 3, RuleIdentifierStatement = 4, RuleFilterStatement = 5, 
-    RuleTopLimit = 6, RuleOrderingTerm = 7, RuleExpressionList = 8, RuleExpression = 9, 
-    RulePredicateExpression = 10, RuleValueExpression = 11, RuleNotOperator = 12, 
-    RuleUnaryOperator = 13, RuleExactMatchModifier = 14, RuleComparisonOperator = 15, 
-    RuleLogicalOperator = 16, RuleBitwiseOperator = 17, RuleMathOperator = 18, 
-    RuleFunctionName = 19, RuleFunctionExpression = 20, RuleLiteralValue = 21, 
-    RuleTableName = 22, RuleColumnName = 23, RuleOrderByColumnName = 24
+    RuleParse = 0, RuleErr = 1, RuleFilterExpressionStatementList = 2, RuleFilterExpressionStatement = 3, 
+    RuleIdentifierStatement = 4, RuleFilterStatement = 5, RuleTopLimit = 6, 
+    RuleOrderingTerm = 7, RuleExpressionList = 8, RuleExpression = 9, RulePredicateExpression = 10, 
+    RuleValueExpression = 11, RuleNotOperator = 12, RuleUnaryOperator = 13, 
+    RuleExactMatchModifier = 14, RuleComparisonOperator = 15, RuleLogicalOperator = 16, 
+    RuleBitwiseOperator = 17, RuleMathOperator = 18, RuleFunctionName = 19, 
+    RuleFunctionExpression = 20, RuleLiteralValue = 21, RuleTableName = 22, 
+    RuleColumnName = 23, RuleOrderByColumnName = 24
   };
 
   explicit FilterExpressionSyntaxParser(antlr4::TokenStream *input);
@@ -55,7 +55,7 @@ public:
 
 
   class ParseContext;
-  class ErrorContext;
+  class ErrContext;
   class FilterExpressionStatementListContext;
   class FilterExpressionStatementContext;
   class IdentifierStatementContext;
@@ -86,7 +86,7 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *EOF();
     FilterExpressionStatementListContext *filterExpressionStatementList();
-    ErrorContext *error();
+    ErrContext *err();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -95,10 +95,10 @@ public:
 
   ParseContext* parse();
 
-  class  ErrorContext : public antlr4::ParserRuleContext {
+  class  ErrContext : public antlr4::ParserRuleContext {
   public:
     antlr4::Token *unexpected_charToken = nullptr;
-    ErrorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    ErrContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *UNEXPECTED_CHAR();
 
@@ -107,7 +107,7 @@ public:
    
   };
 
-  ErrorContext* error();
+  ErrContext* err();
 
   class  FilterExpressionStatementListContext : public antlr4::ParserRuleContext {
   public:

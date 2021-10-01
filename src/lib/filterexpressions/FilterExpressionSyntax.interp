@@ -202,7 +202,7 @@ UNEXPECTED_CHAR
 
 rule names:
 parse
-error
+err
 filterExpressionStatementList
 filterExpressionStatement
 identifierStatement
