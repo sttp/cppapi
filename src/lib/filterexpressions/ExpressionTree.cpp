@@ -1480,7 +1480,6 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
 
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
-    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
 
     // If source value is Null, result is Null
     if (dateValue->IsNull())
@@ -1492,6 +1491,7 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
     if (intervalType->IsNull())
         throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
 
+    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
     int32_t value;
 
     switch (addValue->ValueType)
@@ -1548,7 +1548,6 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
 
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
-    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
 
     // If source value is Null, result is Null
     if (dateValue->IsNull())
@@ -1556,6 +1555,8 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
 
     if (intervalType->IsNull())
         throw ExpressionTreeException("\"DatePart\" function interval type, second argument, is null");
+
+    const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::DatePart(dateValue->ValueAsDateTime(), interval));
 }
