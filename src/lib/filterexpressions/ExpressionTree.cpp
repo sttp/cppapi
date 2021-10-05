@@ -1982,11 +1982,11 @@ ValueExpressionPtr ExpressionTree::Sqrt(const ValueExpressionPtr& sourceValue) c
     switch (sourceValue->ValueType)
     {
         case ExpressionValueType::Boolean:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Boolean, sqrt(sourceValue->ValueAsBoolean()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, sqrt(sourceValue->ValueAsBoolean()));
         case ExpressionValueType::Int32:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sqrt(sourceValue->ValueAsInt32()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, sqrt(sourceValue->ValueAsInt32()));
         case ExpressionValueType::Int64:
-            return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, sqrt(sourceValue->ValueAsInt64()));
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, sqrt(sourceValue->ValueAsInt64()));
         case ExpressionValueType::Decimal:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, sqrt(sourceValue->ValueAsDecimal()));
         case ExpressionValueType::Double:
