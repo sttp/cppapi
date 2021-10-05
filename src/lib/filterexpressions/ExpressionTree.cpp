@@ -1629,12 +1629,12 @@ ValueExpressionPtr ExpressionTree::IndexOf(const ValueExpressionPtr& sourceValue
     if (testValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"IndexOf\" function test value, second argument, must be a string");
 
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, is null");
+
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
-
-    if (testValue->IsNull())
-        throw ExpressionTreeException("\"IndexOf\" function test value, second argument, is null");
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::IndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1716,12 +1716,12 @@ ValueExpressionPtr ExpressionTree::LastIndexOf(const ValueExpressionPtr& sourceV
     if (testValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, must be a string");
 
+    if (testValue->IsNull())
+        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, is null");
+
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::Int32);
-
-    if (testValue->IsNull())
-        throw ExpressionTreeException("\"LastIndexOf\" function test value, second argument, is null");
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::LastIndexOf(sourceValue->ValueAsString(), testValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1804,15 +1804,15 @@ ValueExpressionPtr ExpressionTree::NthIndexOf(const ValueExpressionPtr& sourceVa
     if (!IsIntegerType(indexValue->ValueType))
         throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, must be an integer type");
 
-    // If source value is Null, result is Null
-    if (sourceValue->IsNull())
-        return NullValue(ExpressionValueType::Int32);
-
     if (testValue->IsNull())
         throw ExpressionTreeException("\"NthIndexOf\" function test value, second argument, is null");
 
     if (indexValue->IsNull())
         throw ExpressionTreeException("\"NthIndexOf\" function index value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
 
     int32_t index;
 
@@ -1888,15 +1888,15 @@ ValueExpressionPtr ExpressionTree::Replace(const ValueExpressionPtr& sourceValue
     if (replaceValue->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"Replace\" function replace value, third argument, must be a string");
 
-    // If source value is Null, result is Null
-    if (sourceValue->IsNull())
-        return sourceValue;
-
     if (testValue->IsNull())
         throw ExpressionTreeException("\"Replace\" function test value, second argument, is null");
 
     if (replaceValue->IsNull())
         throw ExpressionTreeException("\"Replace\" function replace value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::String, sttp::Replace(sourceValue->ValueAsString(), testValue->ValueAsString(), replaceValue->ValueAsString(), Convert(ignoreCase, ExpressionValueType::Boolean)->ValueAsBoolean()));
 }
@@ -1950,15 +1950,15 @@ ValueExpressionPtr ExpressionTree::Split(const ValueExpressionPtr& sourceValue, 
     if (!IsIntegerType(indexValue->ValueType))
         throw ExpressionTreeException("\"Split\" function index value, third argument, must be an integer type");
 
-    // If source value is Null, result is Null
-    if (sourceValue->IsNull())
-        return sourceValue;
-
     if (delimiterValue->IsNull())
         throw ExpressionTreeException("\"Split\" function delimiter value, second argument, is null");
 
     if (indexValue->IsNull())
         throw ExpressionTreeException("\"Split\" function index value, third argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return sourceValue;
 
     int32_t index;
 
@@ -2074,12 +2074,12 @@ ValueExpressionPtr ExpressionTree::SubStr(const ValueExpressionPtr& sourceValue,
     if (!IsIntegerType(lengthValue->ValueType))
         throw ExpressionTreeException("\"SubStr\" function length value, third argument, must be an integer type");
 
+    if (indexValue->IsNull())
+        throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
+
     // If source value is Null, result is Null
     if (sourceValue->IsNull())
         return NullValue(ExpressionValueType::String);
-
-    if (indexValue->IsNull())
-        throw ExpressionTreeException("\"SubStr\" function index value, second argument, is null");
 
     int32_t index, length = -1;
 
