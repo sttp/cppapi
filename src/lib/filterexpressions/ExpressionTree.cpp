@@ -1488,18 +1488,18 @@ ValueExpressionPtr ExpressionTree::DateAdd(const ValueExpressionPtr& sourceValue
     if (intervalType->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, must be a string");
 
+    if (addValue->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, is null");
+
+    if (intervalType->IsNull())
+        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
+
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
 
     // If source value is Null, result is Null
     if (dateValue->IsNull())
         return dateValue;
-
-    if (addValue->IsNull())
-        throw ExpressionTreeException("\"DateAdd\" function add value, second argument, is null");
-
-    if (intervalType->IsNull())
-        throw ExpressionTreeException("\"DateAdd\" function interval type, third argument, is null");
 
     const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
     int32_t value;
@@ -1536,14 +1536,14 @@ ValueExpressionPtr ExpressionTree::DateDiff(const ValueExpressionPtr& leftValue,
     if (intervalType->IsNull())
         throw ExpressionTreeException("\"DateDiff\" function interval type, third argument, is null");
 
+    // If either test value is Null, result is Null
+    if (leftValue->IsNull() || rightValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
     // DateTime parameters should support strings as well as literals
     const ValueExpressionPtr leftDateValue = Convert(leftValue, ExpressionValueType::DateTime);
     const ValueExpressionPtr rightDateValue = Convert(rightValue, ExpressionValueType::DateTime);
     const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
-
-    // If either test value is Null, result is Null
-    if (leftDateValue->IsNull() || rightDateValue->IsNull())
-        return NullValue(ExpressionValueType::Int32);
 
     return NewSharedPtr<ValueExpression>(ExpressionValueType::Int32, sttp::DateDiff(leftDateValue->ValueAsDateTime(), rightDateValue->ValueAsDateTime(), interval));
 }
@@ -1556,15 +1556,15 @@ ValueExpressionPtr ExpressionTree::DatePart(const ValueExpressionPtr& sourceValu
     if (intervalType->ValueType != ExpressionValueType::String)
         throw ExpressionTreeException("\"DatePart\" function interval type, second argument, must be a string");
 
-    // DateTime parameters should support strings as well as literals
-    const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
-
-    // If source value is Null, result is Null
-    if (dateValue->IsNull())
-        return NullValue(ExpressionValueType::Int32);
-
     if (intervalType->IsNull())
         throw ExpressionTreeException("\"DatePart\" function interval type, second argument, is null");
+
+    // If source value is Null, result is Null
+    if (sourceValue->IsNull())
+        return NullValue(ExpressionValueType::Int32);
+
+    // DateTime parameters should support strings as well as literals
+    const ValueExpressionPtr dateValue = Convert(sourceValue, ExpressionValueType::DateTime);
 
     const TimeInterval interval = ParseTimeInterval(intervalType->ValueAsString());
 
