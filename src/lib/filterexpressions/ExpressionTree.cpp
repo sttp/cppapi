@@ -1425,7 +1425,7 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
 
     if (!foundValueType)
     {
-        // Handle a few common exceptions
+        // Handle a few common aliases
         if (sttp::IsEqual(targetTypeName, "Single") || sttp::StartsWith(targetTypeName, "float"))
         {
             targetValueType = ExpressionValueType::Double;
@@ -1439,6 +1439,16 @@ ValueExpressionPtr ExpressionTree::Convert(const ValueExpressionPtr& sourceValue
         else if (sttp::StartsWith(targetTypeName, "Int") || sttp::StartsWith(targetTypeName, "UInt"))
         {
             targetValueType = ExpressionValueType::Int64;
+            foundValueType = true;
+        }
+        else if (sttp::IsEqual(targetTypeName, "Date") || sttp::IsEqual(targetTypeName, "Time"))
+        {
+            targetValueType = ExpressionValueType::DateTime;
+            foundValueType = true;
+        }
+        else if (sttp::IsEqual(targetTypeName, "UUID"))
+        {
+            targetValueType = ExpressionValueType::Guid;
             foundValueType = true;
         }
     }
