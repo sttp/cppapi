@@ -2274,7 +2274,10 @@ ValueExpressionPtr ExpressionTree::Modulus(const ValueExpressionPtr& leftValue, 
         case ExpressionValueType::Int64:
             return NewSharedPtr<ValueExpression>(ExpressionValueType::Int64, left->ValueAsInt64() % right->ValueAsInt64());
         case ExpressionValueType::Decimal:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Decimal, fmod(left->ValueAsDecimal(), right->ValueAsDecimal()));
         case ExpressionValueType::Double:
+            return NewSharedPtr<ValueExpression>(ExpressionValueType::Double, fmod(left->ValueAsDouble(), right->ValueAsDouble()));
+        case ExpressionValueType::Boolean:
         case ExpressionValueType::String:
         case ExpressionValueType::Guid:
         case ExpressionValueType::DateTime:
