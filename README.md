@@ -4,7 +4,7 @@
 <img align="right" src="https://raw.githubusercontent.com/sttp/cppapi/master/src/sttp.png">
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/sttp/cppapi.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/sttp/cppapi/context:cpp)
 
-Native C++ implementation for STTP ([IEEE 2664](https://standards.ieee.org/project/2664.html))
+C++ implementation for STTP ([IEEE 2664](https://standards.ieee.org/project/2664.html))
 
 Requires [boost](https://www.boost.org/)
 
