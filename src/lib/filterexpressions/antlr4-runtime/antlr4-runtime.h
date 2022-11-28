@@ -5,9 +5,6 @@
 
 #pragma once
 
-// JRC: Keep this change - macro added for multi-language target grammar exception support
-#define panic(expr) throw RuntimeException(expr) // NOLINT
-
 // This is the umbrella header for all ANTLR4 C++ runtime headers.
 
 #include "antlr4-common.h"
@@ -52,6 +49,7 @@
 #include "TokenStreamRewriter.h"
 #include "UnbufferedCharStream.h"
 #include "UnbufferedTokenStream.h"
+#include "Version.h"
 #include "Vocabulary.h"
 #include "Vocabulary.h"
 #include "WritableToken.h"
@@ -60,11 +58,9 @@
 #include "atn/ATNConfigSet.h"
 #include "atn/ATNDeserializationOptions.h"
 #include "atn/ATNDeserializer.h"
-#include "atn/ATNSerializer.h"
 #include "atn/ATNSimulator.h"
 #include "atn/ATNState.h"
 #include "atn/ATNType.h"
-#include "atn/AbstractPredicateTransition.h"
 #include "atn/ActionTransition.h"
 #include "atn/AmbiguityInfo.h"
 #include "atn/ArrayPredictionContext.h"
@@ -77,7 +73,6 @@
 #include "atn/DecisionEventInfo.h"
 #include "atn/DecisionInfo.h"
 #include "atn/DecisionState.h"
-#include "atn/EmptyPredictionContext.h"
 #include "atn/EpsilonTransition.h"
 #include "atn/ErrorInfo.h"
 #include "atn/LL1Analyzer.h"
@@ -101,12 +96,16 @@
 #include "atn/OrderedATNConfigSet.h"
 #include "atn/ParseInfo.h"
 #include "atn/ParserATNSimulator.h"
+#include "atn/ParserATNSimulatorOptions.h"
 #include "atn/PlusBlockStartState.h"
 #include "atn/PlusLoopbackState.h"
 #include "atn/PrecedencePredicateTransition.h"
 #include "atn/PredicateEvalInfo.h"
 #include "atn/PredicateTransition.h"
 #include "atn/PredictionContext.h"
+#include "atn/PredictionContextCache.h"
+#include "atn/PredictionContextMergeCache.h"
+#include "atn/PredictionContextMergeCacheOptions.h"
 #include "atn/PredictionMode.h"
 #include "atn/ProfilingATNSimulator.h"
 #include "atn/RangeTransition.h"
@@ -114,6 +113,7 @@
 #include "atn/RuleStopState.h"
 #include "atn/RuleTransition.h"
 #include "atn/SemanticContext.h"
+#include "atn/SerializedATNView.h"
 #include "atn/SetTransition.h"
 #include "atn/SingletonPredictionContext.h"
 #include "atn/StarBlockStartState.h"
@@ -134,9 +134,8 @@
 #include "support/Any.h"
 #include "support/Arrays.h"
 #include "support/BitSet.h"
+#include "support/Casts.h"
 #include "support/CPPUtils.h"
-#include "support/StringUtils.h"
-#include "support/guid.h"
 #include "tree/AbstractParseTreeVisitor.h"
 #include "tree/ErrorNode.h"
 #include "tree/ErrorNodeImpl.h"
@@ -166,5 +165,4 @@
 #include "tree/xpath/XPathTokenElement.h"
 #include "tree/xpath/XPathWildcardAnywhereElement.h"
 #include "tree/xpath/XPathWildcardElement.h"
-
-
+#include "internal/Synchronization.h"
