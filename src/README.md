@@ -33,18 +33,18 @@ Boost library files:
 
 If you have an existing Boost installation you can simply create a symbolic
 link to the folder, e.g.:
-```
-    mklink /D C:\projects\sttp\boost C:\boost_1_75_0
+```cmd
+mklink /D C:\projects\sttp\boost C:\boost_1_75_0
 ```
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with v1.66, v1.71 and v1.75 of Boost.
+has been tested with v1.66, v1.71, v1.75 and v1.80 of Boost.
 
 Note that you will need to compile Boost in order to execute the sample
 applications found in:
-```
-    sttp\cppapi\src\samples
+```cmd
+sttp\cppapi\src\samples
 ```
 
 The STTP API library requires the zlib features of Boost, as a result it is necessary
@@ -54,8 +54,8 @@ https://zlib.net/
 After unzipping the zlib source code and running the Boost `bootstrap.bat` script,
 run  the `.\b2` build application with the following zlib parameters, adjusting
 the paths to the directory where the zlib source code was unzipped:
-```
-     b2 -s ZLIB_SOURCE="C:\zlib-1.2.11" -s ZLIB_INCLUDE="C:\zlib-1.2.11"
+```cmd
+b2 -s ZLIB_SOURCE="C:\zlib-1.2.13" -s ZLIB_INCLUDE="C:\zlib-1.2.13"
 ```
 
 ## Compiling in Linux
@@ -78,7 +78,7 @@ Earlier versions of the libraries listed may not work properly.
 
 * bzip2 Library, e.g.: `sudo apt install libbz2-dev`
 
-* Boost C++ Libraries v1.75.0 (http://www.boost.org/)
+* Boost C++ Libraries v1.80.0 (http://www.boost.org/)
     - Boost.Asio
     - Boost.Bind
     - Boost.Iostreams
@@ -89,37 +89,37 @@ Earlier versions of the libraries listed may not work properly.
 Boost will need to be compiled:
 https://www.boost.org/doc/libs/1_75_0/more/getting_started/unix-variants.html
 
-For Ubuntu, here are some common steps (don't type `$`; that represents the shell's prompt):
+For Ubuntu, here are some common steps:
 
-```
-$ sudo apt update
-$ sudo apt install build-essential
-$ sudo apt install cmake
-$ sudo apt install gcc-10 g++-10
-$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+```bash
+sudo apt update
+sudo apt install build-essential
+sudo apt install cmake
+sudo apt install gcc-10 g++-10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
 
-$ sudo apt install zlib1g-dev
-$ sudo apt install libbz2-dev
+sudo apt install zlib1g-dev
+sudo apt install libbz2-dev
 
-$ sudo mkdir /usr/local/boost_1_75_0
-$ cd /usr/local/
-$ wget https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2
-$ sudo tar -xvjf boost_1_75_0.tar.bz2
+sudo mkdir /usr/local/boost_1_80_0
+cd /usr/local/
+wget https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_80_0.tar.bz2
+sudo tar -xvjf boost_1_80_0.tar.bz2
 ```
 
 Start a new terminal session before building Boost:
 
-```
-$ cd /usr/local/boost_1_75_0
-$ sudo ./bootstrap.sh
-$ sudo ./b2 install
+```bash
+cd /usr/local/boost_1_80_0
+sudo ./bootstrap.sh
+sudo ./b2 install
 ```
 
 It may be necessary to add `/usr/local/lib`, the default path for boost libraries,
 to the system library path before running any samples:
 
-```
-$ sudo ldconfig /usr/local/lib
+```bash
+sudo ldconfig /usr/local/lib
 ```
 
 ### Configuration
@@ -127,16 +127,16 @@ $ sudo ldconfig /usr/local/lib
 From the command terminal, enter the source directory containing this
 README file and type the following command:
 
-```
-    cmake .
+```bash
+cmake .
 ```
 
 Alternatively, you can create a build directory separate from the
 source code you downloaded. Enter the build directory you created
 and type the following command:
 
-```
-    cmake path/to/source
+```bash
+cmake path/to/source
 ```
 
 Using the CMake GUI, you can modify configuration options, such as
@@ -144,47 +144,47 @@ building as a shared library or changing the installation directory.
 
 To make a debug build, use the following:
 
-```
-    cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wno-unknown-pragmas"
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wno-unknown-pragmas"
 ```
 
 ### Build
 
 At the top level of the build directory, type the following command.
 
-```
-    make -j6
+```bash
+make -j6
 ```
 
 In addition to the library itself, there are sample applications which
 demonstrate the proper use of the STTP library API. To build all samples,
 type the following command:
 
-```
-    make -j6 samples
+```bash
+make -j6 samples
 ```
 > Hint: You can start with samples and this will auto-build STTP library depdendency.
 
 Individual sample applications can be built as follows:
 
-```
-    make SimpleSubscribe
-    make AdvancedSubscribe
-    make AverageFrequencyCalculator
-    make InstanceSubscribe
-    make InstancePublish
-    make DynamicMetadataPublish
-    make FilterExpressionTests
-    make SimplePublish
-    make AdvancedPublish
+```bash
+make SimpleSubscribe
+make AdvancedSubscribe
+make AverageFrequencyCalculator
+make InstanceSubscribe
+make InstancePublish
+make DynamicMetadataPublish
+make FilterExpressionTests
+make SimplePublish
+make AdvancedPublish
 ```
 
 ### Installation
 
 At the top level of the build directory, type the following command.
 
-```
-    make install
+```bash
+make install
 ```
 
 This will move the header files and the library file to the location
