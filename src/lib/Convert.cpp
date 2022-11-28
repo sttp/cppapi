@@ -43,7 +43,7 @@ using namespace boost::gregorian;
 using namespace sttp;
 
 const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
-const int64_t DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
+constexpr int64_t DateTimeTicksPerSecond = TimeSpan::ticks_per_second();
 
 inline int GetRadix(const string& value)
 {
@@ -193,9 +193,29 @@ int64_t sttp::ToTicks(const datetime_t& time)
         static_cast<int64_t>(offset.fractional_seconds() * Ticks::PerSecond / tickInterval);
 }
 
+bool sttp::IsLeapSecond(int64_t ticks)
+{
+    return (ticks & Ticks::LeapSecondFlag) > 0;
+}
+
+void sttp::SetLeapSecond(int64_t& ticks)
+{
+    ticks |= Ticks::LeapSecondFlag;
+}
+
+bool sttp::IsNegativeLeapSecond(int64_t ticks)
+{
+    return IsLeapSecond(ticks) && (ticks & Ticks::LeapSecondDirection) > 0;
+}
+
+void SetNegativeLeapSecond(int64_t& ticks)
+{
+    ticks |= Ticks::LeapSecondFlag | Ticks::LeapSecondDirection;
+}
+
 bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, const float64_t leadTime, const bool utc)
 {
-    static const float64_t ticksPerSecondF = static_cast<float64_t>(Ticks::PerSecond);
+    static constexpr float64_t ticksPerSecondF = static_cast<float64_t>(Ticks::PerSecond);
 
     if (lagTime <= 0)
         throw runtime_error("lagTime must be greater than zero, but it can be less than one");
@@ -305,7 +325,7 @@ string sttp::ToString(const Guid& value)
 string sttp::ToString(const datetime_t& value, const char* format)
 {
     stringstream stream;
-    time_facet* facet = new time_facet(format);
+    const time_facet* facet = new time_facet(format);
     
     auto _ = stream.imbue(locale(stream.getloc(), facet));
     stream << value;
@@ -524,11 +544,11 @@ bool sttp::IsGuid(const string& value)
 Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
 {
     Guid id;
-    uint8_t swappedBytes[16];
     uint8_t* encodedBytes;
 
     if (swapEndianness)
     {
+        uint8_t swappedBytes[16];
         uint8_t copy[8];
 
         for (uint32_t i = 0; i < 16; i++)
@@ -566,7 +586,7 @@ Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
 
 Guid sttp::ParseGuid(const char* data)
 {
-    const string_generator generator;
+    constexpr string_generator generator;
     return generator(data);
 }
 
@@ -679,9 +699,7 @@ datetime_t sttp::ParseRelativeTimestamp(const char* time, const datetime_t& defa
         int32_t offset;
         TryParseInt32(match.str(1), offset);
 
-        const char unit = ToLower(Trim(match.str(2)))[0];
-
-        switch (unit)
+        switch (ToLower(Trim(match.str(2)))[0])
         {
             case 's':
                 timestamp = DateAdd(now, offset, TimeInterval::Second);
@@ -814,7 +832,7 @@ StringMap<string> sttp::ParseKeyValuePairs(const string& value, const char param
     }
 
     // Parse key/value pairs from escaped value
-    vector<string> pairs = Split(boost::algorithm::join(escapedValue, ""), parameterDelimiterStr, false);
+    const vector<string> pairs = Split(boost::algorithm::join(escapedValue, ""), parameterDelimiterStr, false);
 
     for (const string& pair : pairs)
     {

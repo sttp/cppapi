@@ -188,6 +188,12 @@ namespace sttp
         static const int64_t PerMinute = 60LL * Ticks::PerSecond;
         static const int64_t PerHour = 60LL * Ticks::PerMinute;
         static const int64_t PerDay = 24LL * Ticks::PerHour;
+
+        // Flag (64th bit) that marks a Ticks value as a leap second, i.e., second 60 (one beyond normal second 59).
+        static const int64_t LeapSecondFlag = 1LL << 63;
+
+        // Flag (63rd bit) that indicates if leap second is positive or negative; 0 for add, 1 for delete.
+        static const int64_t LeapSecondDirection = 1LL << 62;
     };
 
     inline int32_t ConvertInt32(const size_t value)

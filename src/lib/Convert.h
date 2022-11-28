@@ -39,6 +39,18 @@ namespace sttp
     // Converts a DateTime to Ticks
     int64_t ToTicks(const datetime_t& time);
 
+    // Determines if the deserialized Ticks value represents a leap second, i.e., second 60.
+    bool IsLeapSecond(int64_t ticks);
+
+    // Flags a Ticks value to represent a leap second, i.e., second 60, before wire serialization.
+    void SetLeapSecond(int64_t& ticks);
+
+    // Determines if the deserialized Ticks value represents a negative leap second, i.e., checks flag on second 58 to see if second 59 will be missing.
+    bool IsNegativeLeapSecond(int64_t ticks);
+
+    // Flags a Ticks value to represent a negative leap second, i.e., sets flag on second 58 to mark that second 59 will be missing, before wire serialization.
+    void SetNegativeLeapSecond(int64_t& ticks);
+
     // Determines if timestamp, in ticks, is reasonable as compared to local clock within specified tolerances, in seconds
     // lagTime and leadTime must be greater than zero, but can be less than one.
     bool TimestampIsReasonable(int64_t value, float64_t lagTime = 5.0, float64_t leadTime = 5.0, bool utc = true);
