@@ -103,7 +103,7 @@ sudo apt install libbz2-dev
 
 sudo mkdir /usr/local/boost_1_80_0
 cd /usr/local/
-wget https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_80_0.tar.bz2
+sudo wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2
 sudo tar -xvjf boost_1_80_0.tar.bz2
 ```
 
