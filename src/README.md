@@ -4,7 +4,7 @@ Code includes STTP functionality for both "subscribers" and "publishers".
 
 Build instructions follow:
 
-* [Windows](#compiling-in-visual-studio) (using [Visual Studio 2019](https://visualstudio.microsoft.com/vs/community/))
+* [Windows](#compiling-in-visual-studio) (using [Visual Studio 2022](https://visualstudio.microsoft.com/vs/community/))
 * [Unix Variants](#compiling-in-linux) (using [CMake](https://cmake.org/))
 
 ## Compiling in Visual Studio
@@ -34,7 +34,7 @@ Boost library files:
 If you have an existing Boost installation you can simply create a symbolic
 link to the folder, e.g.:
 ```cmd
-mklink /D C:\projects\sttp\boost C:\boost_1_75_0
+mklink /D C:\projects\sttp\boost C:\boost_1_80_0
 ```
 
 Alternately you can adjust the additional include directories to your own
@@ -87,7 +87,7 @@ Earlier versions of the libraries listed may not work properly.
     - Boost.Uuid
 
 Boost will need to be compiled:
-https://www.boost.org/doc/libs/1_75_0/more/getting_started/unix-variants.html
+https://www.boost.org/doc/libs/1_80_0/more/getting_started/unix-variants.html
 
 For Ubuntu, here are some common steps:
 
