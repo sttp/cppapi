@@ -172,7 +172,7 @@ namespace sttp::transport
         SignalKind Kind { SignalKind::Unknown };
 
         SignalReference();
-        SignalReference(const std::string& signal);
+        explicit SignalReference(const std::string& signal);
     };
 
     std::ostream& operator << (std::ostream& stream, const SignalReference& reference);

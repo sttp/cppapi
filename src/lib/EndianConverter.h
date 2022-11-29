@@ -31,7 +31,7 @@ namespace sttp
 {
     // Converts values between the system's native byte
     // order and the big and little endian byte orders.
-    class EndianConverter
+    class EndianConverter final
     {
     private:
         int m_nativeOrder;

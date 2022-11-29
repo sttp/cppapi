@@ -33,7 +33,7 @@ namespace sttp
     typedef std::function<void(Timer* timer, void* userData)> TimerElapsedCallback;
     typedef sttp::SharedPtr<Timer> TimerPtr;
 
-    class Timer // NOLINT
+    class Timer final // NOLINT
     {
     private:
         ThreadPtr m_timerThread;
@@ -85,7 +85,7 @@ namespace sttp
         {
         }
 
-        Timer(const int32_t interval, TimerElapsedCallback callback, const bool autoReset = false) :
+        explicit Timer(const int32_t interval, TimerElapsedCallback callback, const bool autoReset = false) :
             m_timerThread(nullptr),
             m_interval(interval),
             m_callback(std::move(callback)),
@@ -182,7 +182,7 @@ namespace sttp
 
             if (m_timerThread != nullptr)
             {
-                ThreadPtr timerThread = m_timerThread;
+                const ThreadPtr timerThread = m_timerThread;
 
                 if (timerThread != nullptr)
                 {
@@ -202,7 +202,7 @@ namespace sttp
             {
                 if (m_running && m_timerThread != nullptr)
                 {
-                    ThreadPtr timerThread = m_timerThread;
+                    const ThreadPtr timerThread = m_timerThread;
 
                     if (timerThread != nullptr)
                         timerThread->join();
@@ -234,14 +234,11 @@ namespace sttp
 }
 
 // Setup standard hash code for TimerPtr
-namespace std  // NOLINT
+template<>
+struct std::hash<sttp::TimerPtr>
 {
-    template<>
-    struct hash<sttp::TimerPtr>
+    size_t operator () (const sttp::TimerPtr& timer) const noexcept
     {
-        size_t operator () (const sttp::TimerPtr& timer) const noexcept
-        {
-            return boost::hash<sttp::TimerPtr>()(timer);
-        }
-    };
-}
+        return boost::hash<sttp::TimerPtr>()(timer);
+    }
+};
