@@ -24,5 +24,5 @@
 #pragma once
 
 constexpr auto STTP_TITLE = "STTP C++ Library";
-constexpr auto STTP_VERSION = "1.0.21";
-constexpr auto STTP_UPDATEDON = "2020-12-29";
+constexpr auto STTP_VERSION = "1.1.0";
+constexpr auto STTP_UPDATEDON = "2022-12-01";

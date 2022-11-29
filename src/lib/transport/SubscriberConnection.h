@@ -31,8 +31,7 @@
 #include "tssc/TSSCEncoder.h"
 #include <deque>
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class DataPublisher;
     typedef sttp::SharedPtr<DataPublisher> DataPublisherPtr;
@@ -41,10 +40,10 @@ namespace transport
     typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
 
     // Represents a subscriber connection to a data publisher
-    class SubscriberConnection : public sttp::EnableSharedThisPtr<SubscriberConnection> // NOLINT
+    class SubscriberConnection final : public sttp::EnableSharedThisPtr<SubscriberConnection> // NOLINT
     {
     private:
-        static constexpr const uint32_t TSSCBufferSize = 32768U;
+        static constexpr uint32_t TSSCBufferSize = 32768U;
 
         const DataPublisherPtr m_parent;
         sttp::IOContext& m_commandChannelService;
@@ -121,8 +120,8 @@ namespace transport
         void HandleMetadataRefresh(uint8_t* data, uint32_t length);
         void HandleRotateCipherKeys();
         void HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length);
-        void HandleDefineOperationalModes(uint8_t* data, uint32_t length);
-        void HandleUserCommand(uint32_t command, uint8_t* data, uint32_t length);
+        void HandleDefineOperationalModes(const uint8_t* data, uint32_t length);
+        void HandleUserCommand(uint32_t command, const uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
         void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);
@@ -133,7 +132,7 @@ namespace transport
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
         void ParseCommand(const ErrorCode& error, size_t bytesTransferred);
-        std::vector<uint8_t> SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const;
+        std::vector<uint8_t> SerializeSignalIndexCache(const SignalIndexCache& signalIndexCache) const;
         std::vector<uint8_t> SerializeMetadata(const sttp::data::DataSetPtr& metadata) const;
         sttp::data::DataSetPtr FilterClientMetadata(const StringMap<sttp::filterexpressions::ExpressionTreePtr>& filterExpressions) const;
         void CommandChannelSendAsync();
@@ -143,7 +142,7 @@ namespace transport
 
         static void PingTimerElapsed(Timer*, void* userData);
     public:
-        SubscriberConnection(DataPublisherPtr parent, sttp::IOContext& commandChannelService);
+        explicit SubscriberConnection(DataPublisherPtr parent, sttp::IOContext& commandChannelService);
         ~SubscriberConnection();
 
         const DataPublisherPtr& GetParent() const;
@@ -274,17 +273,14 @@ namespace transport
 
     typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
 
-}}
+}
 
 // Setup standard hash code for SubscriberConnectionPtr
-namespace std  // NOLINT
+template<>
+struct std::hash<sttp::transport::SubscriberConnectionPtr>
 {
-    template<>
-    struct hash<sttp::transport::SubscriberConnectionPtr>
+    size_t operator () (const sttp::transport::SubscriberConnectionPtr& connection) const noexcept
     {
-        size_t operator () (const sttp::transport::SubscriberConnectionPtr& connection) const noexcept
-        {
-            return boost::hash<sttp::transport::SubscriberConnectionPtr>()(connection);
-        }
-    };
-}
+        return boost::hash<sttp::transport::SubscriberConnectionPtr>()(connection);
+    }
+};

@@ -208,7 +208,7 @@ bool sttp::IsNegativeLeapSecond(int64_t ticks)
     return IsLeapSecond(ticks) && (ticks & Ticks::LeapSecondDirection) > 0;
 }
 
-void SetNegativeLeapSecond(int64_t& ticks)
+void sttp::SetNegativeLeapSecond(int64_t& ticks)
 {
     ticks |= Ticks::LeapSecondFlag | Ticks::LeapSecondDirection;
 }

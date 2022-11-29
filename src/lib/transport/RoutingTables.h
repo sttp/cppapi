@@ -27,10 +27,9 @@
 #include "../ThreadSafeQueue.h"
 #include "SubscriberConnection.h"
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
-    class RoutingTables // NOLINT
+    class RoutingTables final // NOLINT
     {
     private:
         typedef std::unordered_set<SubscriberConnectionPtr> Destinations;
@@ -62,4 +61,4 @@ namespace transport
 
         void Clear();
     };
-}}
+}

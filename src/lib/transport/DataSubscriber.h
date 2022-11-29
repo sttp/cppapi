@@ -27,13 +27,11 @@
 
 #include "../Timer.h"
 #include "../ThreadSafeQueue.h"
-#include "../ThreadPool.h"
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 #include "tssc/TSSCDecoder.h"
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class DataSubscriber;
 
@@ -70,7 +68,7 @@ namespace transport
     };
 
     // Helper class to provide retry and auto-reconnect functionality to the subscriber.
-    class SubscriberConnector // NOLINT
+    class SubscriberConnector final // NOLINT
     {
     private:
         typedef std::function<void(DataSubscriber*, const std::string&)> ErrorMessageCallback;
@@ -264,15 +262,15 @@ namespace transport
         void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
         void HandleSucceeded(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
         void HandleFailed(uint8_t commandCode, uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleMetadataRefresh(uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleDataStartTime(uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleProcessingComplete(uint8_t* data, uint32_t offset, uint32_t length);
-        void HandleUpdateSignalIndexCache(uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleMetadataRefresh(const uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleDataStartTime(const uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleProcessingComplete(const uint8_t* data, uint32_t offset, uint32_t length);
+        void HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t offset, uint32_t length);
         void HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleConfigurationChanged(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
         void ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint32_t length, std::vector<MeasurementPtr>& measurements);
-        void ParseCompactMeasurements(uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
+        void ParseCompactMeasurements(const uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
 
         SignalIndexCache* AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef);
         SignalIndexCachePtr ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr);
@@ -298,7 +296,7 @@ namespace transport
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
 
-        void Connect(const std::string& hostname, const uint16_t port, bool autoReconnecting);
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting);
         void Disconnect(bool joinThread, bool autoReconnecting);
         bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
 
@@ -383,17 +381,11 @@ namespace transport
         // Send a command to the server.
         //
         // Command codes can be found in the "Constants.h" header file.
-        // They are defined as:
+        // For example:
         //   ServerCommand::Connect
         //   ServerCommand::MetadataRefresh
         //   ServerCommand::Subscribe
         //   ServerCommand::Unsubscribe
-        //   ServerCommand::RotateCipherKeys
-        //   ServerCommand::UpdateProcessingInterval
-        //   ServerCommand::DefineOperationalModes
-        //   ServerCommand::ConfirmNotification
-        //   ServerCommand::ConfirmBufferBlock
-        //   ServerCommand::PublishCommandMeasurements
         void SendServerCommand(uint8_t commandCode);
         void SendServerCommand(uint8_t commandCode, std::string message);
         void SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length);
@@ -418,4 +410,4 @@ namespace transport
     };
 
     typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
-}}
+}

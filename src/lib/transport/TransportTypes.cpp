@@ -203,7 +203,7 @@ ostream& sttp::transport::operator << (ostream& stream, const SignalReference& r
     return stream << reference.Acronym << "-" << SignalKindAcronym[static_cast<int32_t>(reference.Kind)];
 }
 
-string sttp::transport::GetSignalTypeAcronym(SignalKind kind, char phasorType)
+string sttp::transport::GetSignalTypeAcronym(const SignalKind kind, const char phasorType)
 {
     switch (kind)
     {

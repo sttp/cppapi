@@ -27,8 +27,7 @@
 #include "DataColumn.h"
 #include "DataRow.h"
 
-namespace sttp {
-namespace data
+namespace sttp::data
 {
     class DataSet;
     typedef sttp::SharedPtr<DataSet> DataSetPtr;
@@ -48,7 +47,7 @@ namespace data
         std::vector<DataRowPtr> m_rows;
 
     public:
-        DataTable(DataSetPtr parent, std::string name);
+        explicit DataTable(DataSetPtr parent, std::string name);
         ~DataTable();
 
         const DataSetPtr& Parent() const;
@@ -85,4 +84,4 @@ namespace data
     };
 
     typedef sttp::SharedPtr<DataTable> DataTablePtr;
-}}
+}

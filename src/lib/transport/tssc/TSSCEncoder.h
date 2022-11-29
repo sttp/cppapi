@@ -28,22 +28,20 @@
 #include "../TransportTypes.h"
 #include "TSSCPointMetadata.h"
 
-namespace sttp {
-namespace transport {
-namespace tssc
+namespace sttp::transport::tssc
 {
     // Encoder for the Time-Series Special Compression algorithm of the Streaming Telemetry Transport Protocol.
-    class TSSCEncoder
+    class TSSCEncoder final
     {
     private:
-        static constexpr const uint32_t Bits28 = 0xFFFFFFFU;
-        static constexpr const uint32_t Bits24 = 0xFFFFFFU;
-        static constexpr const uint32_t Bits20 = 0xFFFFFU;
-        static constexpr const uint32_t Bits16 = 0xFFFFU;
-        static constexpr const uint32_t Bits12 = 0xFFFU;
-        static constexpr const uint32_t Bits8 = 0xFFU;
-        static constexpr const uint32_t Bits4 = 0xFU;
-        static constexpr const uint32_t Bits0 = 0x0U;
+        static constexpr uint32_t Bits28 = 0xFFFFFFFU;
+        static constexpr uint32_t Bits24 = 0xFFFFFFU;
+        static constexpr uint32_t Bits20 = 0xFFFFFU;
+        static constexpr uint32_t Bits16 = 0xFFFFU;
+        static constexpr uint32_t Bits12 = 0xFFFU;
+        static constexpr uint32_t Bits8 = 0xFFU;
+        static constexpr uint32_t Bits4 = 0xFU;
+        static constexpr uint32_t Bits0 = 0x0U;
 
         uint8_t* m_data;
         uint32_t m_position;
@@ -97,4 +95,4 @@ namespace tssc
         // Adds the supplied measurement to the stream. If the stream is full, this method returns false.
         bool TryAddMeasurement(int32_t id, int64_t timestamp, uint32_t quality, float32_t value);
     };
-}}}
+}

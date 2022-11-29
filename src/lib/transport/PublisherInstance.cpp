@@ -56,7 +56,7 @@ PublisherInstance::~PublisherInstance()
         m_publisher->ShutDown(true);
 }
 
-void PublisherInstance::HandleStatusMessage(DataPublisher* source, const string& message)
+void PublisherInstance::HandleStatusMessage(const DataPublisher* source, const string& message)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -66,7 +66,7 @@ void PublisherInstance::HandleStatusMessage(DataPublisher* source, const string&
     instance->StatusMessage(message);
 }
 
-void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& message)
+void PublisherInstance::HandleErrorMessage(const DataPublisher* source, const string& message)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -76,7 +76,7 @@ void PublisherInstance::HandleErrorMessage(DataPublisher* source, const string& 
     instance->ErrorMessage(message);
 }
 
-void PublisherInstance::HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleClientConnected(const DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -86,7 +86,7 @@ void PublisherInstance::HandleClientConnected(DataPublisher* source, const Subsc
     instance->ClientConnected(connection);
 }
 
-void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleClientDisconnected(const DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -96,7 +96,7 @@ void PublisherInstance::HandleClientDisconnected(DataPublisher* source, const Su
     instance->ClientDisconnected(connection);
 }
 
-void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleProcessingIntervalChangeRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -106,7 +106,7 @@ void PublisherInstance::HandleProcessingIntervalChangeRequested(DataPublisher* s
     instance->ProcessingIntervalChangeRequested(connection);
 }
 
-void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleTemporalSubscriptionRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -116,7 +116,7 @@ void PublisherInstance::HandleTemporalSubscriptionRequested(DataPublisher* sourc
     instance->TemporalSubscriptionRequested(connection);
 }
 
-void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection)
+void PublisherInstance::HandleTemporalSubscriptionCanceled(const DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -126,7 +126,7 @@ void PublisherInstance::HandleTemporalSubscriptionCanceled(DataPublisher* source
     instance->TemporalSubscriptionCanceled(connection);
 }
 
-void PublisherInstance::HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
+void PublisherInstance::HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 

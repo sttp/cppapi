@@ -165,7 +165,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
             if (TryFindTargetConfigurationFrame(measurement->SignalID, configurationFrame))
             {
                 // Lookup measurement metadata - it's faster to find metadata from within configuration frame
-                if (TryGetMeasurementMetdataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
+                if (TryGetMeasurementMetadataFromConfigurationFrame(measurement->SignalID, configurationFrame, measurementMetadata))
                 {
                     const SignalReference& reference = measurementMetadata->Reference;
 

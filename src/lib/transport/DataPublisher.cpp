@@ -43,7 +43,7 @@ struct UserCommandData
 
 DataPublisher::DataPublisher() :
     m_nodeID(NewGuid()),
-    m_securityMode(SecurityMode::None),
+    m_securityMode(SecurityMode::Off),
     m_maximumAllowedConnections(-1),
     m_isMetadataRefreshAllowed(true),
     m_isNaNValueFilterAllowed(true),
@@ -65,13 +65,13 @@ DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
     Start(endpoint);
 }
 
-DataPublisher::DataPublisher(uint16_t port, bool ipV6) :
+DataPublisher::DataPublisher(const uint16_t port, const bool ipV6) :
     DataPublisher()
 {
     Start(port, ipV6);
 }
 
-DataPublisher::DataPublisher(const string& networkInterfaceIP, uint16_t port) :
+DataPublisher::DataPublisher(const string& networkInterfaceIP, const uint16_t port) :
     DataPublisher()
 {
     Start(networkInterfaceIP, port);
@@ -146,7 +146,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
             m_threadPool.Queue(1000, AddDispatchReference(connection), [&,this](void* state)
             {
                 SubscriberConnection* connectionPtr = static_cast<SubscriberConnection*>(state);
-                SubscriberConnectionPtr connectionRef = ReleaseDispatchReference(connectionPtr);
+                const SubscriberConnectionPtr connectionRef = ReleaseDispatchReference(connectionPtr);
                 connectionRef->Stop();
             });
         }
@@ -213,7 +213,7 @@ void DataPublisher::Dispatch(const DispatcherFunction& function)
 void DataPublisher::Dispatch(const DispatcherFunction& function, const uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     CallbackDispatcher dispatcher;
-    SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
+    const SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
 
     dataVector->resize(length);
 
@@ -396,7 +396,7 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
     if (source == nullptr || buffer.empty())
         return;
 
-    UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(&buffer[0]));
+    const UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(&buffer[0]));
 
     if (userCommandData != nullptr && userCommandData->connection != nullptr)
     {
@@ -825,7 +825,7 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
     if (m_metadata == nullptr)
         throw PublisherException("Cannot filter metadata, no metadata has been defined.");
 
-    vector<DataRowPtr> rows = FilterExpressionParser::Select(m_metadata, filterExpression, "MeasurementDetail");
+    const vector<DataRowPtr> rows = FilterExpressionParser::Select(m_metadata, filterExpression, "MeasurementDetail");
     vector<MeasurementMetadataPtr> measurementMetadata;
     const DataTablePtr& measurementDetail = m_metadata->Table("MeasurementDetail");
     
@@ -841,7 +841,7 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
 
     for (size_t i = 0; i < rows.size(); i++)
     {
-        DataRowPtr row = rows[i];
+        const DataRowPtr row = rows[i];
         MeasurementMetadataPtr metadata = NewSharedPtr<MeasurementMetadata>();
 
         if (!row->ValueAsBoolean(enabled).GetValueOrDefault())

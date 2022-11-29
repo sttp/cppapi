@@ -28,12 +28,10 @@
 #include "../TransportTypes.h"
 #include "TSSCPointMetadata.h"
 
-namespace sttp {
-namespace transport {
-namespace tssc
+namespace sttp::transport::tssc
 {
     // Decoder for the Time-Series Special Compression algorithm of the Streaming Telemetry Transport Protocol.
-    class TSSCDecoder
+    class TSSCDecoder final
     {
     private:
         uint8_t* m_data;
@@ -83,4 +81,4 @@ namespace tssc
         int32_t ReadBits4();
         int32_t ReadBits5();
     };
-}}}
+}

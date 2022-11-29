@@ -72,10 +72,10 @@ namespace sttp
         int NativeOrder() const;
 
         // Class constant defining the big endian byte order.
-        static const int BigEndian = 0;
+        static constexpr int BigEndian = 0;
 
         // Class constant defining the little endian byte order.
-        static const int LittleEndian = 1;
+        static constexpr int LittleEndian = 1;
 
         static EndianConverter Default;
         static bool IsLittleEndian();
@@ -98,7 +98,7 @@ namespace sttp
         {
             static const uint32_t length = sizeof(T);
             value = Default.ConvertBigEndian(value);
-            uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+            const uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
             WriteBytes(buffer, bytes, 0, length);
 
@@ -110,7 +110,7 @@ namespace sttp
         {
             static const uint32_t length = sizeof(T);
             value = Default.ConvertLittleEndian(value);
-            uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+            const uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
             WriteBytes(buffer, bytes, 0, length);
 

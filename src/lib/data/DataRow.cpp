@@ -52,7 +52,9 @@ DataRow::DataRow(DataTablePtr parent) :
 
 DataRow::~DataRow()
 {
-    for (uint32_t i = 0; i < m_values.size(); i++)
+    const int32_t valueCount = ConvertInt32(m_values.size());
+
+    for (int32_t i = 0; i < valueCount; i++)
     {
         const DataColumnPtr column = m_parent->Column(i);
 
@@ -763,7 +765,7 @@ Nullable<bool> DataRow::ValueAsBoolean(const int32_t columnIndex)
     if (column->Computed())
         return Cast<bool>(GetComputedValue(column, DataType::Boolean));
 
-    uint8_t* value = static_cast<uint8_t*>(m_values[columnIndex]);
+    const uint8_t* value = static_cast<uint8_t*>(m_values[columnIndex]);
     
     if (value)
         return *value != 0;
@@ -921,7 +923,7 @@ Nullable<sttp::Guid> DataRow::ValueAsGuid(const int32_t columnIndex)
     if (column->Computed())
         return Cast<sttp::Guid>(GetComputedValue(column, DataType::Guid));
 
-    int8_t* data = static_cast<int8_t*>(m_values[columnIndex]);
+    const int8_t* data = static_cast<int8_t*>(m_values[columnIndex]);
 
     if (data)
     {

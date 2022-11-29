@@ -471,7 +471,7 @@ bool SubscriberInstance::TryGetDeviceMetadata(const string& deviceAcronym, Devic
     return found;
 }
 
-bool SubscriberInstance::TryGetMeasurementMetdata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryGetMeasurementMetadata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata)
 {
     bool found = false;
 
@@ -532,7 +532,7 @@ bool SubscriberInstance::TryFindTargetConfigurationFrame(const Guid& signalID, C
     return found;
 }
 
-bool SubscriberInstance::TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryGetMeasurementMetadataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata)
 {
     if (sourceFrame == nullptr)
         return false;
@@ -1178,7 +1178,7 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
     }
 }
 
-void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, const string& message)
+void SubscriberInstance::HandleStatusMessage(const DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1188,7 +1188,7 @@ void SubscriberInstance::HandleStatusMessage(DataSubscriber* source, const strin
     instance->StatusMessage(message);
 }
 
-void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, const string& message)
+void SubscriberInstance::HandleErrorMessage(const DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1198,7 +1198,7 @@ void SubscriberInstance::HandleErrorMessage(DataSubscriber* source, const string
     instance->ErrorMessage(message);
 }
 
-void SubscriberInstance::HandleDataStartTime(DataSubscriber* source, int64_t startTime)
+void SubscriberInstance::HandleDataStartTime(const DataSubscriber* source, const int64_t startTime)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1229,7 +1229,7 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
         source->Subscribe();
 }
 
-void SubscriberInstance::HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache)
+void SubscriberInstance::HandleSubscriptionUpdated(const DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1239,7 +1239,7 @@ void SubscriberInstance::HandleSubscriptionUpdated(DataSubscriber* source, const
     instance->SubscriptionUpdated(signalIndexCache);
 }
 
-void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
+void SubscriberInstance::HandleNewMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1249,7 +1249,7 @@ void SubscriberInstance::HandleNewMeasurements(DataSubscriber* source, const vec
     instance->ReceivedNewMeasurements(measurements);
 }
 
-void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
+void SubscriberInstance::HandleConfigurationChanged(const DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1263,7 +1263,7 @@ void SubscriberInstance::HandleConfigurationChanged(DataSubscriber* source)
     instance->SendMetadataRefreshCommand();
 }
 
-void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const string& message)
+void SubscriberInstance::HandleProcessingComplete(const DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
@@ -1274,7 +1274,7 @@ void SubscriberInstance::HandleProcessingComplete(DataSubscriber* source, const 
     instance->HistoricalReadComplete();
 }
 
-void SubscriberInstance::HandleConnectionTerminated(DataSubscriber* source)
+void SubscriberInstance::HandleConnectionTerminated(const DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 

@@ -25,8 +25,7 @@
 
 #include "DataPublisher.h"
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class PublisherInstance // NOLINT
     {
@@ -36,14 +35,14 @@ namespace transport
         void* m_userData;
 
         // Internal subscription event handlers
-        static void HandleStatusMessage(DataPublisher* source, const std::string& message);
-        static void HandleErrorMessage(DataPublisher* source, const std::string& message);
-        static void HandleClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleReceivedUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
+        static void HandleStatusMessage(const DataPublisher* source, const std::string& message);
+        static void HandleErrorMessage(const DataPublisher* source, const std::string& message);
+        static void HandleClientConnected(const DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleClientDisconnected(const DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleProcessingIntervalChangeRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleTemporalSubscriptionRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleTemporalSubscriptionCanceled(const DataPublisher* source, const SubscriberConnectionPtr& connection);
+        static void HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
 
 #ifdef SWIG
     public:
@@ -142,4 +141,4 @@ namespace transport
         void DisconnectSubscriber(const SubscriberConnectionPtr& connection) const;
         void DisconnectSubscriber(const sttp::Guid& instanceID) const;
     };
-}}
+}

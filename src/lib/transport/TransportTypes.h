@@ -27,8 +27,7 @@
 #include "Constants.h"
 #include <unordered_set>
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     // Simple exception type thrown by the data subscriber
     class SubscriberException final : public Exception, public std::exception
@@ -75,7 +74,7 @@ namespace transport
         Measurement();
 
         // Create instance from existing simple measurement
-        Measurement(const SimpleMeasurement& source);
+        explicit Measurement(const SimpleMeasurement& source);
 
         // Measurement's globally unique identifier.
         Guid SignalID { Empty::Guid };
@@ -311,4 +310,4 @@ namespace transport
     //    vector<Measurement> Analogs;
     //    vector<Measurement> Digitals;
     //};
-}}
+}

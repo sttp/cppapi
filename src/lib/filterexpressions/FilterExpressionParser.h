@@ -42,8 +42,7 @@
 #define SUPPRESS_CONSOLE_ERROR_OUTPUT true
 #endif
 
-namespace sttp {
-namespace filterexpressions
+namespace sttp::filterexpressions
 {
     // Simple exception type thrown by the filter expression parser
     class FilterExpressionParserException final : public Exception, public std::exception
@@ -52,7 +51,7 @@ namespace filterexpressions
         std::string m_message;
 
     public:
-        FilterExpressionParserException(std::string message) noexcept;
+        explicit FilterExpressionParserException(std::string message) noexcept;
         const char* what() const noexcept override;
     };
 
@@ -70,12 +69,12 @@ namespace filterexpressions
 
     typedef std::function<void(FilterExpressionParserPtr, const std::string&)> ParsingExceptionCallback;
 
-    class FilterExpressionParser : // NOLINT
+    class FilterExpressionParser final : // NOLINT
         public FilterExpressionSyntaxBaseListener,
         public sttp::EnableSharedThisPtr<FilterExpressionParser>
     {
     private:
-        class CallbackErrorListener : public antlr4::BaseErrorListener
+        class CallbackErrorListener final : public antlr4::BaseErrorListener
         {
         private:
             const FilterExpressionParserPtr m_filterExpressionParser;
@@ -118,7 +117,7 @@ namespace filterexpressions
 
         static ValueExpressionPtr ParseNumericLiteral(const std::string& literal);
     public:
-        FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
+        explicit FilterExpressionParser(const std::string& filterExpression, bool suppressConsoleErrorOutput = SUPPRESS_CONSOLE_ERROR_OUTPUT);
         ~FilterExpressionParser() override;
 
         const sttp::data::DataSetPtr& GetDataSet() const;
@@ -173,4 +172,4 @@ namespace filterexpressions
     };
 
     typedef sttp::SharedPtr<FilterExpressionParser> FilterExpressionParserPtr;
-}}
+}

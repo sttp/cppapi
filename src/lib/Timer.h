@@ -55,7 +55,7 @@ namespace sttp
                     
                     if (interval > 0)
                     {
-                        static const int32_t MaxSleepDuration = 500;
+                        static constexpr int32_t MaxSleepDuration = 500;
                         const int32_t waits = interval / MaxSleepDuration;
                         const int32_t remainder = interval % MaxSleepDuration;
 

@@ -102,8 +102,8 @@ void ThreadPool::Queue(const uint32_t delay, void* state, const std::function<vo
 {
     if (m_disposing)
         return;
-    
-    TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](Timer* timer, void*)
+
+    const TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](const Timer* timer, void*)
     {        
         if (m_disposing)
             return;

@@ -113,59 +113,61 @@ namespace sttp
 
     struct Int8
     {
-        static const int8_t MaxValue = static_cast<int8_t>(127);
-        static const int8_t MinValue = static_cast<int8_t>(-128);
+        static constexpr int8_t MaxValue = static_cast<int8_t>(127);
+        static constexpr int8_t MinValue = static_cast<int8_t>(-128);
     };
 
     struct UInt8
     {
-        static const uint8_t MaxValue = static_cast<uint8_t>(255);
-        static const uint8_t MinValue = static_cast<uint8_t>(0);
+        static constexpr uint8_t MaxValue = static_cast<uint8_t>(255);
+        static constexpr uint8_t MinValue = static_cast<uint8_t>(0);
     };
 
     struct Int16
     {
-        static const int16_t MaxValue = static_cast<int16_t>(32767);
-        static const int16_t MinValue = static_cast<int16_t>(-32768);
+        static constexpr int16_t MaxValue = static_cast<int16_t>(32767);
+        static constexpr int16_t MinValue = static_cast<int16_t>(-32768);
     };
 
     struct UInt16
     {
-        static const uint16_t MaxValue = static_cast<uint16_t>(65535);
-        static const uint16_t MinValue = static_cast<uint16_t>(0);
+        static constexpr uint16_t MaxValue = static_cast<uint16_t>(65535);
+        static constexpr uint16_t MinValue = static_cast<uint16_t>(0);
     };
 
     struct Int32
     {
-        static const int32_t MaxValue = static_cast<int32_t>(2147483647);
-        static const int32_t MinValue = static_cast<int32_t>(-2147483647) - 1;
+        static constexpr int32_t MaxValue = static_cast<int32_t>(2147483647);
+        static constexpr int32_t MinValue = static_cast<int32_t>(-2147483647) - 1;
     };
 
     struct UInt32
     {
-        static const uint32_t MaxValue = static_cast<uint32_t>(4294967295U);
-        static const uint32_t MinValue = static_cast<uint32_t>(0U);
+        static constexpr uint32_t MaxValue = static_cast<uint32_t>(4294967295U);
+        static constexpr uint32_t MinValue = static_cast<uint32_t>(0U);
     };
 
     struct Int64
     {
-        static const int64_t MaxValue = static_cast<int64_t>(9223372036854775807LL);
-        static const int64_t MinValue = static_cast<int64_t>(-9223372036854775807LL) - 1LL;
+        static constexpr int64_t MaxValue = static_cast<int64_t>(9223372036854775807LL);
+        static constexpr int64_t MinValue = static_cast<int64_t>(-9223372036854775807LL) - 1LL;
     };
 
     struct UInt64
     {
-        static const uint64_t MaxValue = static_cast<uint64_t>(18446744073709551615ULL);
-        static const uint64_t MinValue = static_cast<uint64_t>(0ULL);
+        static constexpr uint64_t MaxValue = static_cast<uint64_t>(18446744073709551615ULL);
+        static constexpr uint64_t MinValue = static_cast<uint64_t>(0ULL);
     };
 
     struct Decimal
     {
+        // ReSharper disable CppVariableCanBeMadeConstexpr
         static const decimal_t MaxValue;
         static const decimal_t MinValue;
-
+        
         static const decimal_t DotNetMaxValue;
         static const decimal_t DotNetMinValue;
+        // ReSharper restore CppVariableCanBeMadeConstexpr
     };
 
     struct DateTime
@@ -176,24 +178,24 @@ namespace sttp
 
     struct Ticks
     {
-        static const int64_t MaxValue = 3155378975999999999LL;       // 12/31/1999 11:59:59.999
-        static const int64_t MinValue = 0LL;                         // 01/01/0001 00:00:00.000
+        static constexpr int64_t MaxValue = 3155378975999999999LL;       // 12/31/1999 11:59:59.999
+        static constexpr int64_t MinValue = 0LL;                         // 01/01/0001 00:00:00.000
 
-        static const int64_t UnixBaseOffset = 621355968000000000LL;  // 01/01/1970 00:00:00.000
-        static const int64_t PTimeBaseOffset = 441481536000000000LL; // 01/01/1400 00:00:00.000
+        static constexpr int64_t UnixBaseOffset = 621355968000000000LL;  // 01/01/1970 00:00:00.000
+        static constexpr int64_t PTimeBaseOffset = 441481536000000000LL; // 01/01/1400 00:00:00.000
 
-        static const int64_t PerSecond = 10000000LL;
-        static const int64_t PerMillisecond = Ticks::PerSecond / 1000LL;
-        static const int64_t PerMicrosecond = Ticks::PerSecond / 1000000LL;
-        static const int64_t PerMinute = 60LL * Ticks::PerSecond;
-        static const int64_t PerHour = 60LL * Ticks::PerMinute;
-        static const int64_t PerDay = 24LL * Ticks::PerHour;
+        static constexpr int64_t PerSecond = 10000000LL;
+        static constexpr int64_t PerMillisecond = Ticks::PerSecond / 1000LL;
+        static constexpr int64_t PerMicrosecond = Ticks::PerSecond / 1000000LL;
+        static constexpr int64_t PerMinute = 60LL * Ticks::PerSecond;
+        static constexpr int64_t PerHour = 60LL * Ticks::PerMinute;
+        static constexpr int64_t PerDay = 24LL * Ticks::PerHour;
 
         // Flag (64th bit) that marks a Ticks value as a leap second, i.e., second 60 (one beyond normal second 59).
-        static const int64_t LeapSecondFlag = 1LL << 63;
+        static constexpr int64_t LeapSecondFlag = 1LL << 63;  // NOLINT(clang-diagnostic-shift-sign-overflow)
 
         // Flag (63rd bit) that indicates if leap second is positive or negative; 0 for add, 1 for delete.
-        static const int64_t LeapSecondDirection = 1LL << 62;
+        static constexpr int64_t LeapSecondDirection = 1LL << 62;
     };
 
     inline int32_t ConvertInt32(const size_t value)

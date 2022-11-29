@@ -28,8 +28,7 @@
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     // Encoder / decoder for the compact measurement format of the Streaming Telemetry Transport Protocol.
     class CompactMeasurement
@@ -46,14 +45,14 @@ namespace transport
 
     public:
         // Creates a new instance of the compact measurement parser.
-        CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets = nullptr, bool includeTime = true, bool useMillisecondResolution = false, int32_t timeIndex = 0);
+        explicit CompactMeasurement(SignalIndexCachePtr signalIndexCache, int64_t* baseTimeOffsets = nullptr, bool includeTime = true, bool useMillisecondResolution = false, int32_t timeIndex = 0);
 
         // Attempts to parse a measurement from the buffer. Return value of false indicates
         // that there is not enough data to parse the measurement. Offset and length will be
         // updated by this method to indicate how many bytes were used when parsing.
-        bool TryParseMeasurement(uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& measurement) const;
+        bool TryParseMeasurement(const uint8_t* data, uint32_t& offset, uint32_t length, MeasurementPtr& measurement) const;
 
         // Serializes a measurement into a buffer
         uint32_t SerializeMeasurement(const Measurement& measurement, std::vector<uint8_t>& buffer, int32_t runtimeID) const;
     };
-}}
+}

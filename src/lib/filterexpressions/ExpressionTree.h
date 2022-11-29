@@ -26,8 +26,7 @@
 #include "../../CommonTypes.h"
 #include "../../data/DataSet.h"
 
-namespace sttp {
-namespace filterexpressions
+namespace sttp::filterexpressions
 {
     // Simple exception type thrown by the expression tree
     class ExpressionTreeException final : public Exception, public std::exception
@@ -36,7 +35,7 @@ namespace filterexpressions
         std::string m_message;
 
     public:
-        ExpressionTreeException(std::string message) noexcept;
+        explicit ExpressionTreeException(std::string message) noexcept;
         const char* what() const noexcept override;
     };
 
@@ -89,13 +88,13 @@ namespace filterexpressions
     bool IsIntegerType(ExpressionValueType valueType);
     bool IsNumericType(ExpressionValueType valueType);
 
-    class ValueExpression : public Expression
+    class ValueExpression final : public Expression
     {
     private:
         void ValidateValueType(ExpressionValueType valueType) const;
 
     public:
-        ValueExpression(ExpressionValueType valueType, sttp::Object value, bool valueIsNullable = false);
+        explicit ValueExpression(ExpressionValueType valueType, sttp::Object value, bool valueIsNullable = false);
 
         const sttp::Object Value;
         const ExpressionValueType ValueType;
@@ -142,10 +141,10 @@ namespace filterexpressions
     const extern char* ExpressionUnaryTypeAcronym[];
     const char* EnumName(ExpressionUnaryType unaryType);
 
-    class UnaryExpression : public Expression
+    class UnaryExpression final : public Expression
     {
     public:
-        UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value);
+        explicit UnaryExpression(ExpressionUnaryType unaryType, ExpressionPtr value);
 
         const ExpressionUnaryType UnaryType;
         const ExpressionPtr Value;
@@ -153,20 +152,20 @@ namespace filterexpressions
 
     typedef sttp::SharedPtr<UnaryExpression> UnaryExpressionPtr;
 
-    class ColumnExpression : public Expression
+    class ColumnExpression final : public Expression
     {
     public:
-        ColumnExpression(sttp::data::DataColumnPtr dataColumn);
+        explicit ColumnExpression(sttp::data::DataColumnPtr dataColumn);
 
         const sttp::data::DataColumnPtr DataColumn;
     };
 
     typedef sttp::SharedPtr<ColumnExpression> ColumnExpressionPtr;
 
-    class InListExpression : public Expression
+    class InListExpression final : public Expression
     {
     public:
-        InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword, bool exactMatch);
+        explicit InListExpression(ExpressionPtr value, ExpressionCollectionPtr arguments, bool hasNotKeyword, bool exactMatch);
 
         const ExpressionPtr Value;
         const ExpressionCollectionPtr Arguments;
@@ -221,10 +220,10 @@ namespace filterexpressions
         UtcNow
     };
 
-    class FunctionExpression : public Expression
+    class FunctionExpression final : public Expression
     {
     public:
-        FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments);
+        explicit FunctionExpression(ExpressionFunctionType functionType, ExpressionCollectionPtr arguments);
 
         const ExpressionFunctionType FunctionType;
         const ExpressionCollectionPtr Arguments;
@@ -265,10 +264,10 @@ namespace filterexpressions
     const extern char* ExpressionOperatorTypeAcronym[];
     const char* EnumName(ExpressionOperatorType operatorType);
 
-    class OperatorExpression : public Expression
+    class OperatorExpression final : public Expression
     {
     public:
-        OperatorExpression(ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue);
+        explicit OperatorExpression(ExpressionOperatorType operatorType, ExpressionPtr leftValue, ExpressionPtr rightValue);
 
         const ExpressionOperatorType OperatorType;
         const ExpressionPtr LeftValue;
@@ -277,7 +276,7 @@ namespace filterexpressions
 
     typedef sttp::SharedPtr<OperatorExpression> OperatorExpressionPtr;
 
-    class ExpressionTree
+    class ExpressionTree final
     {
     private:
         sttp::data::DataRowPtr m_currentRow;
@@ -375,7 +374,7 @@ namespace filterexpressions
         ValueExpressionPtr Convert(const ValueExpressionPtr& sourceValue, ExpressionValueType targetValueType) const;
         ValueExpressionPtr EvaluateRegEx(const std::string& functionName, const ValueExpressionPtr& regexValue, const ValueExpressionPtr& testValue, bool returnMatchedValue) const;
     public:
-        ExpressionTree(sttp::data::DataTablePtr table);
+        explicit ExpressionTree(sttp::data::DataTablePtr table);
 
         const sttp::data::DataTablePtr& Table() const;
         int32_t TopLimit;
@@ -392,4 +391,4 @@ namespace filterexpressions
     };
 
     typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
-}}
+}

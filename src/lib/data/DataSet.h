@@ -31,8 +31,7 @@ namespace pugi
     class xml_document;
 }
 
-namespace sttp {
-namespace data
+namespace sttp::data
 {
     // Simple exception type thrown by data set operations
     class DataSetException final : public sttp::Exception, public std::exception
@@ -41,7 +40,7 @@ namespace data
         std::string m_message;
 
     public:
-        DataSetException(std::string message) noexcept;
+        explicit DataSetException(std::string message) noexcept;
         const char* what() const noexcept override;
     };
 
@@ -57,7 +56,7 @@ namespace data
         void GenerateXml(pugi::xml_document& document, const std::string& dataSetName) const;
 
     public:
-         DataSet();
+        DataSet();
         ~DataSet();
 
         const DataTablePtr& Table(const std::string& tableName) const;
@@ -93,4 +92,4 @@ namespace data
         static const std::string XmlSchemaNamespace;
         static const std::string ExtXmlSchemaDataNamespace;
     };
-}}
+}

@@ -64,7 +64,7 @@ void SignalIndexCache::Clear()
 // Determines whether an element with the given runtime ID exists in the signal index cache.
 bool SignalIndexCache::Contains(const int32_t signalIndex) const
 {
-    return m_reference.find(signalIndex) != m_reference.end();
+    return m_reference.contains(signalIndex);
 }
 
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
@@ -183,7 +183,7 @@ void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnection& conne
     m_binaryLength = binaryLength;
 }
 
-void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
+void SignalIndexCache::Decode(const vector<uint8_t>& buffer, Guid& subscriberID)
 {
     const uint8_t* data = buffer.data();
     stringstream sourceStream;
@@ -233,7 +233,7 @@ void SignalIndexCache::Parse(const vector<uint8_t>& buffer, Guid& subscriberID)
     // that may need to be parsed in the future...
 }
 
-void SignalIndexCache::Serialize(const SubscriberConnection& connection, vector<uint8_t>& buffer)
+void SignalIndexCache::Encode(const SubscriberConnection& connection, vector<uint8_t>& buffer) const
 {
     const uint32_t binaryLengthLocation = ConvertUInt32(buffer.size());
     uint32_t binaryLength = 28; // cache size + subscriber ID + ref count + unauthorized count

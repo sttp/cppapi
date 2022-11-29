@@ -45,7 +45,7 @@ private:
     static sttp::data::DataSetPtr s_history;
 
 public:
-    TemporalSubscriber(SubscriberConnectionPtr connection);
+    explicit TemporalSubscriber(SubscriberConnectionPtr connection);
     ~TemporalSubscriber();
 
     void SetProcessingInterval(int32_t processingInterval) const;
@@ -53,7 +53,7 @@ public:
 
     bool GetIsStopped() const;
 
-    static constexpr const int64_t HistoryInterval = sttp::Ticks::PerMillisecond * 33L;
+    static constexpr int64_t HistoryInterval = sttp::Ticks::PerMillisecond * 33L;
 };
 
 typedef sttp::SharedPtr<TemporalSubscriber> TemporalSubscriberPtr;

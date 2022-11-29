@@ -27,18 +27,16 @@
 #include "../Nullable.h"
 #include "DataColumn.h"
 
-namespace sttp {
-namespace filterexpressions
+namespace sttp::filterexpressions
 {
     class ValueExpression;
     typedef sttp::SharedPtr<ValueExpression> ValueExpressionPtr;
 
     class ExpressionTree;
     typedef sttp::SharedPtr<ExpressionTree> ExpressionTreePtr;
-}}
+}
 
-namespace sttp {
-namespace data
+namespace sttp::data
 {
     enum class DataType;
 
@@ -66,7 +64,7 @@ namespace data
         template<class T>
         void SetValue(int32_t columnIndex, const sttp::Nullable<T>& value, DataType targetType);
     public:
-        DataRow(DataTablePtr parent);
+        explicit DataRow(DataTablePtr parent);
         ~DataRow();
 
         const DataTablePtr& Parent() const;
@@ -153,17 +151,14 @@ namespace data
 
         static const DataRowPtr NullPtr;
     };
-}}
+}
 
 // Setup standard hash code for DataRowPtr
-namespace std  // NOLINT
+template<>
+struct std::hash<sttp::data::DataRowPtr>
 {
-    template<>
-    struct hash<sttp::data::DataRowPtr>
+    size_t operator () (const sttp::data::DataRowPtr& dataRow) const noexcept
     {
-        size_t operator () (const sttp::data::DataRowPtr& dataRow) const noexcept
-        {
-            return boost::hash<sttp::data::DataRowPtr>()(dataRow);
-        }
-    };
-}
+        return boost::hash<sttp::data::DataRowPtr>()(dataRow);
+    }
+};

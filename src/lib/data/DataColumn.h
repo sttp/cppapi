@@ -25,8 +25,7 @@
 
 #include "../CommonTypes.h"
 
-namespace sttp {
-namespace data
+namespace sttp::data
 {
     enum class DataType
     {
@@ -67,7 +66,7 @@ namespace data
         int32_t m_index;
 
     public:
-        DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string{});
+        explicit DataColumn(DataTablePtr parent, std::string name, DataType type, std::string expression = std::string{});
         ~DataColumn();
 
         const DataTablePtr& Parent() const;
@@ -86,4 +85,4 @@ namespace data
 
         friend class DataTable;
     };
-}}
+}

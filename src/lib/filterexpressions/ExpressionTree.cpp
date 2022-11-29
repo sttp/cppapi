@@ -33,7 +33,7 @@ using namespace sttp;
 using namespace sttp::data;
 using namespace sttp::filterexpressions;
 
-const int32_t sttp::filterexpressions::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
+constexpr int32_t sttp::filterexpressions::ExpressionValueTypeLength = static_cast<int32_t>(ExpressionValueType::Undefined) + 1;
 
 const char* sttp::filterexpressions::ExpressionValueTypeAcronym[] =
 {
@@ -1217,10 +1217,10 @@ ExpressionValueType ExpressionTree::DeriveComparisonOperationValueType(const Exp
             {
                 case ExpressionValueType::Boolean:
                 case ExpressionValueType::Int32:
-                case ExpressionValueType::String:
                     return ExpressionValueType::Int32;
                 case ExpressionValueType::Int64:
                     return ExpressionValueType::Int64;
+                case ExpressionValueType::String:
                 case ExpressionValueType::Decimal:
                     return ExpressionValueType::Decimal;
                 case ExpressionValueType::Double:
@@ -1237,8 +1237,8 @@ ExpressionValueType ExpressionTree::DeriveComparisonOperationValueType(const Exp
                 case ExpressionValueType::Boolean:
                 case ExpressionValueType::Int32:
                 case ExpressionValueType::Int64:
-                case ExpressionValueType::String:
                     return ExpressionValueType::Int64;
+                case ExpressionValueType::String:
                 case ExpressionValueType::Decimal:
                     return ExpressionValueType::Decimal;
                 case ExpressionValueType::Double:

@@ -28,31 +28,31 @@ using namespace sttp::transport;
 MeasurementStateFlags sttp::transport::operator &(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) &
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 }
 
 MeasurementStateFlags sttp::transport::operator ^(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) ^
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 }
 
 MeasurementStateFlags sttp::transport::operator ~(MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        ~static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        ~static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 }
 
 MeasurementStateFlags& sttp::transport::operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) |
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) |
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 
     return lhs;
@@ -61,8 +61,8 @@ MeasurementStateFlags& sttp::transport::operator |=(MeasurementStateFlags &lhs, 
 MeasurementStateFlags& sttp::transport::operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) &
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) &
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 
     return lhs;
@@ -71,14 +71,16 @@ MeasurementStateFlags& sttp::transport::operator &=(MeasurementStateFlags &lhs, 
 MeasurementStateFlags& sttp::transport::operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(lhs) ^
-        static_cast<std::underlying_type<MeasurementStateFlags>::type>(rhs)
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) ^
+        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
     );
 
     return lhs;
 }
 
 // Define "instances" of all static constants so values can be passed by reference and found by linker
+// JRC: This appears to be no longer needed, leaving for now in case a particular environment needs it
+/*
 const size_t Common::MaxPacketSize;
 const uint32_t Common::PayloadHeaderSize;
 const uint32_t Common::ResponseHeaderSize;
@@ -87,7 +89,7 @@ const uint8_t DataPacketFlags::Synchronized;
 const uint8_t DataPacketFlags::Compact;
 const uint8_t DataPacketFlags::CipherIndex;
 const uint8_t DataPacketFlags::Compressed;
-const uint8_t DataPacketFlags::LittleEndianCompression;
+const uint8_t DataPacketFlags::CacheIndex;
 const uint8_t DataPacketFlags::NoFlags;
 
 const uint8_t ServerCommand::Connect;
@@ -99,6 +101,11 @@ const uint8_t ServerCommand::UpdateProcessingInterval;
 const uint8_t ServerCommand::DefineOperationalModes;
 const uint8_t ServerCommand::ConfirmNotification;
 const uint8_t ServerCommand::ConfirmBufferBlock;
+const uint8_t ServerCommand::ConfirmUpdateBaseTimes;
+const uint8_t ServerCommand::ConfirmUpdateSignalIndexCache;
+const uint8_t ServerCommand::ConfirmUpdateCipherKeys;
+const uint8_t ServerCommand::GetPrimaryMetadataSchema;
+const uint8_t ServerCommand::GetSignalSelectionSchema;
 const uint8_t ServerCommand::UserCommand00;
 const uint8_t ServerCommand::UserCommand01;
 const uint8_t ServerCommand::UserCommand02;
@@ -148,6 +155,7 @@ const uint8_t ServerResponse::NoOP;
 const uint32_t OperationalModes::VersionMask;
 const uint32_t OperationalModes::CompressionModeMask;
 const uint32_t OperationalModes::EncodingMask;
+const uint32_t OperationalModes::ImplementationSpecificExtensionMask;
 const uint32_t OperationalModes::ReceiveExternalMetadata;
 const uint32_t OperationalModes::ReceiveInternalMetadata;
 const uint32_t OperationalModes::CompressPayloadData;
@@ -162,3 +170,4 @@ const uint32_t OperationalEncoding::UTF8;
 const uint32_t CompressionModes::GZip;
 const uint32_t CompressionModes::TSSC;
 const uint32_t CompressionModes::None;
+*/

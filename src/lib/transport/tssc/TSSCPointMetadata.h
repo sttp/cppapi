@@ -27,56 +27,54 @@
 
 #include "../TransportTypes.h"
 
-namespace sttp {
-namespace transport {
-namespace tssc
+namespace sttp::transport::tssc
 {
     // The encoding commands supported by TSSC
     struct TSSCCodeWords
     {
-        static const uint8_t EndOfStream = 0;
+        static constexpr uint8_t EndOfStream = 0;
 
-        static const uint8_t PointIDXOR4 = 1;
-        static const uint8_t PointIDXOR8 = 2;
-        static const uint8_t PointIDXOR12 = 3;
-        static const uint8_t PointIDXOR16 = 4;
-        static const uint8_t PointIDXOR20 = 5;
-        static const uint8_t PointIDXOR24 = 6;
-        static const uint8_t PointIDXOR32 = 7;
+        static constexpr uint8_t PointIDXOR4 = 1;
+        static constexpr uint8_t PointIDXOR8 = 2;
+        static constexpr uint8_t PointIDXOR12 = 3;
+        static constexpr uint8_t PointIDXOR16 = 4;
+        static constexpr uint8_t PointIDXOR20 = 5;
+        static constexpr uint8_t PointIDXOR24 = 6;
+        static constexpr uint8_t PointIDXOR32 = 7;
 
-        static const uint8_t TimeDelta1Forward = 8;
-        static const uint8_t TimeDelta2Forward = 9;
-        static const uint8_t TimeDelta3Forward = 10;
-        static const uint8_t TimeDelta4Forward = 11;
-        static const uint8_t TimeDelta1Reverse = 12;
-        static const uint8_t TimeDelta2Reverse = 13;
-        static const uint8_t TimeDelta3Reverse = 14;
-        static const uint8_t TimeDelta4Reverse = 15;
-        static const uint8_t Timestamp2 = 16;
-        static const uint8_t TimeXOR7Bit = 17;
+        static constexpr uint8_t TimeDelta1Forward = 8;
+        static constexpr uint8_t TimeDelta2Forward = 9;
+        static constexpr uint8_t TimeDelta3Forward = 10;
+        static constexpr uint8_t TimeDelta4Forward = 11;
+        static constexpr uint8_t TimeDelta1Reverse = 12;
+        static constexpr uint8_t TimeDelta2Reverse = 13;
+        static constexpr uint8_t TimeDelta3Reverse = 14;
+        static constexpr uint8_t TimeDelta4Reverse = 15;
+        static constexpr uint8_t Timestamp2 = 16;
+        static constexpr uint8_t TimeXOR7Bit = 17;
 
-        static const uint8_t Quality2 = 18;
-        static const uint8_t Quality7Bit32 = 19;
+        static constexpr uint8_t Quality2 = 18;
+        static constexpr uint8_t Quality7Bit32 = 19;
 
-        static const uint8_t Value1 = 20;
-        static const uint8_t Value2 = 21;
-        static const uint8_t Value3 = 22;
-        static const uint8_t ValueZero = 23;
-        static const uint8_t ValueXOR4 = 24;
-        static const uint8_t ValueXOR8 = 25;
-        static const uint8_t ValueXOR12 = 26;
-        static const uint8_t ValueXOR16 = 27;
-        static const uint8_t ValueXOR20 = 28;
-        static const uint8_t ValueXOR24 = 29;
-        static const uint8_t ValueXOR28 = 30;
-        static const uint8_t ValueXOR32 = 31;
+        static constexpr uint8_t Value1 = 20;
+        static constexpr uint8_t Value2 = 21;
+        static constexpr uint8_t Value3 = 22;
+        static constexpr uint8_t ValueZero = 23;
+        static constexpr uint8_t ValueXOR4 = 24;
+        static constexpr uint8_t ValueXOR8 = 25;
+        static constexpr uint8_t ValueXOR12 = 26;
+        static constexpr uint8_t ValueXOR16 = 27;
+        static constexpr uint8_t ValueXOR20 = 28;
+        static constexpr uint8_t ValueXOR24 = 29;
+        static constexpr uint8_t ValueXOR28 = 30;
+        static constexpr uint8_t ValueXOR32 = 31;
     };
 
     // The metadata kept for each pointID.
-    class TSSCPointMetadata
+    class TSSCPointMetadata final
     {
     private:
-        static const uint8_t CommandStatsLength = 32;
+        static constexpr uint8_t CommandStatsLength = 32;
 
         uint8_t m_commandStats[CommandStatsLength];
         int32_t m_commandsSentSinceLastChange;
@@ -110,11 +108,11 @@ namespace tssc
         );
 
     public:
-        TSSCPointMetadata(
+        explicit TSSCPointMetadata(
             std::function<void(int32_t, int32_t)> writeBits
         );
 
-        TSSCPointMetadata(
+        explicit TSSCPointMetadata(
             std::function<int32_t()> readBit,
             std::function<int32_t()> readBits5
         );
@@ -133,4 +131,4 @@ namespace tssc
     };
 
     typedef SharedPtr<TSSCPointMetadata> TSSCPointMetadataPtr;
-}}}
+}

@@ -25,8 +25,7 @@
 
 #include "DataSubscriber.h"
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class SubscriberInstance  // NOLINT
     {
@@ -64,15 +63,15 @@ namespace transport
 
         // Internal subscription event handlers
         static void HandleResubscribe(DataSubscriber* source);
-        static void HandleStatusMessage(DataSubscriber* source, const std::string& message);
-        static void HandleErrorMessage(DataSubscriber* source, const std::string& message);
-        static void HandleDataStartTime(DataSubscriber* source, int64_t startTime);
+        static void HandleStatusMessage(const DataSubscriber* source, const std::string& message);
+        static void HandleErrorMessage(const DataSubscriber* source, const std::string& message);
+        static void HandleDataStartTime(const DataSubscriber* source, int64_t startTime);
         static void HandleMetadata(DataSubscriber* source, const std::vector<uint8_t>& payload);
-        static void HandleSubscriptionUpdated(DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache);
-        static void HandleNewMeasurements(DataSubscriber* source, const std::vector<MeasurementPtr>& measurements);
-        static void HandleProcessingComplete(DataSubscriber* source, const std::string& message);
-        static void HandleConfigurationChanged(DataSubscriber* source);
-        static void HandleConnectionTerminated(DataSubscriber* source);
+        static void HandleSubscriptionUpdated(const DataSubscriber* source, const SignalIndexCachePtr& signalIndexCache);
+        static void HandleNewMeasurements(const DataSubscriber* source, const std::vector<MeasurementPtr>& measurements);
+        static void HandleProcessingComplete(const DataSubscriber* source, const std::string& message);
+        static void HandleConfigurationChanged(const DataSubscriber* source);
+        static void HandleConnectionTerminated(const DataSubscriber* source);
 
 #ifdef SWIG
     public:
@@ -250,13 +249,13 @@ namespace transport
 
         // Metadata record lookup functions (post-parse)
         bool TryGetDeviceMetadata(const std::string& deviceAcronym, DeviceMetadataPtr& deviceMetadata);
-        bool TryGetMeasurementMetdata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata);
+        bool TryGetMeasurementMetadata(const Guid& signalID, MeasurementMetadataPtr& measurementMetadata);
         bool TryGetConfigurationFrame(const std::string& deviceAcronym, ConfigurationFramePtr& configurationFrame);
         bool TryFindTargetConfigurationFrame(const Guid& signalID, ConfigurationFramePtr& targetFrame);
 
         // Configuration frame limits the required search range for measurement metadata,
         // searching the frame members for a matching signal ID should normally be much
         // faster than executing a lookup in the full measurement map cache.
-        static bool TryGetMeasurementMetdataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata);
+        static bool TryGetMeasurementMetadataFromConfigurationFrame(const Guid& signalID, const ConfigurationFramePtr& sourceFrame, MeasurementMetadataPtr& measurementMetadata);
     };
-}}
+}

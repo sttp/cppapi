@@ -38,10 +38,10 @@ using namespace sttp::data;
 using namespace sttp::filterexpressions;
 using namespace sttp::transport;
 
-static const uint32_t MaxPacketSize = 32768U;
-static const float64_t DefaultLagTime = 5.0;
-static const float64_t DefaultLeadTime = 5.0;
-static const float64_t DefaultPublishInterval = 1.0;
+static constexpr uint32_t MaxPacketSize = 32768U;
+static constexpr float64_t DefaultLagTime = 5.0;
+static constexpr float64_t DefaultLeadTime = 5.0;
+static constexpr float64_t DefaultPublishInterval = 1.0;
 
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) : //NOLINT
     m_parent(std::move(parent)),
@@ -541,7 +541,6 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
         if (length >= 6)
         {
             const uint8_t flags = data[0];
-            int32_t index = 1;
 
             if ((flags & DataPacketFlags::Synchronized) > 0)
             {
@@ -550,6 +549,8 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             }
             else
             {
+                int32_t index = 1;
+
                 // Cancel any existing subscription timers
                 if (m_baseTimeRotationTimer != nullptr)
                     m_baseTimeRotationTimer->Stop();
@@ -750,7 +751,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                     if (signalIndexCache == nullptr)
                         throw PublisherException("Signal index cache is undefined.");
 
-                    int32_t signalCount = signalIndexCache->Count();
+                    uint32_t signalCount = signalIndexCache->Count();
 
                     // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
                     SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
@@ -766,9 +767,9 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                         m_baseTimeOffsets[1] = 0LL;
                         m_latestTimestamp = 0LL;
 
-                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](Timer* timer, void*)
+                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](const Timer* timer, void*)
                         {
-                            const uint64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
+                            const int64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
 
                             if (realTime == 0LL)
                                 return;
@@ -777,7 +778,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                             {
                                 // Initialize base time offsets
                                 m_baseTimeOffsets[0] = realTime;
-                                m_baseTimeOffsets[1] = realTime + static_cast<int64_t>(timer->GetInterval() * Ticks::PerMillisecond);
+                                m_baseTimeOffsets[1] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
 
                                 m_timeIndex = 0;
                             }
@@ -789,7 +790,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                                 m_timeIndex ^= 1;
 
                                 // Setup next time base
-                                m_baseTimeOffsets[oldIndex] = realTime + static_cast<int64_t>(timer->GetInterval() * Ticks::PerMillisecond);
+                                m_baseTimeOffsets[oldIndex] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
                             }
 
                             // Send new base time offsets to client
@@ -1022,7 +1023,7 @@ void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, c
     }
 }
 
-void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleDefineOperationalModes(const uint8_t* data, const uint32_t length)
 {
     if (length < 4)
         return;
@@ -1035,7 +1036,7 @@ void SubscriberConnection::HandleDefineOperationalModes(uint8_t* data, const uin
     SetOperationalModes(operationalModes);
 }
 
-void SubscriberConnection::HandleUserCommand(const uint32_t command, uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleUserCommand(const uint32_t command, const uint8_t* data, const uint32_t length)
 {
     m_parent->DispatchUserCommand(m_parent->AddDispatchReference(GetReference()), command, data, length);
 }
@@ -1043,7 +1044,7 @@ void SubscriberConnection::HandleUserCommand(const uint32_t command, uint8_t* da
 SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string& filterExpression, bool& success)
 {
     string exceptionMessage, parsingException;
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
+    const FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression);
 
     // Define an empty schema if none has been defined
     if (m_parent->m_filteringMetadata == nullptr)
@@ -1155,7 +1156,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
             count = 0;
         }
 
-        WriteBytes(packet, buffer);
+        WriteBytes(packet, buffer);  // NOLINT
         buffer.clear();
         count++; //-V127
 
@@ -1327,19 +1328,20 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
         // Validate packet size, anything larger than 256K should be considered invalid data
-        // TODO: Consider allowing "continued" subscribes to overcome a fixed packet limit
-        if (packetSize > static_cast<uint32_t>(UInt16::MaxValue * 4U))
-        {
-            m_parent->m_threadPool.Queue([this, packetSize]
-            {
-                m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
-                SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
-                ThreadSleep(500);
-                Stop();
-            });
-            
-            return;
-        }
+        // TODO: Needs fix, validate initial packet only (see Go code)
+        // FUTURE: Consider allowing "continued" packet subscribes
+        //if (packetSize > static_cast<uint32_t>(UInt16::MaxValue * 4U))
+        //{
+        //    m_parent->m_threadPool.Queue([this, packetSize]
+        //    {
+        //        m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
+        //        SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
+        //        ThreadSleep(500);
+        //        Stop();
+        //    });
+        //    
+        //    return;
+        //}
 
         m_readBuffer.resize(packetSize);
     }
@@ -1452,7 +1454,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
     ReadCommandChannel();
 }
 
-std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndexCache& signalIndexCache) const
+std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(const SignalIndexCache& signalIndexCache) const
 {
     vector<uint8_t> serializationBuffer;
 
@@ -1461,7 +1463,7 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(SignalIndex
     const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
 
     serializationBuffer.reserve(static_cast<size_t>(signalIndexCache.GetBinaryLength() * 0.02));
-    signalIndexCache.Serialize(*this, serializationBuffer);
+    signalIndexCache.Encode(*this, serializationBuffer);
 
     if (compressSignalIndexCache && useGZipCompression)
     {
@@ -1512,12 +1514,12 @@ DataSetPtr SubscriberConnection::FilterClientMetadata(const StringMap<Expression
         return m_parent->m_metadata;
 
     DataSetPtr dataSet = NewSharedPtr<DataSet>();
-    vector<DataTablePtr> tables = m_parent->m_metadata->Tables();
+    const vector<DataTablePtr> tables = m_parent->m_metadata->Tables();
 
     for (size_t i = 0; i < tables.size(); i++)
     {
         const DataTablePtr table = tables[i];
-        DataTablePtr filteredTable = dataSet->CreateTable(table->Name());
+        const DataTablePtr filteredTable = dataSet->CreateTable(table->Name());
         ExpressionTreePtr expression;
 
         for (int32_t j = 0; j < table->ColumnCount(); j++)
@@ -1728,7 +1730,7 @@ string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t of
 {
     // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
     // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
-    static const uint32_t enc_sizeof_wchar = 2;
+    static constexpr uint32_t enc_sizeof_wchar = 2;
     bool swapBytes = EndianConverter::IsBigEndian();
 
     switch (m_encoding)
@@ -1766,7 +1768,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
 {
     // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
     // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
-    static const uint32_t enc_sizeof_wchar = 2;
+    static constexpr uint32_t enc_sizeof_wchar = 2;
     bool swapBytes = EndianConverter::IsBigEndian();
     vector<uint8_t> result {};
 

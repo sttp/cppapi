@@ -32,15 +32,13 @@
 #include "TransportTypes.h"
 #include "Constants.h"
 
-namespace sttp {
-namespace filterexpressions
+namespace sttp::filterexpressions
 {
     class ExpressionTree;
     typedef SharedPtr<ExpressionTree> ExpressionTreePtr;
-}}
+}
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class DataPublisher : public EnableSharedThisPtr<DataPublisher> // NOLINT
     {
@@ -148,9 +146,9 @@ namespace transport
         DataPublisher();
 
         // The following constructors will auto-start DataPublisher using specified connection info
-        DataPublisher(const TcpEndPoint& endpoint);
-        DataPublisher(uint16_t port, bool ipV6 = false);                        // Bind to default NIC
-        DataPublisher(const std::string& networkInterfaceIP, uint16_t port);    // Bind to specified NIC IP, format determines IP version
+        explicit DataPublisher(const TcpEndPoint& endpoint);
+        explicit DataPublisher(uint16_t port, bool ipV6 = false);                        // Bind to default NIC
+        explicit DataPublisher(const std::string& networkInterfaceIP, uint16_t port);    // Bind to specified NIC IP, format determines IP version
 
         // Releases all threads and sockets
         // tied up by the publisher.
@@ -273,4 +271,4 @@ namespace transport
     };
 
     typedef SharedPtr<DataPublisher> DataPublisherPtr;
-}}
+}

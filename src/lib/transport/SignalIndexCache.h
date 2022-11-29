@@ -28,8 +28,7 @@
 #include "../CommonTypes.h"
 #include <unordered_set>
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     class SubscriberConnection;
     typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
@@ -40,7 +39,7 @@ namespace transport
     // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
     // to human-readable measurement keys.
-    class SignalIndexCache : public sttp::EnableSharedThisPtr<SignalIndexCache> // NOLINT
+    class SignalIndexCache final : public sttp::EnableSharedThisPtr<SignalIndexCache> // NOLINT
     {
     private:
         std::unordered_map<int32_t, uint32_t> m_reference;
@@ -97,23 +96,20 @@ namespace transport
 
         void RecalculateBinaryLength(const SubscriberConnection& connection);
 
-        void Parse(const std::vector<uint8_t>& buffer, Guid& subscriberID);
+        void Decode(const std::vector<uint8_t>& buffer, Guid& subscriberID);
 
-        void Serialize(const SubscriberConnection& connection, std::vector<uint8_t>& buffer);
+        void Encode(const SubscriberConnection& connection, std::vector<uint8_t>& buffer) const;
     };
 
     typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
-}}
+}
 
 // Setup standard hash code for SignalIndexCachePtr
-namespace std  // NOLINT
+template<>
+struct std::hash<sttp::transport::SignalIndexCachePtr>
 {
-    template<>
-    struct hash<sttp::transport::SignalIndexCachePtr>
+    size_t operator () (const sttp::transport::SignalIndexCachePtr& signalIndexCache) const noexcept
     {
-        size_t operator () (const sttp::transport::SignalIndexCachePtr& signalIndexCache) const noexcept
-        {
-            return boost::hash<sttp::transport::SignalIndexCachePtr>()(signalIndexCache);
-        }
-    };
-}
+        return boost::hash<sttp::transport::SignalIndexCachePtr>()(signalIndexCache);
+    }
+};

@@ -28,7 +28,7 @@ using namespace sttp;
 // Creates a new instance of the EndianConverter.
 EndianConverter::EndianConverter()
 {
-    const union
+    constexpr union
     {
         uint32_t num;
         uint8_t bytes[4];
@@ -36,9 +36,9 @@ EndianConverter::EndianConverter()
     endianTest = { 0x00000001 };
 
     if (endianTest.bytes[0] == 1)
-        m_nativeOrder = EndianConverter::LittleEndian;
+        m_nativeOrder = LittleEndian;
     else
-        m_nativeOrder = EndianConverter::BigEndian;
+        m_nativeOrder = BigEndian;
 }
 
 // Swaps the bytes in a character array.

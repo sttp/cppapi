@@ -5,9 +5,8 @@
 
 #include <cstdint>
 
-namespace sttp {
-namespace transport
+namespace sttp::transport
 {
     const extern uint8_t MetadataSchema[];
     const extern uint32_t MetadataSchemaLength;
-}}
+}

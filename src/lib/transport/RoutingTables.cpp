@@ -86,7 +86,7 @@ void RoutingTables::UpdateRoutesOperation(RoutingTables& routingTables, const De
     // Remove subscriber connection from undesired measurement route destinations
     for (auto& [signalID, destinations] : activeRoutes)
     {
-        if (routes.find(signalID) != routes.end())
+        if (routes.contains(signalID))
             destinations->erase(destination);
     }
 
@@ -173,12 +173,12 @@ void RoutingTables::PublishMeasurements(const vector<MeasurementPtr>& measuremen
     }
 
     // Publish routed measurements
-    for (auto& [destinationPtr, measurements] : routedMeasurementMap)
+    for (auto& [destinationPtr, subscriberMeasurements] : routedMeasurementMap)
     {
         auto& destination = *destinationPtr;
 
         if (destination.GetIsSubscribed() && !destination.GetIsTemporalSubscription())
-            destination.PublishMeasurements(*measurements);
+            destination.PublishMeasurements(*subscriberMeasurements);
     }
 }
 

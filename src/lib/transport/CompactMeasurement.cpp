@@ -29,22 +29,22 @@ using namespace sttp;
 using namespace sttp::transport;
 
 // These constants represent each flag in the 8-bit compact measurement state flags.
-static const uint8_t CompactDataRangeFlag = 0x01;
-static const uint8_t CompactDataQualityFlag = 0x02;
-static const uint8_t CompactTimeQualityFlag = 0x04;
-static const uint8_t CompactSystemIssueFlag = 0x08;
-static const uint8_t CompactCalculatedValueFlag = 0x10;
-static const uint8_t CompactDiscardedValueFlag = 0x20;
-static const uint8_t CompactBaseTimeOffsetFlag = 0x40;
-static const uint8_t CompactTimeIndexFlag = 0x80;
+static constexpr uint8_t CompactDataRangeFlag = 0x01;
+static constexpr uint8_t CompactDataQualityFlag = 0x02;
+static constexpr uint8_t CompactTimeQualityFlag = 0x04;
+static constexpr uint8_t CompactSystemIssueFlag = 0x08;
+static constexpr uint8_t CompactCalculatedValueFlag = 0x10;
+static constexpr uint8_t CompactDiscardedValueFlag = 0x20;
+static constexpr uint8_t CompactBaseTimeOffsetFlag = 0x40;
+static constexpr uint8_t CompactTimeIndexFlag = 0x80;
 
 // These constants are masks used to set flags within the full 32-bit measurement state flags.
-static const uint32_t DataRangeMask = 0x000000FC;
-static const uint32_t DataQualityMask = 0x0000EF03;
-static const uint32_t TimeQualityMask = 0x00BF0000;
-static const uint32_t SystemIssueMask = 0xE0000000;
-static const uint32_t CalculatedValueMask = 0x00001000;
-static const uint32_t DiscardedValueMask = 0x00400000;
+static constexpr uint32_t DataRangeMask = 0x000000FC;
+static constexpr uint32_t DataQualityMask = 0x0000EF03;
+static constexpr uint32_t TimeQualityMask = 0x00BF0000;
+static constexpr uint32_t SystemIssueMask = 0xE0000000;
+static constexpr uint32_t CalculatedValueMask = 0x00001000;
+static constexpr uint32_t DiscardedValueMask = 0x00400000;
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
@@ -135,7 +135,7 @@ uint32_t CompactMeasurement::GetBinaryLength(const bool usingBaseTimeOffset) con
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool CompactMeasurement::TryParseMeasurement(uint8_t* data, uint32_t& offset, const uint32_t length, MeasurementPtr& measurement) const
+bool CompactMeasurement::TryParseMeasurement(const uint8_t* data, uint32_t& offset, const uint32_t length, MeasurementPtr& measurement) const
 {
     // Ensure that we at least have enough
     // data to read the compact state flags

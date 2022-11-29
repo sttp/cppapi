@@ -608,7 +608,7 @@ void FilterExpressionParser::exitExpression(FilterExpressionSyntaxParser::Expres
     }
 
     // Check for not operator expressions
-    auto* notOperatorContext = context->notOperator();
+    const auto* notOperatorContext = context->notOperator();
 
     if (notOperatorContext != nullptr)
     {
@@ -684,9 +684,9 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for IN expressions
-    auto* inKeywordContext = context->K_IN();
-    auto* notOperatorContext = context->notOperator();
-    auto* exactMatchModifierContext = context->exactMatchModifier();
+    const auto* inKeywordContext = context->K_IN();
+    const auto* notOperatorContext = context->notOperator();
+    const auto* exactMatchModifierContext = context->exactMatchModifier();
 
     if (inKeywordContext != nullptr)
     {
@@ -697,7 +697,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
         if (!TryGetExpr(context->predicateExpression(0), value))
             throw FilterExpressionParserException("Failed to find \"IN\" predicate expression \"" + context->predicateExpression(0)->getText() + "\"");
 
-        ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
+        const ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
         auto* expressionList = context->expressionList();
         const size_t argumentCount = expressionList->expression().size();
 
@@ -719,8 +719,8 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for IS NULL expressions
-    auto* isKeywordContext = context->K_IS();
-    auto* nullKeywordContext = context->K_NULL();
+    const auto* isKeywordContext = context->K_IS();
+    const auto* nullKeywordContext = context->K_NULL();
 
     if (isKeywordContext != nullptr && nullKeywordContext != nullptr)
     {
@@ -784,7 +784,7 @@ void FilterExpressionParser::exitPredicateExpression(FilterExpressionSyntaxParse
     }
 
     // Check for LIKE expressions
-    auto* likeKeywordContext = context->K_LIKE();
+    const auto* likeKeywordContext = context->K_LIKE();
 
     if (likeKeywordContext != nullptr)
     {
@@ -1169,7 +1169,7 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
     else
         throw FilterExpressionParserException("Unexpected function type \"" + functionNameContext->getText() + "\"");
 
-    ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
+    const ExpressionCollectionPtr arguments = NewSharedPtr<ExpressionCollection>();
     auto* expressionList = context->expressionList();
 
     if (expressionList != nullptr)
@@ -1192,7 +1192,7 @@ void FilterExpressionParser::exitFunctionExpression(FilterExpressionSyntaxParser
 
 vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const DataSetPtr& dataSet, const string& primaryTableName, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
+    const FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
     parser->SetDataSet(dataSet);
     parser->SetPrimaryTableName(primaryTableName);
@@ -1208,7 +1208,7 @@ vector<ExpressionTreePtr> FilterExpressionParser::GenerateExpressionTrees(const 
 
 ExpressionTreePtr FilterExpressionParser::GenerateExpressionTree(const DataTablePtr& dataTable, const string& filterExpression, const bool suppressConsoleErrorOutput)
 {
-    vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression, suppressConsoleErrorOutput);
+    const vector<ExpressionTreePtr> expressionTrees = GenerateExpressionTrees(dataTable, filterExpression, suppressConsoleErrorOutput);
 
     if (!expressionTrees.empty())
         return expressionTrees[0];
@@ -1223,7 +1223,7 @@ ValueExpressionPtr FilterExpressionParser::Evaluate(const DataRowPtr& dataRow, c
 
 vector<DataRowPtr> FilterExpressionParser::Select(const DataSetPtr& dataSet, const string& filterExpression, const string& primaryTableName, const TableIDFieldsPtr& tableIDFields, const bool suppressConsoleErrorOutput)
 {
-    FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
+    const FilterExpressionParserPtr parser = NewSharedPtr<FilterExpressionParser>(filterExpression, suppressConsoleErrorOutput);
 
     parser->SetDataSet(dataSet);
 
