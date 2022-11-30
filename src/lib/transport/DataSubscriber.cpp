@@ -39,6 +39,7 @@ using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace sttp;
 using namespace sttp::transport;
+using namespace sttp::transport::tssc;
 
 // --- SubscriptionInfo ---
 
@@ -374,6 +375,7 @@ DataSubscriber::DataSubscriber() :
     m_compressPayloadData(true),
     m_compressMetadata(true),
     m_compressSignalIndexCache(true),
+    m_version(2),
     m_connected(false),
     m_subscribed(false),
     m_disconnecting(false),
@@ -386,11 +388,12 @@ DataSubscriber::DataSubscriber() :
     m_assemblySource(STTP_TITLE),
     m_assemblyVersion(STTP_VERSION),
     m_assemblyUpdatedOn(STTP_UPDATEDON),
-    m_signalIndexCache(nullptr),
+    m_signalIndexCache{ nullptr, nullptr },
+    m_cacheIndex(0),
     m_timeIndex(0),
-    m_baseTimeOffsets { 0, 0 },
+    m_baseTimeOffsets{ 0, 0 },
     m_tsscResetRequested(false),
-    m_tsscSequenceNumber(0),
+    m_tsscLastOOSReport(DateTime::MinValue),
     m_commandChannelSocket(m_commandChannelService),
     m_readBuffer(Common::MaxPacketSize),
     m_writeBuffer(Common::MaxPacketSize),
@@ -518,8 +521,10 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransf
     // Gather statistics
     m_totalCommandChannelBytesReceived += bytesTransferred;
 
+    // TODO: Add packet validation (size related here) esp. important for reverse connection mode
+
     // Process response
-    ProcessServerResponse(&m_readBuffer[0], 0, ConvertUInt32(bytesTransferred));
+    ProcessServerResponse(m_readBuffer.data(), 0, ConvertUInt32(bytesTransferred));
 
     // Read next payload header
     async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
@@ -556,18 +561,21 @@ void DataSubscriber::RunDataChannelResponseThread()
         // Gather statistics
         m_totalDataChannelBytesReceived += length;
 
-        ProcessServerResponse(&buffer[0], 0, length);
+        ProcessServerResponse(buffer.data(), 0, length);
     }
 }
 
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
 void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offset, const uint32_t length)
 {
+    // Note: internal payload size at buffer[2:6] ignored - future versions of STTP will exclude this
     uint8_t* packetBodyStart = buffer + Common::ResponseHeaderSize;
     const uint32_t packetBodyLength = length - Common::ResponseHeaderSize;
 
     const uint8_t responseCode = buffer[0];
     const uint8_t commandCode = buffer[1];
+
+    // TODO: Add initial packet response validation (STTP >=v3) to check for DefOpMode response
 
     switch (responseCode)
     {
@@ -601,6 +609,10 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
 
         case ServerResponse::ConfigurationChanged:
             HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
+            break;
+
+        case ServerResponse::BufferBlock:
+            HandleBufferBlock(packetBodyStart, 0, packetBodyLength);
             break;
 
         case ServerResponse::NoOP:
@@ -702,12 +714,22 @@ void DataSubscriber::HandleProcessingComplete(const uint8_t* data, const uint32_
 }
 
 // Cache signal IDs sent by the server into the signal index cache.
-void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, const uint32_t offset, const uint32_t length)
+void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t offset, const uint32_t length)
 {
     if (data == nullptr)
         return;
 
     vector<uint8_t> uncompressedBuffer;
+    int32_t cacheIndex = 0;
+
+    // Get active cache index
+    if (m_version > 1)
+    {
+        if (data[0] > 0)
+            cacheIndex = 1;
+
+        offset++;
+    }
 
     if (m_compressSignalIndexCache)
     {
@@ -728,9 +750,16 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, const uin
 
     SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
     signalIndexCache->Decode(uncompressedBuffer, m_subscriberID);
-    m_signalIndexCache.swap(signalIndexCache);
 
-    DispatchSubscriptionUpdated(AddDispatchReference(m_signalIndexCache));
+    m_signalIndexCacheMutex.lock();
+    m_signalIndexCache[cacheIndex].swap(signalIndexCache);
+    m_cacheIndex = cacheIndex;
+    m_signalIndexCacheMutex.unlock();
+
+    if (m_version > 1)
+        SendServerCommand(ServerCommand::ConfirmUpdateSignalIndexCache);
+
+    DispatchSubscriptionUpdated(AddDispatchReference(m_signalIndexCache[cacheIndex]));
 }
 
 // Updates base time offsets.
@@ -785,18 +814,38 @@ void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, const uint
         offset += 4; //-V112
 
         vector<MeasurementPtr> measurements;
+        int32_t cacheIndex = 0;
+
+        if (dataPacketFlags & DataPacketFlags::CacheIndex)
+            cacheIndex = 1;
+
+        m_signalIndexCacheMutex.lock();
+        const SignalIndexCachePtr signalIndexCache = m_signalIndexCache[cacheIndex];
+        m_signalIndexCacheMutex.unlock();
 
         if (dataPacketFlags & DataPacketFlags::Compressed)
-            ParseTSSCMeasurements(data, offset, length, measurements);
+            ParseTSSCMeasurements(signalIndexCache, data, offset, length, measurements);
         else
-            ParseCompactMeasurements(data, offset, length, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
+            ParseCompactMeasurements(signalIndexCache, data, offset, length, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
 
         newMeasurementsCallback(this, measurements);
     }
 }
 
-void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const uint32_t length, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalIndexCache, uint8_t* data, uint32_t offset, const uint32_t length, vector<MeasurementPtr>& measurements)
 {
+    TSSCDecoderPtr decoder = signalIndexCache->m_tsscDecoder;
+    bool newDecoder = false;
+
+    // Use TSSC to decompress measurements
+    if (decoder == nullptr)
+    {
+        signalIndexCache->m_tsscDecoder = NewSharedPtr<TSSCDecoder>();
+        decoder = signalIndexCache->m_tsscDecoder;
+        decoder->ResetSequenceNumber();
+        newDecoder = true;
+    }
+
     string errorMessage;
 
     if (data[offset] != 85)
@@ -813,31 +862,47 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const
     const uint16_t sequenceNumber = EndianConverter::ToBigEndian<uint16_t>(data, offset);
     offset += 2;
 
-    if (sequenceNumber == 0 && m_tsscSequenceNumber > 0)
+    if (sequenceNumber == 0)
     {
-        if (!m_tsscResetRequested)
+        if (!newDecoder)
         {
-            stringstream statusMessageStream;
-            statusMessageStream << "TSSC algorithm reset before sequence number: ";
-            statusMessageStream << m_tsscSequenceNumber;
-            DispatchStatusMessage(statusMessageStream.str());
+            if (decoder->GetSequenceNumber() > 0)
+            {
+                stringstream statusMessageStream;
+                statusMessageStream << "TSSC algorithm reset before sequence number: ";
+                statusMessageStream << decoder->GetSequenceNumber();
+                DispatchStatusMessage(statusMessageStream.str());
+            }
+
+            signalIndexCache->m_tsscDecoder = NewSharedPtr<TSSCDecoder>();
+            decoder = signalIndexCache->m_tsscDecoder;
+            decoder->ResetSequenceNumber();
         }
 
-        m_tsscDecoder.Reset();
-        m_tsscSequenceNumber = 0;
         m_tsscResetRequested = false;
+        m_tsscLastOOSReportMutex.lock();
+        m_tsscLastOOSReport = DateTime::MinValue;
+        m_tsscLastOOSReportMutex.lock();
     }
 
-    if (m_tsscSequenceNumber != sequenceNumber)
+    if (decoder->GetSequenceNumber() != sequenceNumber)
     {
         if (!m_tsscResetRequested)
         {
-            stringstream errorMessageStream;
-            errorMessageStream << "TSSC is out of sequence. Expecting: ";
-            errorMessageStream << m_tsscSequenceNumber;
-            errorMessageStream << ", Received: ";
-            errorMessageStream << sequenceNumber;
-            DispatchErrorMessage(errorMessageStream.str());
+            m_tsscLastOOSReportMutex.lock();
+
+            if (TimeSince(m_tsscLastOOSReport) > 2.0F)
+            {
+                stringstream errorMessageStream;
+                errorMessageStream << "TSSC is out of sequence. Expecting: ";
+                errorMessageStream << decoder->GetSequenceNumber();
+                errorMessageStream << ", Received: ";
+                errorMessageStream << sequenceNumber;
+                DispatchErrorMessage(errorMessageStream.str());
+                m_tsscLastOOSReport = UtcNow();
+            }
+
+            m_tsscLastOOSReportMutex.unlock();
         }
 
         // Ignore packets until the reset has occurred.
@@ -846,7 +911,7 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const
 
     try
     {
-        m_tsscDecoder.SetBuffer(data, offset, length);
+        decoder->SetBuffer(data, offset, length);
 
         MeasurementPtr measurement;
         Guid signalID;
@@ -857,9 +922,9 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const
         uint32_t quality;
         float32_t value;
 
-        while (m_tsscDecoder.TryGetMeasurement(id, time, quality, value))
+        while (decoder->TryGetMeasurement(id, time, quality, value))
         {
-            if (m_signalIndexCache->GetMeasurementKey(id, signalID, measurementSource, measurementID))
+            if (signalIndexCache->GetMeasurementKey(id, signalID, measurementSource, measurementID))
             {
                 measurement = NewSharedPtr<Measurement>();
 
@@ -886,27 +951,25 @@ void DataSubscriber::ParseTSSCMeasurements(uint8_t* data, uint32_t offset, const
     if (errorMessage.length() > 0)
     {
         stringstream errorMessageStream;
-        errorMessageStream << "Decompression failure: ";
+        errorMessageStream << "Failed to parse TSSC measurements - disconnecting: ";
         errorMessageStream << errorMessage;
         DispatchErrorMessage(errorMessageStream.str());
+        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
+        return;
     }
 
-    m_tsscSequenceNumber++;
-
-    // Do not increment to 0 on roll-over
-    if (m_tsscSequenceNumber == 0)
-        m_tsscSequenceNumber = 1;
+    decoder->IncrementSequenceNumber();
 }
 
-void DataSubscriber::ParseCompactMeasurements(const uint8_t* data, uint32_t offset, const uint32_t length, const bool includeTime, const bool useMillisecondResolution, const int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
+void DataSubscriber::ParseCompactMeasurements(const SignalIndexCachePtr& signalIndexCache, const uint8_t* data, uint32_t offset, const uint32_t length, const bool includeTime, const bool useMillisecondResolution, const int64_t frameLevelTimestamp, vector<MeasurementPtr>& measurements)
 {
     const MessageCallback errorMessageCallback = m_errorMessageCallback;
 
-    if (m_signalIndexCache == nullptr)
+    if (signalIndexCache == nullptr)
         return;
 
     // Create measurement parser
-    const CompactMeasurement parser(m_signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
+    const CompactMeasurement parser(signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
 
     while (length != offset)
     {
@@ -925,6 +988,13 @@ void DataSubscriber::ParseCompactMeasurements(const uint8_t* data, uint32_t offs
 
         measurements.push_back(measurement);
     }
+}
+
+// Handles buffer blocks from the server.
+void DataSubscriber::HandleBufferBlock(uint8_t* data, uint32_t offset, uint32_t length)
+{
+    DispatchErrorMessage("WARNING: This STTP data subscriber implementation does not currently handle buffer blocks - initiating unsubscribe.");
+    SendServerCommand(ServerCommand::Unsubscribe);
 }
 
 SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef) // NOLINT
@@ -1005,7 +1075,7 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
     
     if (statusMessageCallback != nullptr)
-        statusMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
+        statusMessageCallback(source, reinterpret_cast<const char*>(buffer.data()));
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
@@ -1017,7 +1087,7 @@ void DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, const vector
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 
     if (errorMessageCallback != nullptr)
-        errorMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
+        errorMessageCallback(source, reinterpret_cast<const char*>(buffer.data()));
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
@@ -1052,7 +1122,7 @@ void DataSubscriber::SubscriptionUpdatedDispatcher(DataSubscriber* source, const
     if (source == nullptr || buffer.empty())
         return;
 
-    SignalIndexCache* signalIndexCachePtr = *reinterpret_cast<SignalIndexCache**>(const_cast<uint8_t*>(&buffer[0]));
+    SignalIndexCache* signalIndexCachePtr = *reinterpret_cast<SignalIndexCache**>(const_cast<uint8_t*>(buffer.data()));
 
     if (signalIndexCachePtr != nullptr)
     {
@@ -1204,6 +1274,19 @@ bool DataSubscriber::IsSignalIndexCacheCompressed() const
 void DataSubscriber::SetSignalIndexCacheCompressed(const bool compressed)
 {
     m_compressSignalIndexCache = compressed;
+}
+
+uint8_t DataSubscriber::GetVersion() const
+{
+    return m_version;
+}
+
+void DataSubscriber::SetVersion(const uint8_t version)
+{
+    if (version < 1 || version > 2)
+        throw invalid_argument("This STTP data subscriber implementation only supports version 1 to 2 of the protocol");
+
+    m_version = version;
 }
 
 // Gets user defined data reference
@@ -1452,7 +1535,7 @@ void DataSubscriber::Subscribe()
         connectionStream << m_subscriptionInfo.ExtraConnectionStringParameters << ";";
 
     string connectionString = connectionStream.str();
-    const uint8_t* connectionStringPtr = reinterpret_cast<uint8_t*>(&connectionString[0]);
+    const uint8_t* connectionStringPtr = reinterpret_cast<uint8_t*>(connectionString.data());
     const uint32_t connectionStringSize = ConvertUInt32(connectionString.size() * sizeof(char));
     bigEndianConnectionStringSize = EndianConverter::Default.ConvertBigEndian(connectionStringSize);
     const uint8_t* bigEndianConnectionStringSizePtr = reinterpret_cast<uint8_t*>(&bigEndianConnectionStringSize);
@@ -1469,9 +1552,12 @@ void DataSubscriber::Subscribe()
     for (size_t i = 0; i < connectionStringSize; ++i)
         buffer[5 + i] = connectionStringPtr[i];
 
-    SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
+    SendServerCommand(ServerCommand::Subscribe, buffer.data(), 0, bufferSize);
 
     // Reset TSSC decompresser on successful (re)subscription
+    m_tsscLastOOSReportMutex.lock();
+    m_tsscLastOOSReport = DateTime::MinValue;
+    m_tsscLastOOSReportMutex.unlock();
     m_tsscResetRequested = true;
 }
 
@@ -1500,7 +1586,7 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, string message
 {
     vector<uint8_t> buffer;
     uint32_t bigEndianMessageSize;
-    const uint8_t* messagePtr = reinterpret_cast<uint8_t*>(&message[0]);
+    const uint8_t* messagePtr = reinterpret_cast<uint8_t*>(message.data());
     const uint32_t messageSize = ConvertUInt32(message.size() * sizeof(char));
 
     bigEndianMessageSize = EndianConverter::Default.ConvertBigEndian(messageSize);
@@ -1517,7 +1603,7 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, string message
     for (size_t i = 0; i < messageSize; ++i)
         buffer[4 + i] = messagePtr[i];
 
-    SendServerCommand(commandCode, &buffer[0], 0, bufferSize);
+    SendServerCommand(commandCode, buffer.data(), 0, bufferSize);
 }
 
 // Sends a command along with the given data to the server.
@@ -1585,7 +1671,7 @@ void DataSubscriber::SendOperationalModes()
     uint32_t operationalModes = CompressionModes::GZip;
     uint32_t bigEndianOperationalModes;
 
-    operationalModes |= OperationalModes::VersionMask & 1U;
+    operationalModes |= OperationalModes::VersionMask & m_version;
     operationalModes |= OperationalEncoding::UTF8;
 
     // TSSC compression only works with stateful connections

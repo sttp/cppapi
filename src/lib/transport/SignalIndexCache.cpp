@@ -33,7 +33,8 @@ using namespace sttp;
 using namespace sttp::transport;
 
 SignalIndexCache::SignalIndexCache() :
-    m_binaryLength(28)
+    m_binaryLength(28),
+    m_tsscDecoder(nullptr)
 {
 }
 

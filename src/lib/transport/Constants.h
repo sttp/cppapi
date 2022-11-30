@@ -295,7 +295,6 @@ namespace sttp::transport
     struct OperationalModes
     {
         // Defines a bit mask used to get version number of protocol.
-	    // Version number is currently set to 2.
         static constexpr uint32_t VersionMask = 0x000000FF;
         // Defines a bit mask used to get character encoding used when exchanging messages between publisher and subscriber.
 	    // STTP currently only supports UTF-8 string encoding.

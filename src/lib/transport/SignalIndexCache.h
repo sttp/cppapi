@@ -26,6 +26,7 @@
 #pragma once
 
 #include "../CommonTypes.h"
+#include "tssc/TSSCDecoder.h"
 #include <unordered_set>
 
 namespace sttp::transport
@@ -35,6 +36,8 @@ namespace sttp::transport
 
     class SignalIndexCache;
     typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
+
+    class DataSubscriber;
 
     // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
@@ -48,6 +51,7 @@ namespace sttp::transport
         std::vector<uint64_t> m_idList;
         std::unordered_map<sttp::Guid, int32_t> m_signalIDCache;
         uint32_t m_binaryLength;
+        tssc::TSSCDecoderPtr m_tsscDecoder;
 
     public:
         SignalIndexCache();
@@ -99,6 +103,8 @@ namespace sttp::transport
         void Decode(const std::vector<uint8_t>& buffer, Guid& subscriberID);
 
         void Encode(const SubscriberConnection& connection, std::vector<uint8_t>& buffer) const;
+
+        friend class DataSubscriber;
     };
 
     typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;

@@ -29,7 +29,6 @@
 #include "../ThreadSafeQueue.h"
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
-#include "tssc/TSSCDecoder.h"
 
 namespace sttp::transport
 {
@@ -188,6 +187,7 @@ namespace sttp::transport
         bool m_compressPayloadData;
         bool m_compressMetadata;
         bool m_compressSignalIndexCache;
+        uint8_t m_version;
         std::atomic_bool m_connected;
         std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
@@ -208,12 +208,14 @@ namespace sttp::transport
         std::string m_assemblyUpdatedOn;
 
         // Measurement parsing
-        SignalIndexCachePtr m_signalIndexCache;
+        SignalIndexCachePtr m_signalIndexCache[2];
+        Mutex m_signalIndexCacheMutex;
+        int32_t m_cacheIndex;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
-        tssc::TSSCDecoder m_tsscDecoder;
         bool m_tsscResetRequested;
-        uint16_t m_tsscSequenceNumber;
+        datetime_t m_tsscLastOOSReport;
+        Mutex m_tsscLastOOSReportMutex;
 
         // Dispatch reference - unordered set works fine for signal
         // index cache since each new call will be for a new instance
@@ -269,8 +271,9 @@ namespace sttp::transport
         void HandleUpdateBaseTimes(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleConfigurationChanged(uint8_t* data, uint32_t offset, uint32_t length);
         void HandleDataPacket(uint8_t* data, uint32_t offset, uint32_t length);
-        void ParseTSSCMeasurements(uint8_t* data, uint32_t offset, uint32_t length, std::vector<MeasurementPtr>& measurements);
-        void ParseCompactMeasurements(const uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
+        void ParseTSSCMeasurements(const SignalIndexCachePtr& signalIndexCache, uint8_t* data, uint32_t offset, uint32_t length, std::vector<MeasurementPtr>& measurements);
+        void ParseCompactMeasurements(const SignalIndexCachePtr& signalIndexCache, const uint8_t* data, uint32_t offset, uint32_t length, bool includeTime, bool useMillisecondResolution, int64_t frameLevelTimestamp, std::vector<MeasurementPtr>& measurements);
+        void HandleBufferBlock(uint8_t* data, uint32_t offset, uint32_t length);
 
         SignalIndexCache* AddDispatchReference(SignalIndexCachePtr signalIndexCacheRef);
         SignalIndexCachePtr ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr);
@@ -350,6 +353,10 @@ namespace sttp::transport
         // signal index cache is compressed using GZip.
         bool IsSignalIndexCacheCompressed() const;
         void SetSignalIndexCacheCompressed(bool compressed);
+
+        // Gets or sets STTP protocol version to use.
+        uint8_t GetVersion() const;
+        void SetVersion(uint8_t version);
 
         // Gets or sets user defined data reference
         void* GetUserData() const;

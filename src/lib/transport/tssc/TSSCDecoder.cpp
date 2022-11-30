@@ -46,7 +46,8 @@ TSSCDecoder::TSSCDecoder() :
     m_prevTimeDelta3(Int64::MaxValue),
     m_prevTimeDelta4(Int64::MaxValue),    
     m_bitStreamCount(0),
-    m_bitStreamCache(0)
+    m_bitStreamCache(0),
+    m_sequenceNumber(0)
 {
     m_lastPoint = NewTSSCPointMetadata();
 }
@@ -468,6 +469,25 @@ int32_t TSSCDecoder::ReadBits4()
 int32_t TSSCDecoder::ReadBits5()
 {
     return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
+}
+
+uint16_t TSSCDecoder::GetSequenceNumber() const
+{
+    return m_sequenceNumber;
+}
+
+void TSSCDecoder::ResetSequenceNumber()
+{
+    m_sequenceNumber = 0;
+}
+
+void TSSCDecoder::IncrementSequenceNumber()
+{
+    m_sequenceNumber++;
+
+    // Do not increment to 0 on roll-over
+    if (m_sequenceNumber == 0)
+        m_sequenceNumber = 1;
 }
 
 uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position)

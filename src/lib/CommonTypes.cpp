@@ -68,7 +68,7 @@ size_t StringHash::operator()(const string& value) const
     size_t seed = 0;
     const locale locale;
 
-    for (auto it : value)
+    for (const auto it : value)
         hash_combine(seed, toupper(it, locale));
 
     return seed;
@@ -432,4 +432,12 @@ datetime_t sttp::Now()
 datetime_t sttp::UtcNow()
 {
     return datetime_t { microsec_clock::universal_time() };
+}
+
+float32_t sttp::TimeSince(const datetime_t& value)
+{
+    if (value == DateTime::MinValue)
+        return numeric_limits<float32_t>::max();
+
+    return static_cast<float32_t>(DateDiff(value, UtcNow(), TimeInterval::Millisecond)) / 1000.0F;
 }

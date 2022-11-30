@@ -211,6 +211,10 @@ namespace sttp::transport
         bool IsSignalIndexCacheCompressed() const;
         void SetSignalIndexCacheCompressed(bool compressed) const;
 
+        // Gets or sets STTP protocol version to use.
+        uint8_t GetVersion() const;
+        void SetVersion(uint8_t version) const;
+
         // Gets or sets flag that determines if received measurements should be exposed
         // as simple measurements structures (typically used by SWIG wrapper targets)
         bool GetReceiveSimpleMeasurements() const;

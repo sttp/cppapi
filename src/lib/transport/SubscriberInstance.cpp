@@ -78,7 +78,7 @@ SubscriberInstance::~SubscriberInstance() noexcept
 
 // public functions
 
-void SubscriberInstance::Initialize(const string& hostname, uint16_t port, uint16_t udpPort)
+void SubscriberInstance::Initialize(const string& hostname, const uint16_t port, const uint16_t udpPort)
 {
     m_hostname = hostname;
     m_port = port;
@@ -95,7 +95,7 @@ bool SubscriberInstance::GetAutoReconnect() const
     return m_autoReconnect;
 }
 
-void SubscriberInstance::SetAutoReconnect(bool autoReconnect)
+void SubscriberInstance::SetAutoReconnect(const bool autoReconnect)
 {
     m_autoReconnect = autoReconnect;
 }
@@ -105,7 +105,7 @@ bool SubscriberInstance::GetAutoParseMetadata() const
     return m_autoParseMetadata;
 }
 
-void SubscriberInstance::SetAutoParseMetadata(bool autoParseMetadata)
+void SubscriberInstance::SetAutoParseMetadata(const bool autoParseMetadata)
 {
     m_autoParseMetadata = autoParseMetadata;
 }
@@ -115,7 +115,7 @@ int16_t SubscriberInstance::GetMaxRetries() const
     return m_maxRetries;
 }
 
-void SubscriberInstance::SetMaxRetries(int16_t maxRetries)
+void SubscriberInstance::SetMaxRetries(const int16_t maxRetries)
 {
     m_maxRetries = maxRetries;
 }
@@ -125,7 +125,7 @@ int16_t SubscriberInstance::GetRetryInterval() const
     return m_retryInterval;
 }
 
-void SubscriberInstance::SetRetryInterval(int16_t retryInterval)
+void SubscriberInstance::SetRetryInterval(const int16_t retryInterval)
 {
     m_retryInterval = retryInterval;
 }
@@ -251,7 +251,7 @@ bool SubscriberInstance::IsPayloadDataCompressed() const
     return m_subscriber->IsPayloadDataCompressed();
 }
 
-void SubscriberInstance::SetPayloadDataCompressed(bool compressed) const
+void SubscriberInstance::SetPayloadDataCompressed(const bool compressed) const
 {
     m_subscriber->SetPayloadDataCompressed(compressed);
 }
@@ -261,7 +261,7 @@ bool SubscriberInstance::IsMetadataCompressed() const
     return m_subscriber->IsMetadataCompressed();
 }
 
-void SubscriberInstance::SetMetadataCompressed(bool compressed) const
+void SubscriberInstance::SetMetadataCompressed(const bool compressed) const
 {
     m_subscriber->SetMetadataCompressed(compressed);
 }
@@ -271,9 +271,19 @@ bool SubscriberInstance::IsSignalIndexCacheCompressed() const
     return m_subscriber->IsSignalIndexCacheCompressed();
 }
 
-void SubscriberInstance::SetSignalIndexCacheCompressed(bool compressed) const
+void SubscriberInstance::SetSignalIndexCacheCompressed(const bool compressed) const
 {
     m_subscriber->SetSignalIndexCacheCompressed(compressed);
+}
+
+uint8_t SubscriberInstance::GetVersion() const
+{
+    return m_subscriber->GetVersion();
+}
+
+void SubscriberInstance::SetVersion(const uint8_t version) const
+{
+    m_subscriber->SetVersion(version);
 }
 
 bool SubscriberInstance::GetReceiveSimpleMeasurements() const
@@ -281,7 +291,7 @@ bool SubscriberInstance::GetReceiveSimpleMeasurements() const
     return m_receiveSimpleMeasurements;
 }
 
-void SubscriberInstance::SetReceiveSimpleMeasurements(bool value)
+void SubscriberInstance::SetReceiveSimpleMeasurements(const bool value)
 {
     m_receiveSimpleMeasurements = value;
 }
@@ -385,7 +395,7 @@ void SubscriberInstance::GetParsedMeasurementMetadata(map<Guid, MeasurementMetad
     nullptr);
 }
 
-PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceName(const string& deviceName, int32_t const sourceIndex, bool ignoreCase)
+PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceName(const string& deviceName, int32_t const sourceIndex, const bool ignoreCase)
 {
     DeviceMetadataPtr deviceMetadata = nullptr;
 
@@ -441,7 +451,7 @@ PhasorReferencePtr SubscriberInstance::GetPhasorByDeviceAcronym(const string& de
     return nullptr;
 }
 
-PhasorReferencePtr SubscriberInstance::GetPhasorBySourceIndex(const vector<PhasorReferencePtr>& phasorReferences, int32_t sourceIndex) const
+PhasorReferencePtr SubscriberInstance::GetPhasorBySourceIndex(const vector<PhasorReferencePtr>& phasorReferences, const int32_t sourceIndex) const
 {
     for (auto const& phasorReference: phasorReferences)
     {
@@ -877,7 +887,7 @@ void SubscriberInstance::SendMetadataRefreshCommand()
     // Send meta-data filters when some are specified
     vector<uint8_t> buffer;
     
-    const uint8_t* metadataFiltersPtr = reinterpret_cast<uint8_t*>(&m_metadataFilters[0]);
+    const uint8_t* metadataFiltersPtr = reinterpret_cast<uint8_t*>(m_metadataFilters.data());
     const uint32_t metadataFiltersSize = ConvertUInt32(m_metadataFilters.size() * sizeof(char));
     const uint32_t bufferSize = 4 + metadataFiltersSize;
 
@@ -885,7 +895,7 @@ void SubscriberInstance::SendMetadataRefreshCommand()
     EndianConverter::WriteBigEndianBytes(buffer, metadataFiltersSize);
     WriteBytes(buffer, metadataFiltersPtr, 0, metadataFiltersSize);
 
-    m_subscriber->SendServerCommand(ServerCommand::MetadataRefresh, &buffer[0], 0, bufferSize);
+    m_subscriber->SendServerCommand(ServerCommand::MetadataRefresh, buffer.data(), 0, bufferSize);
 }
 
 void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMetadataPtr>& devices, const unordered_map<Guid, MeasurementMetadataPtr>& measurements, StringMap<ConfigurationFramePtr>& configurationFrames)
@@ -929,7 +939,6 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
         {
             configurationFrame->DfDt = nullptr;
         }
-
 
         if (TryFindMeasurement(deviceMetadata->Measurements, SignalKind::Quality, measurement))
         {
@@ -1058,12 +1067,12 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
     }
 }
 
-bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind, MeasurementMetadataPtr& measurementMetadata)
 {
     return TryFindMeasurement(measurements, kind, 0U, measurementMetadata);
 }
 
-bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind, const uint16_t index, MeasurementMetadataPtr& measurementMetadata)
 {
     for (auto const& measurement : measurements)
     {
@@ -1079,7 +1088,7 @@ bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>
     return false;
 }
 
-uint16_t SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, SignalKind kind)
+uint16_t SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind)
 {
     uint16_t count = 0U;
 

@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include "../TransportTypes.h"
 #include "TSSCPointMetadata.h"
 
 namespace sttp::transport::tssc
@@ -55,6 +54,8 @@ namespace sttp::transport::tssc
         // A cache of bits that need to be flushed to m_buffer when full. Bits filled starting from the right moving left.
         int32_t m_bitStreamCache;
 
+        uint16_t m_sequenceNumber;
+
         void DecodePointID(uint8_t code, const TSSCPointMetadataPtr& lastPoint);
         int64_t DecodeTimestamp(uint8_t code);
         uint32_t DecodeQuality(uint8_t code, const TSSCPointMetadataPtr& nextPoint);
@@ -80,5 +81,11 @@ namespace sttp::transport::tssc
         int32_t ReadBit();
         int32_t ReadBits4();
         int32_t ReadBits5();
+
+        uint16_t GetSequenceNumber() const;
+        void ResetSequenceNumber();
+        void IncrementSequenceNumber();
     };
+
+    typedef SharedPtr<TSSCDecoder> TSSCDecoderPtr;
 }

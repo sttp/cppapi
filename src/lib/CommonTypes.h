@@ -496,17 +496,15 @@ namespace sttp
     int32_t DatePart(const datetime_t& value, TimeInterval interval);
     datetime_t Now();
     datetime_t UtcNow();
+    float32_t TimeSince(const datetime_t& value);
 }
 
 // Setup standard hash code for Guid
-namespace std // NOLINT
+template<>
+struct std::hash<sttp::Guid>
 {
-    template<>
-    struct hash<sttp::Guid>
+    size_t operator () (const sttp::Guid& uuid) const noexcept
     {
-        size_t operator () (const sttp::Guid& uid) const noexcept
-        {
-            return boost::hash<sttp::Guid>()(uid);
-        }
-    };
-}
+        return boost::hash<sttp::Guid>()(uuid);
+    }
+};
