@@ -1192,9 +1192,6 @@ bool DataSubscriber::IsMetadataCompressed() const
 void DataSubscriber::SetMetadataCompressed(const bool compressed)
 {
     m_compressMetadata = compressed;
-
-    if (m_commandChannelSocket.is_open())
-        SendOperationalModes();
 }
 
 // Returns true if signal index cache exchange is compressed (GZip only).
@@ -1207,9 +1204,6 @@ bool DataSubscriber::IsSignalIndexCacheCompressed() const
 void DataSubscriber::SetSignalIndexCacheCompressed(const bool compressed)
 {
     m_compressSignalIndexCache = compressed;
-
-    if (m_commandChannelSocket.is_open())
-        SendOperationalModes();
 }
 
 // Gets user defined data reference
