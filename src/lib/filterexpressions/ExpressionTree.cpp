@@ -170,7 +170,7 @@ ExpressionTreeException::ExpressionTreeException(string message) noexcept :
 
 const char* ExpressionTreeException::what() const noexcept
 {
-    return &m_message[0];
+    return m_message.data();
 }
 
 Expression::Expression(const ExpressionType type) :

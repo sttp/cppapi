@@ -1323,7 +1323,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
         return;
     }
 
-    const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(&m_readBuffer[0], 0);
+    const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(m_readBuffer.data(), 0);
 
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
     {
@@ -1384,7 +1384,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
 
     try
     {
-        uint8_t* data = &m_readBuffer[0];
+        uint8_t* data = m_readBuffer.data();
         const uint8_t command = data[0];
         const uint32_t length = ConvertInt32(bytesTransferred);
 
@@ -1551,7 +1551,7 @@ void SubscriberConnection::CommandChannelSendAsync()
 
     vector<uint8_t>& data = *m_tcpWriteBuffers[0];
 
-    async_write(m_commandChannelSocket, buffer(&data[0], data.size()), bind_executor(m_tcpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
+    async_write(m_commandChannelSocket, buffer(data.data(), data.size()), bind_executor(m_tcpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
         CommandChannelWriteHandler(error, bytesTransferred);
     }));
@@ -1596,7 +1596,7 @@ void SubscriberConnection::DataChannelSendAsync()
 
     vector<uint8_t>& data = *m_udpWriteBuffers[0];
 
-    m_dataChannelSocket.async_send(buffer(&data[0], data.size()), bind_executor(m_udpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
+    m_dataChannelSocket.async_send(buffer(data.data(), data.size()), bind_executor(m_udpWriteStrand, [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
     {
         DataChannelWriteHandler(error, bytesTransferred);
     }));

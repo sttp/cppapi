@@ -36,8 +36,7 @@ SubscriberException::SubscriberException(string message) noexcept :
 
 const char* SubscriberException::what() const noexcept
 {
-
-    return &m_message[0];
+    return m_message.data();
 }
 
 PublisherException::PublisherException(string message) noexcept :
@@ -47,7 +46,7 @@ PublisherException::PublisherException(string message) noexcept :
 
 const char* PublisherException::what() const noexcept
 {
-    return &m_message[0];
+    return m_message.data();
 }
 
 Measurement::Measurement() :

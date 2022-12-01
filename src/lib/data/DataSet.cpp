@@ -58,7 +58,7 @@ DataSetException::DataSetException(string message) noexcept :
 
 const char* DataSetException::what() const noexcept
 {
-    return &m_message[0];
+    return m_message.data();
 }
 
 const string DataSet::XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";

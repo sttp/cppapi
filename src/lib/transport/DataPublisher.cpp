@@ -289,7 +289,7 @@ void DataPublisher::StatusMessageDispatcher(DataPublisher* source, const vector<
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
 
     if (statusMessageCallback != nullptr)
-        statusMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
+        statusMessageCallback(source, reinterpret_cast<const char*>(buffer.data()));
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
@@ -301,7 +301,7 @@ void DataPublisher::ErrorMessageDispatcher(DataPublisher* source, const vector<u
     const MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 
     if (errorMessageCallback != nullptr)
-        errorMessageCallback(source, reinterpret_cast<const char*>(&buffer[0]));
+        errorMessageCallback(source, reinterpret_cast<const char*>(buffer.data()));
 }
 
 void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vector<uint8_t>& buffer)
@@ -309,7 +309,7 @@ void DataPublisher::ClientConnectedDispatcher(DataPublisher* source, const vecto
     if (source == nullptr || buffer.empty())
         return;
 
-    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(buffer.data()));
 
     if (connectionPtr != nullptr)
     {
@@ -326,7 +326,7 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
     if (source == nullptr || buffer.empty())
         return;
 
-    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(buffer.data()));
 
     if (connectionPtr != nullptr)
     {
@@ -345,7 +345,7 @@ void DataPublisher::ProcessingIntervalChangeRequestedDispatcher(DataPublisher* s
     if (source == nullptr || buffer.empty())
         return;
 
-    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(buffer.data()));
 
     if (connectionPtr != nullptr)
     {
@@ -362,7 +362,7 @@ void DataPublisher::TemporalSubscriptionRequestedDispatcher(DataPublisher* sourc
     if (source == nullptr || buffer.empty())
         return;
 
-    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(buffer.data()));
 
     if (connectionPtr != nullptr)
     {
@@ -379,7 +379,7 @@ void DataPublisher::TemporalSubscriptionCanceledDispatcher(DataPublisher* source
     if (source == nullptr || buffer.empty())
         return;
 
-    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(&buffer[0]));
+    SubscriberConnection* connectionPtr = *reinterpret_cast<SubscriberConnection**>(const_cast<uint8_t*>(buffer.data()));
 
     if (connectionPtr != nullptr)
     {
@@ -396,7 +396,7 @@ void DataPublisher::UserCommandDispatcher(DataPublisher* source, const std::vect
     if (source == nullptr || buffer.empty())
         return;
 
-    const UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(&buffer[0]));
+    const UserCommandData* userCommandData = *reinterpret_cast<UserCommandData**>(const_cast<uint8_t*>(buffer.data()));
 
     if (userCommandData != nullptr && userCommandData->connection != nullptr)
     {
