@@ -29,6 +29,9 @@
 
 namespace sttp::transport::tssc
 {
+    class TSSCDecoder;
+    typedef SharedPtr<TSSCDecoder> TSSCDecoderPtr;
+
     // Decoder for the Time-Series Special Compression algorithm of the Streaming Telemetry Transport Protocol.
     class TSSCDecoder final
     {
@@ -85,7 +88,7 @@ namespace sttp::transport::tssc
         uint16_t GetSequenceNumber() const;
         void ResetSequenceNumber();
         void IncrementSequenceNumber();
-    };
 
-    typedef SharedPtr<TSSCDecoder> TSSCDecoderPtr;
+        static const TSSCDecoderPtr NullPtr;
+    };
 }

@@ -35,6 +35,8 @@ using namespace sttp::transport::tssc;
 uint32_t Decode7BitUInt32(const uint8_t* stream, uint32_t& position);
 uint64_t Decode7BitUInt64(const uint8_t* stream, uint32_t& position);
 
+const TSSCDecoderPtr TSSCDecoder::NullPtr = nullptr;
+
 TSSCDecoder::TSSCDecoder() :
     m_data(nullptr),
     m_position(0),

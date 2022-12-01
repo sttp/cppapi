@@ -388,7 +388,7 @@ DataSubscriber::DataSubscriber() :
     m_assemblySource(STTP_TITLE),
     m_assemblyVersion(STTP_VERSION),
     m_assemblyUpdatedOn(STTP_UPDATEDON),
-    m_signalIndexCache{ nullptr, nullptr },
+    m_signalIndexCache{ SignalIndexCache::NullPtr, SignalIndexCache::NullPtr },
     m_cacheIndex(0),
     m_timeIndex(0),
     m_baseTimeOffsets{ 0, 0 },
@@ -714,7 +714,7 @@ void DataSubscriber::HandleProcessingComplete(const uint8_t* data, const uint32_
 }
 
 // Cache signal IDs sent by the server into the signal index cache.
-void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t offset, const uint32_t length)
+void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t offset, uint32_t length)
 {
     if (data == nullptr)
         return;
@@ -729,6 +729,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t 
             cacheIndex = 1;
 
         offset++;
+        length--;
     }
 
     if (m_compressSignalIndexCache)
@@ -882,7 +883,7 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
         m_tsscResetRequested = false;
         m_tsscLastOOSReportMutex.lock();
         m_tsscLastOOSReport = DateTime::MinValue;
-        m_tsscLastOOSReportMutex.lock();
+        m_tsscLastOOSReportMutex.unlock();
     }
 
     if (decoder->GetSequenceNumber() != sequenceNumber)

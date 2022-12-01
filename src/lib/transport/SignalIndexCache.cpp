@@ -31,10 +31,13 @@
 using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
+using namespace sttp::transport::tssc;
+
+const SignalIndexCachePtr SignalIndexCache::NullPtr = nullptr;
 
 SignalIndexCache::SignalIndexCache() :
     m_binaryLength(28),
-    m_tsscDecoder(nullptr)
+    m_tsscDecoder(TSSCDecoder::NullPtr)
 {
 }
 

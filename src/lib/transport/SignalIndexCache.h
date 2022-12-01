@@ -39,6 +39,9 @@ namespace sttp::transport
 
     class DataSubscriber;
 
+    class SignalIndexCache;
+    typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
+
     // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
     // to human-readable measurement keys.
@@ -104,10 +107,10 @@ namespace sttp::transport
 
         void Encode(const SubscriberConnection& connection, std::vector<uint8_t>& buffer) const;
 
+        static const SignalIndexCachePtr NullPtr;
+
         friend class DataSubscriber;
     };
-
-    typedef sttp::SharedPtr<SignalIndexCache> SignalIndexCachePtr;
 }
 
 // Setup standard hash code for SignalIndexCachePtr
