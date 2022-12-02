@@ -414,7 +414,7 @@ namespace sttp::transport
         bool IsConnected() const;
 
         // Waits for publisher response to define operational modes request.
-        bool WaitForOperationalModesResponse(int32_t timeout);
+        bool WaitForOperationalModesResponse(int32_t timeout = 5000);
 
         // Gets user readable status message for current response to define operational modes command request.
         std::string OperationalModesStatus() const;

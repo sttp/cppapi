@@ -30,12 +30,12 @@ using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
 
-constexpr int32_t TargetSTTPVersion = 3;
+constexpr int32_t TargetSTTPVersion = 2;
 
 DataSubscriber* Subscriber;
 
 bool RunSubscriber(const string& hostname, uint16_t port);
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
+void ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-bool RunSubscriber(const string& hostname, uint16_t port)
+bool RunSubscriber(const string& hostname, const uint16_t port)
 {
     // SubscriptionInfo is a helper object which allows the user
     // to set up their subscription and reuse subscription settings.
@@ -132,10 +132,10 @@ bool RunSubscriber(const string& hostname, uint16_t port)
 
     if (Subscriber->GetVersion() > 2)
     {
-        if (!Subscriber->WaitForOperationalModesResponse(1))
+        if (Subscriber->WaitForOperationalModesResponse())
+            cout << "Define operational modes result status: " << Subscriber->OperationalModesStatus() << endl;
+        else
             cout << "Operational modes response timed out." << endl;
-
-        cout << "Define operational modes result status: " << Subscriber->OperationalModesStatus() << endl;
     }
 
     if (connected)
@@ -160,10 +160,10 @@ bool RunSubscriber(const string& hostname, uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
+void ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     static uint64_t processCount = 0;
-    static const uint64_t interval = 5 * 60;
+    static constexpr uint64_t interval = 5 * 60;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 

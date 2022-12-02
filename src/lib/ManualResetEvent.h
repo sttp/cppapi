@@ -43,65 +43,28 @@ namespace sttp
          * Initializes a new instance of the ManualResetEvent class.
          * @param initialState `true` to set the initial state as signaled; `false` for non-signaled.
          */
-        ManualResetEvent(const bool initialState = false)
-        {
-            m_signaled = initialState;
-        }
+        explicit ManualResetEvent(bool initialState = false);
 
         /**
          * Gets whether the event is signaled.
          */
-        bool IsSet() const
-        {
-            return m_signaled;
-        }
+        bool IsSet() const;
 
         /**
          * Sets the state of the event to signaled, which allows one or more threads waiting on the event to proceed.
          */
-        void Set()
-        {
-            ScopeLock lock(m_mutex);
-
-            if (!m_signaled)
-            {
-                m_signaled = true;
-                m_handle.notify_all();
-            }
-        }
+        void Set();
 
         /**
          * Sets the state of the event to non-signaled, which causes threads to block.
          */
-        void Reset()
-        {
-            ScopeLock lock(m_mutex);
-            m_signaled = false;
-        }
+        void Reset();
 
         /**
          * Blocks the current thread until the ManualResetEvent is signaled.
          * @param timeout the number of milliseconds to wait, or -1 to wait indefinitely.
          * @return `true` if the ManualResetEvent was signaled; otherwise, `false`.
          */
-        bool Wait(const int32_t timeout = -1)
-        {
-            UniqueLock lock(m_mutex);
-
-            m_handle.wait(lock);
-
-            if (timeout > -1)
-            {
-                if (!m_signaled)
-                    m_handle.wait_for(lock, boost::chrono::milliseconds(timeout));
-            }
-            else
-            {
-                while (!m_signaled)
-                    m_handle.wait(lock);
-            }
-
-            return m_signaled;
-        }
+        bool Wait(int32_t timeout = -1);
     };
 }

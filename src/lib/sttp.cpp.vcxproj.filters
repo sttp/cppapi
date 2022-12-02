@@ -489,6 +489,7 @@
     <ClCompile Include="filterexpressions\antlr4-runtime\Token.cpp">
       <Filter>filterexpressions\antlr4-runtime</Filter>
     </ClCompile>
+    <ClCompile Include="ManualResetEvent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data\DataColumn.h">

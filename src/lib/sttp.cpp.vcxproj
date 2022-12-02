@@ -349,6 +349,7 @@
     <ClCompile Include="filterexpressions\antlr4-runtime\UnbufferedTokenStream.cpp" />
     <ClCompile Include="filterexpressions\antlr4-runtime\Vocabulary.cpp" />
     <ClCompile Include="filterexpressions\antlr4-runtime\WritableToken.cpp" />
+    <ClCompile Include="ManualResetEvent.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="EndianConverter.cpp" />
     <ClInclude Include="Nullable.h" />

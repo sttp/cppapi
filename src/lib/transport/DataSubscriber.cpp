@@ -614,7 +614,7 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
 
     if (!m_validated)
     {
-        if (commandCode != ServerCommand::DefineOperationalModes || responseCode != ServerResponse::Succeeded && responseCode != ServerResponse::Failed)
+        if (responseCode != ServerResponse::NoOP && (commandCode != ServerCommand::DefineOperationalModes || responseCode != ServerResponse::Succeeded && responseCode != ServerResponse::Failed))
         {
             stringstream errorMessageStream;
 

@@ -39,7 +39,7 @@ SubscriptionInfo CreateSubscriptionInfo();
 
 // Handlers for subscriber callbacks.
 void Resubscribe(DataSubscriber* source);
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements);
+void ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements);
 void ConfigurationChanged(DataSubscriber* source);
 void DisplayStatusMessage(DataSubscriber* source, const string& message);
 void DisplayErrorMessage(DataSubscriber* source, const string& message);
@@ -157,7 +157,7 @@ void SetupSubscriberConnector(SubscriberConnector& connector, const string& host
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
+void ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     const float64_t LoFrequency = 57.0F;
     const float64_t HiFrequency = 62.0F;
