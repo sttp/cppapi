@@ -210,6 +210,7 @@
     <ClInclude Include="filterexpressions\antlr4-runtime\Version.h" />
     <ClInclude Include="filterexpressions\antlr4-runtime\Vocabulary.h" />
     <ClInclude Include="filterexpressions\antlr4-runtime\WritableToken.h" />
+    <ClInclude Include="ManualResetEvent.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="EndianConverter.h" />
     <ClCompile Include="filterexpressions\antlr4-runtime\ANTLRErrorListener.cpp" />

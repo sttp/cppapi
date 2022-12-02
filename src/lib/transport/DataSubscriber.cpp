@@ -377,6 +377,7 @@ DataSubscriber::DataSubscriber() :
     m_compressSignalIndexCache(true),
     m_version(2),
     m_connected(false),
+    m_validated(false),
     m_subscribed(false),
     m_disconnecting(false),
     m_disconnected(false),
@@ -482,6 +483,44 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t byte
 
     const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(m_readBuffer.data(), 0);
 
+    if (!m_validated)
+    {
+        if (m_version > 2)
+        {
+			// We need to check for a valid initial payload header size before attempting to resize
+			// the payload buffer, especially when subscriber may be in listening mode. The very first
+			// response received from the publisher should be the succeeded or failed response command
+			// for the DefineOperationalModes command sent by the subscriber. The packet payload size
+			// for this response, succeed or fail, will be a short message. Longer message sizes would
+			// be considered suspect data, likely from a non-STTP based client connection. In context
+			// of this initial response message, anything larger than 8KB of payload is considered
+			// suspect and will be evaluated as a non-STTP type response.
+			constexpr uint32_t MaxInitialPacketSize = Common::ResponseHeaderSize + 8192;
+
+			if (packetSize > MaxInitialPacketSize)
+            {
+                stringstream errorMessageStream;
+
+                errorMessageStream << "Possible invalid protocol detected from \"";
+                errorMessageStream << m_connector.GetHostname(); // TODO: For listening mode, change to resolved connection ID
+                errorMessageStream << "\": encountered request for ";
+                errorMessageStream << packetSize;
+                errorMessageStream << " byte initial packet size -- connection likely from non-STTP client, disconnecting.";
+
+			    DispatchErrorMessage(errorMessageStream.str());
+
+			    auto _ = Thread([this] { Disconnect(false, false); });
+				return;
+			}
+		}
+        else
+        {
+			// Older versions of STTP did not provide a response to define operational modes - in this
+			// case common first response was for metadata refresh, which may be larger than 8KB
+			m_validated = true;
+		}
+    }
+
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
         m_readBuffer.resize(packetSize);
 
@@ -520,8 +559,6 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransf
 
     // Gather statistics
     m_totalCommandChannelBytesReceived += bytesTransferred;
-
-    // TODO: Add packet validation (size related here) esp. important for reverse connection mode
 
     // Process response
     ProcessServerResponse(m_readBuffer.data(), 0, ConvertUInt32(bytesTransferred));
@@ -575,7 +612,26 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
     const uint8_t responseCode = buffer[0];
     const uint8_t commandCode = buffer[1];
 
-    // TODO: Add initial packet response validation (STTP >=v3) to check for DefOpMode response
+    if (!m_validated)
+    {
+        if (commandCode != ServerCommand::DefineOperationalModes || responseCode != ServerResponse::Succeeded && responseCode != ServerResponse::Failed)
+        {
+            stringstream errorMessageStream;
+
+            errorMessageStream << "Possible invalid protocol detected from \"";
+            errorMessageStream << m_connector.GetHostname(); // TODO: For listening mode, change to resolved connection ID
+            errorMessageStream << "\": encountered unexpected initial command / response code: ";
+            errorMessageStream << ToHex(commandCode);
+            errorMessageStream << " / ";
+            errorMessageStream << ToHex(responseCode);
+            errorMessageStream << " -- connection likely from non-STTP client, disconnecting.";
+
+            DispatchErrorMessage(errorMessageStream.str());
+
+            auto _ = Thread([this] { Disconnect(false, false); });
+			return;
+        }
+    }
 
     switch (responseCode)
     {
@@ -635,10 +691,21 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
 
     switch (commandCode)
     {
-        case ServerCommand::MetadataRefresh:
-            // Metadata refresh message is not sent with a
-            // message, but rather the metadata itself.
-            HandleMetadataRefresh(data, offset, length);
+        case ServerCommand::DefineOperationalModes:
+            m_validated = true;
+            m_defineOpModesCompleted.Set();
+
+            if (data != nullptr)
+            {
+                char* messageStart = reinterpret_cast<char*>(data + offset);
+                const char* messageEnd = messageStart + messageLength;
+                messageStream << "Received success code in response to server command " << ToHex(commandCode) << ": ";
+
+                for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+                    messageStream << *messageIter;
+
+                DispatchStatusMessage(messageStream.str());
+            }
             break;
         case ServerCommand::Subscribe:
         case ServerCommand::Unsubscribe:
@@ -683,6 +750,13 @@ void DataSubscriber::HandleFailed(const uint8_t commandCode, uint8_t* data, cons
 
     char* messageStart = reinterpret_cast<char*>(data + offset);
     const char* messageEnd = messageStart + messageLength;
+
+    if (commandCode == ServerCommand::DefineOperationalModes)
+    {
+        m_validated = false;
+        m_defineOpModesCompleted.Set();
+        auto _ = Thread([this] { Disconnect(false, false); });
+    }
 
     if (commandCode == ServerCommand::Connect)
         m_connector.SetConnectionRefused(true);
@@ -1284,10 +1358,11 @@ uint8_t DataSubscriber::GetVersion() const
 
 void DataSubscriber::SetVersion(const uint8_t version)
 {
-    if (version < 1 || version > 2)
-        throw invalid_argument("This STTP data subscriber implementation only supports version 1 to 2 of the protocol");
+    if (version < 1 || version > 3)
+        throw invalid_argument("This STTP data subscriber implementation only supports version 1 to 3 of the protocol");
 
     m_version = version;
+
 }
 
 // Gets user defined data reference
@@ -1339,6 +1414,8 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     ErrorCode error;
 
     m_disconnected = false;
+    m_validated = m_version < 3;
+    m_defineOpModesCompleted.Reset();
     m_totalCommandChannelBytesReceived = 0UL;
     m_totalDataChannelBytesReceived = 0UL;
     m_totalMeasurementsReceived = 0UL;    
@@ -1402,6 +1479,9 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
     m_disconnecting = true;
     m_connected = false;
+    m_validated = false;
+    m_defineOpModesCompleted.Set();
+    m_defineOpModesCompleted.Reset();
     m_subscribed = false;
 
     m_disconnectThread = Thread([this, autoReconnecting]
@@ -1613,6 +1693,12 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, const uint8_t*
     if (!m_connected)
         return;
 
+    if (!m_validated && commandCode != ServerCommand::DefineOperationalModes)
+    {
+        DispatchStatusMessage("WARNING: Cannot send any server command until requested operational modes for connection have been accepted.");
+        return;
+    }
+
     const uint32_t packetSize = length + 1;
     uint32_t bigEndianPacketSize = EndianConverter::Default.ConvertBigEndian(packetSize);
     const uint8_t* bigEndianPacketSizePtr = reinterpret_cast<uint8_t*>(&bigEndianPacketSize);
@@ -1714,6 +1800,33 @@ uint64_t DataSubscriber::GetTotalMeasurementsReceived() const
 bool DataSubscriber::IsConnected() const
 {
     return m_connected;
+}
+
+bool DataSubscriber::WaitForOperationalModesResponse(const int32_t timeout)
+{
+    return m_defineOpModesCompleted.Wait(timeout);
+}
+
+std::string DataSubscriber::OperationalModesStatus() const
+{
+    if (m_validated)
+        return "Accepted -- Connection Validated";
+
+    if (m_defineOpModesCompleted.IsSet())
+        return "Rejected -- Connection Canceled";
+
+    return "Pending Response";
+}
+
+// Indicates if subscriber connection has been validated as an STTP connection.
+bool DataSubscriber::IsValidated() const
+{
+    return m_validated;
+}
+
+bool DataSubscriber::IsListening() const
+{
+    return false; // TODO: Enable response when listening mode is implemented
 }
 
 // Indicates whether the subscriber is subscribed.

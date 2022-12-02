@@ -1102,6 +1102,7 @@
     <ClInclude Include="filterexpressions\antlr4-runtime\TokenFactory.h">
       <Filter>filterexpressions\antlr4-runtime</Filter>
     </ClInclude>
+    <ClInclude Include="ManualResetEvent.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

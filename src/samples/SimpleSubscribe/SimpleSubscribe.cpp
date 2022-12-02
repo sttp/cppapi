@@ -30,6 +30,8 @@ using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
 
+constexpr int32_t TargetSTTPVersion = 3;
+
 DataSubscriber* Subscriber;
 
 bool RunSubscriber(const string& hostname, uint16_t port);
@@ -96,6 +98,8 @@ bool RunSubscriber(const string& hostname, uint16_t port)
     SubscriptionInfo info;
     info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 
+    Subscriber->SetVersion(TargetSTTPVersion);
+
     // Register callbacks
     Subscriber->RegisterStatusMessageCallback(&DisplayStatusMessage);
     Subscriber->RegisterErrorMessageCallback(&DisplayErrorMessage);
@@ -124,10 +128,27 @@ bool RunSubscriber(const string& hostname, uint16_t port)
         errorMessage = boost::current_exception_diagnostic_information(true);
     }
 
+    cout << "Define operational modes result status: " << Subscriber->OperationalModesStatus() << endl;
+
+    if (Subscriber->GetVersion() > 2)
+    {
+        if (!Subscriber->WaitForOperationalModesResponse(1))
+            cout << "Operational modes response timed out." << endl;
+
+        cout << "Define operational modes result status: " << Subscriber->OperationalModesStatus() << endl;
+    }
+
     if (connected)
     {
-        cout << "Connected! Subscribing to data..." << endl << endl;
-        Subscriber->Subscribe(info);
+        if (Subscriber->IsValidated())
+        {
+            cout << "Connected! Subscribing to data..." << endl << endl;
+            Subscriber->Subscribe(info);
+        }
+        else
+        {
+            connected = false;
+        }
     }
     else
     {

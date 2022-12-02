@@ -40,6 +40,7 @@ namespace sttp::transport
         bool m_autoParseMetadata;
         int16_t m_maxRetries;
         int16_t m_retryInterval;
+        int32_t m_operationalModesResponseTimeout;
         std::string m_filterExpression;
         std::string m_metadataFilters;
         std::string m_startTime;
@@ -176,7 +177,7 @@ namespace sttp::transport
         void SetMetadataFilters(const std::string& metadataFilters);
 
         // Starts the connection cycle to an STTP publisher. Upon connection, meta-data will be requested,
-        // when received, a subscription will be established
+        // when received, a subscription will be established.
         void Connect();
         void ConnectAsync();
 
@@ -220,11 +221,31 @@ namespace sttp::transport
         bool GetReceiveSimpleMeasurements() const;
         void SetReceiveSimpleMeasurements(bool value);
 
+        // Gets or sets total time, in milliseconds, to wait for a response to the
+        // define operational modes server command request after a successful connection
+        // to the data publisher has been established.
+        int32_t GetOperationalModesResponseTimeout() const;
+        void SetOperationalModesResponseTimeout(int32_t value);
+
         // Statistical functions
         uint64_t GetTotalCommandChannelBytesReceived() const;
         uint64_t GetTotalDataChannelBytesReceived() const;
         uint64_t GetTotalMeasurementsReceived() const;
+
+        // Determines if a subscriber is currently connected to a publisher.
         bool IsConnected() const;
+
+        // Gets user readable status message for current response to define operational modes command request.
+        std::string OperationalModesStatus() const;
+
+        // Determines if a subscriber connection has been validated as an STTP connection.
+        bool IsValidated() const;
+
+        // Determines if a subscriber is currently listening for a publisher
+        // connection, i.e., subscriber is in reverse connection mode.
+        bool IsListening() const;
+
+        // Determines if a subscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;
 
         // Metadata iteration functions - note that full lock will be maintained on source collections

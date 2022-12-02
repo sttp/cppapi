@@ -27,6 +27,7 @@
 
 #include "../Timer.h"
 #include "../ThreadSafeQueue.h"
+#include "../ManualResetEvent.h"
 #include "TransportTypes.h"
 #include "SignalIndexCache.h"
 
@@ -189,6 +190,8 @@ namespace sttp::transport
         bool m_compressSignalIndexCache;
         uint8_t m_version;
         std::atomic_bool m_connected;
+        ManualResetEvent m_defineOpModesCompleted;
+        std::atomic_bool m_validated;
         std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
@@ -406,7 +409,24 @@ namespace sttp::transport
         uint64_t GetTotalCommandChannelBytesReceived() const;
         uint64_t GetTotalDataChannelBytesReceived() const;
         uint64_t GetTotalMeasurementsReceived() const;
+
+        // Determines if a DataSubscriber is currently connected to a DataPublisher.
         bool IsConnected() const;
+
+        // Waits for publisher response to define operational modes request.
+        bool WaitForOperationalModesResponse(int32_t timeout);
+
+        // Gets user readable status message for current response to define operational modes command request.
+        std::string OperationalModesStatus() const;
+
+        // Determines if a DataSubscriber connection has been validated as an STTP connection.
+        bool IsValidated() const;
+
+        // Determines if a DataSubscriber is currently listening for a DataPublisher
+        // connection, i.e., DataSubscriber is in reverse connection mode.
+        bool IsListening() const;
+
+        // Determines if a DataSubscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;
 
         // Version info functions

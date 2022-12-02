@@ -222,7 +222,7 @@ namespace sttp::transport
         void SetPublishInterval(float64_t value);
 
         // Gets or sets flag that determines if time should be restricted to millisecond resolution in data packets when the
-        // compact measurement format used; otherwise, full resolution time will be used
+        // compact measurement format used; otherwise, full resolution time (defaults to 100-nanosecond ticks) will be used
         bool GetUseMillisecondResolution() const;
         void SetUseMillisecondResolution(bool value);
 

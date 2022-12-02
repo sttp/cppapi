@@ -41,6 +41,7 @@ SubscriberInstance::SubscriberInstance() :
     m_autoParseMetadata(true),
     m_maxRetries(-1),
     m_retryInterval(2000),
+    m_operationalModesResponseTimeout(5000),
     m_filterExpression(SubscribeAllNoStatsExpression),
 #ifdef SWIG
     m_receiveSimpleMeasurements(true),
@@ -205,6 +206,18 @@ void SubscriberInstance::Connect()
 
     if (result == SubscriberConnector::ConnectSuccess)
     {
+        if (m_subscriber->GetVersion() > 2 && !m_subscriber->WaitForOperationalModesResponse(m_operationalModesResponseTimeout))
+        {
+            ErrorMessage("Timed out waiting for define operational modes response, cancelling automated connection steps...");
+            return;
+        }
+
+        if (!m_subscriber->IsValidated())
+        {
+            ErrorMessage("Data publisher rejected connection, cancelling automated connection steps...");
+            return;
+        }
+
         ConnectionEstablished();
 
         // If automatically parsing metadata, request metadata upon successful connection,
@@ -296,6 +309,16 @@ void SubscriberInstance::SetReceiveSimpleMeasurements(const bool value)
     m_receiveSimpleMeasurements = value;
 }
 
+int32_t SubscriberInstance::GetOperationalModesResponseTimeout() const
+{
+    return m_operationalModesResponseTimeout;
+}
+
+void SubscriberInstance::SetOperationalModesResponseTimeout(int32_t value)
+{
+    m_operationalModesResponseTimeout = value;
+}
+
 uint64_t SubscriberInstance::GetTotalCommandChannelBytesReceived() const
 {
     return m_subscriber->GetTotalCommandChannelBytesReceived();
@@ -314,6 +337,21 @@ uint64_t SubscriberInstance::GetTotalMeasurementsReceived() const
 bool SubscriberInstance::IsConnected() const
 {
     return m_subscriber->IsConnected();
+}
+
+std::string SubscriberInstance::OperationalModesStatus() const
+{
+    return m_subscriber->OperationalModesStatus();
+}
+
+bool SubscriberInstance::IsValidated() const
+{
+    return m_subscriber->IsValidated();
+}
+
+bool SubscriberInstance::IsListening() const
+{
+    return m_subscriber->IsListening();
 }
 
 bool SubscriberInstance::IsSubscribed() const
