@@ -490,6 +490,12 @@
       <Filter>filterexpressions\antlr4-runtime</Filter>
     </ClCompile>
     <ClCompile Include="ManualResetEvent.cpp" />
+    <ClCompile Include="transport\SubscriberConnector.cpp">
+      <Filter>transport</Filter>
+    </ClCompile>
+    <ClCompile Include="transport\SubscriptionInfo.cpp">
+      <Filter>transport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data\DataColumn.h">
@@ -1104,6 +1110,12 @@
       <Filter>filterexpressions\antlr4-runtime</Filter>
     </ClInclude>
     <ClInclude Include="ManualResetEvent.h" />
+    <ClInclude Include="transport\SubscriberConnector.h">
+      <Filter>transport</Filter>
+    </ClInclude>
+    <ClInclude Include="transport\SubscriptionInfo.h">
+      <Filter>transport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

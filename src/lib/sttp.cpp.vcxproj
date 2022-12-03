@@ -397,10 +397,14 @@
     <ClCompile Include="transport\RoutingTables.cpp" />
     <ClCompile Include="transport\SignalIndexCache.cpp" />
     <ClInclude Include="transport\SubscriberConnection.h" />
+    <ClInclude Include="transport\SubscriberConnector.h" />
     <ClInclude Include="transport\SubscriberInstance.h" />
     <ClCompile Include="transport\SubscriberConnection.cpp" />
+    <ClCompile Include="transport\SubscriberConnector.cpp" />
     <ClCompile Include="transport\SubscriberInstance.cpp" />
+    <ClInclude Include="transport\SubscriptionInfo.h" />
     <ClInclude Include="transport\TransportTypes.h" />
+    <ClCompile Include="transport\SubscriptionInfo.cpp" />
     <ClCompile Include="transport\TransportTypes.cpp" />
     <ClCompile Include="transport\tssc\TSSCDecoder.cpp" />
     <ClCompile Include="transport\tssc\TSSCEncoder.cpp" />

@@ -41,335 +41,6 @@ using namespace sttp;
 using namespace sttp::transport;
 using namespace sttp::transport::tssc;
 
-// --- SubscriptionInfo ---
-
-SubscriptionInfo::SubscriptionInfo() :
-    Throttled(false),
-    PublishInterval(0.0),
-    UdpDataChannel(false),
-    DataChannelLocalPort(9500),
-    IncludeTime(true),
-    LagTime(10.0),
-    LeadTime(5.0),
-    UseLocalClockAsRealTime(false),
-    UseMillisecondResolution(false),
-    RequestNaNValueFilter(false),
-    ProcessingInterval(-1)
-{
-}
-
-// --- SubscriberConnector ---
-
-SubscriberConnector::SubscriberConnector() :
-    m_port(0),
-    m_timer(nullptr),
-    m_maxRetries(-1),
-    m_retryInterval(2000),
-    m_maxRetryInterval(120000),
-    m_connectAttempt(0),
-    m_connectionRefused(false),
-    m_autoReconnect(true),
-    m_cancel(false)
-{
-}
-
-SubscriberConnector::~SubscriberConnector() noexcept
-{
-    try
-    {
-        Cancel();
-    }
-    catch (...)
-    {
-        // ReSharper disable once CppRedundantControlFlowJump
-        return;
-    }
-}
-
-// Auto-reconnect handler.
-void SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
-{
-    SubscriberConnector& connector = subscriber->GetSubscriberConnector();
-
-    if (connector.m_cancel || subscriber->m_disposing)
-        return;
-
-    // Make sure to wait on any running reconnect to complete...
-    connector.m_autoReconnectThread.join();
-    
-    connector.m_autoReconnectThread = Thread([&connector,subscriber]
-    {
-        // Reset connection attempt counter if last attempt was not refused
-        if (!connector.m_connectionRefused)
-            connector.ResetConnection();
-        
-        if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
-        {
-            if (connector.m_errorMessageCallback != nullptr)
-                connector.m_errorMessageCallback(subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
-            return;
-        }
-
-        // Apply exponential back-off algorithm for retry attempt delays
-        const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
-        int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
-
-        if (retryInterval > connector.m_maxRetryInterval)
-            retryInterval = connector.m_maxRetryInterval;
-
-        // Notify the user that we are attempting to reconnect.
-        if (connector.m_errorMessageCallback != nullptr)
-        {
-            stringstream errorMessageStream;
-
-            errorMessageStream << "Connection";
-
-            if (connector.m_connectAttempt > 0)
-                errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
-
-            errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
-           
-            if (retryInterval > 0)
-                errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
-            else
-                errorMessageStream << "Attempting to reconnect...";
-
-            connector.m_errorMessageCallback(subscriber, errorMessageStream.str());
-        }
-
-        connector.m_timer = Timer::WaitTimer(retryInterval);
-        connector.m_timer->Wait();
-
-        if (connector.m_cancel || subscriber->m_disposing)
-            return;
-
-        if (connector.Connect(*subscriber, true) == ConnectCanceled)
-            return;
-
-        // Notify the user that reconnect attempt was completed.
-        if (!connector.m_cancel && connector.m_reconnectCallback != nullptr)
-            connector.m_reconnectCallback(subscriber);
-    });    
-}
-
-// Registers a callback to provide error messages each time
-// the subscriber fails to connect during a connection sequence.
-void SubscriberConnector::RegisterErrorMessageCallback(const ErrorMessageCallback& errorMessageCallback)
-{
-    m_errorMessageCallback = errorMessageCallback;
-}
-
-// Registers a callback to notify after an automatic reconnection attempt has been made.
-void SubscriberConnector::RegisterReconnectCallback(const ReconnectCallback& reconnectCallback)
-{
-    m_reconnectCallback = reconnectCallback;
-}
-
-int SubscriberConnector::Connect(DataSubscriber& subscriber, const SubscriptionInfo& info)
-{
-    if (m_cancel)
-        return ConnectCanceled;
-
-    subscriber.SetSubscriptionInfo(info);
-    return Connect(subscriber, false);
-}
-
-// Begin connection sequence.
-int SubscriberConnector::Connect(DataSubscriber& subscriber, bool autoReconnecting)
-{
-    if (m_autoReconnect)
-        subscriber.RegisterAutoReconnectCallback(&AutoReconnect);
-
-    m_cancel = false;
-
-    while (!subscriber.m_disposing)
-    {
-        if (m_maxRetries != -1 && m_connectAttempt >= m_maxRetries)
-        {
-            if (m_errorMessageCallback != nullptr)
-                m_errorMessageCallback(&subscriber, "Maximum connection retries attempted. Auto-reconnect canceled.");
-            break;
-        }
-
-        string errorMessage;
-        bool connected = false;
-
-        try
-        {
-            m_connectAttempt++;
-
-            if (subscriber.m_disposing)
-                return ConnectCanceled;
-
-            subscriber.Connect(m_hostname, m_port, autoReconnecting);
-            
-            connected = true;
-            break;
-        }
-        catch (SubscriberException& ex)
-        {
-            errorMessage = ex.what();
-        }
-        catch (SystemError& ex)
-        {
-            errorMessage = ex.what();
-        }
-        catch (...)
-        {
-            errorMessage = current_exception_diagnostic_information(true);
-        }
-
-        if (!connected && !subscriber.m_disposing)
-        {
-            // Apply exponential back-off algorithm for retry attempt delays
-            const int32_t exponent = (m_connectAttempt > 13 ? 13 : m_connectAttempt) - 1;
-            int32_t retryInterval = m_connectAttempt > 0 ? m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
-            autoReconnecting = true;
-
-            if (retryInterval > m_maxRetryInterval)
-                retryInterval = m_maxRetryInterval;
-
-            if (m_errorMessageCallback != nullptr)
-            {
-                stringstream errorMessageStream;
-                errorMessageStream << "Connection";
-
-                if (m_connectAttempt > 0)
-                    errorMessageStream << " attempt " << m_connectAttempt + 1;
-
-                errorMessageStream << " to \"" << m_hostname << ":" << m_port << "\" failed: " << errorMessage << ". ";
-       
-                if (retryInterval > 0)
-                    errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
-                else
-                    errorMessageStream << "Attempting to reconnect...";
-
-                m_errorMessageCallback(&subscriber, errorMessageStream.str());
-            }
-
-            if (retryInterval > 0)
-            {
-                m_timer = Timer::WaitTimer(retryInterval);
-                m_timer->Wait();
-
-                if (m_cancel)
-                    return ConnectCanceled;
-            }
-        }
-    }
-
-    return subscriber.m_disposing ? ConnectCanceled : subscriber.IsConnected() ? ConnectSuccess : ConnectFailed;
-}
-
-// Cancel all current and future connection sequences.
-void SubscriberConnector::Cancel()
-{
-    m_cancel = true;
-
-    // Cancel any waiting timer operations by setting immediate timer expiration
-    if (m_timer != nullptr)
-        m_timer->Stop();
-
-    m_autoReconnectThread.join();
-}
-
-// Sets the hostname of the publisher to connect to.
-void SubscriberConnector::SetHostname(const string& hostname)
-{
-    m_hostname = hostname;
-}
-
-// Sets the port that the publisher is listening on.
-void SubscriberConnector::SetPort(const uint16_t port)
-{
-    m_port = port;
-}
-
-// Sets the maximum number of retries during a connection sequence.
-void SubscriberConnector::SetMaxRetries(const int32_t maxRetries)
-{
-    m_maxRetries = maxRetries;
-}
-
-// Sets the interval of idle time (in milliseconds) between connection attempts.
-void SubscriberConnector::SetRetryInterval(const int32_t retryInterval)
-{
-    m_retryInterval = retryInterval;
-}
-
-// Sets maximum retry interval - connection retry attempts use exponential
-// back-off algorithm up to this defined maximum.
-void SubscriberConnector::SetMaxRetryInterval(const int32_t maxRetryInterval)
-{
-    m_maxRetryInterval = maxRetryInterval;
-}
-
-// Sets the flag that determines whether the subscriber should
-// automatically attempt to reconnect when the connection is terminated.
-void SubscriberConnector::SetAutoReconnect(const bool autoReconnect)
-{
-    m_autoReconnect = autoReconnect;
-}
-
-// Sets flag indicating connection was refused.
-void SubscriberConnector::SetConnectionRefused(const bool connectionRefused)
-{
-    m_connectionRefused = connectionRefused;
-}
-
-// Resets connector for a new connection
-void SubscriberConnector::ResetConnection()
-{
-    m_connectAttempt = 0;
-    m_cancel = false;
-}
-
-// Gets the hostname of the publisher to connect to.
-string SubscriberConnector::GetHostname() const
-{
-    return m_hostname;
-}
-
-// Gets the port that the publisher is listening on.
-uint16_t SubscriberConnector::GetPort() const
-{
-    return m_port;
-}
-
-// Gets the maximum number of retries during a connection sequence.
-int32_t SubscriberConnector::GetMaxRetries() const
-{
-    return m_maxRetries;
-}
-
-// Gets the interval of idle time between connection attempts.
-int32_t SubscriberConnector::GetRetryInterval() const
-{
-    return m_retryInterval;
-}
-
-// Gets maximum retry interval - connection retry attempts use exponential
-// back-off algorithm up to this defined maximum.
-int32_t SubscriberConnector::GetMaxRetryInterval() const
-{
-    return m_maxRetryInterval;
-}
-
-// Gets the flag that determines whether the subscriber should
-// automatically attempt to reconnect when the connection is terminated.
-bool SubscriberConnector::GetAutoReconnect() const
-{
-    return m_autoReconnect;
-}
-
-// Gets flag indicating connection was refused.
-bool SubscriberConnector::GetConnectionRefused() const
-{
-    return m_connectionRefused;
-}
-
-// --- DataSubscriber ---
-
 DataSubscriber::DataSubscriber() :
     m_subscriberID(Empty::Guid),
     m_compressPayloadData(true),
@@ -381,7 +52,6 @@ DataSubscriber::DataSubscriber() :
     m_subscribed(false),
     m_disconnecting(false),
     m_disconnected(false),
-    m_disposing(false),
     m_userData(nullptr),
     m_totalCommandChannelBytesReceived(0UL),
     m_totalDataChannelBytesReceived(0UL),
@@ -707,6 +377,11 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
                 DispatchStatusMessage(messageStream.str());
             }
             break;
+        case ServerCommand::MetadataRefresh:
+            // Metadata refresh message is not sent with a
+            // message, but rather the metadata itself.
+            HandleMetadataRefresh(data, offset, length);
+            break;
         case ServerCommand::Subscribe:
         case ServerCommand::Unsubscribe:
             // Do not break on these messages because there is
@@ -897,6 +572,9 @@ void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, const uint
         m_signalIndexCacheMutex.lock();
         const SignalIndexCachePtr signalIndexCache = m_signalIndexCache[cacheIndex];
         m_signalIndexCacheMutex.unlock();
+
+        if (signalIndexCache == nullptr)
+            return;
 
         if (dataPacketFlags & DataPacketFlags::Compressed)
             ParseTSSCMeasurements(signalIndexCache, data, offset, length, measurements);
@@ -1304,7 +982,7 @@ void DataSubscriber::RegisterConnectionTerminatedCallback(const ConnectionTermin
 }
 
 // Registers the auto-reconnect callback.
-void DataSubscriber::RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback)
+void DataSubscriber::RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback)
 {
     m_autoReconnectCallback = autoReconnectCallback;
 }
@@ -1663,11 +1341,11 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode)
 }
 
 // Sends a command along with the given message to the server.
-void DataSubscriber::SendServerCommand(const uint8_t commandCode, string message)
+void DataSubscriber::SendServerCommand(const uint8_t commandCode, const string& message)
 {
     vector<uint8_t> buffer;
     uint32_t bigEndianMessageSize;
-    const uint8_t* messagePtr = reinterpret_cast<uint8_t*>(message.data());
+    const uint8_t* messagePtr = reinterpret_cast<const uint8_t*>(message.data());
     const uint32_t messageSize = ConvertUInt32(message.size() * sizeof(char));
 
     bigEndianMessageSize = EndianConverter::Default.ConvertBigEndian(messageSize);

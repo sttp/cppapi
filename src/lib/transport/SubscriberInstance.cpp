@@ -1199,32 +1199,6 @@ void SubscriberInstance::SetAssemblyInfo(const std::string& source, const std::s
 // The following member methods are defined as static so they
 // can be used as callback registrations for DataSubscriber
 
-void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
-{
-    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
-
-    if (instance == nullptr)
-        return;
-
-    if (source->IsConnected())
-    {
-        instance->ConnectionEstablished();
-
-        // If automatically parsing metadata, request metadata upon successful connection,
-        // after metadata is handled the SubscriberInstance will then initiate subscribe;
-        // otherwise, initiate subscribe immediately
-        if (instance->m_autoParseMetadata)
-            instance->SendMetadataRefreshCommand();
-        else
-            source->Subscribe();
-    }
-    else
-    {
-        source->Disconnect();
-        instance->StatusMessage("Connection retry attempts exceeded.");
-    }
-}
-
 void SubscriberInstance::HandleStatusMessage(const DataSubscriber* source, const string& message)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
@@ -1321,12 +1295,28 @@ void SubscriberInstance::HandleProcessingComplete(const DataSubscriber* source, 
     instance->HistoricalReadComplete();
 }
 
-void SubscriberInstance::HandleConnectionTerminated(const DataSubscriber* source)
+void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 {
     SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
 
     if (instance == nullptr)
         return;
 
-    instance->ConnectionTerminated();
+    if (source->IsConnected())
+    {
+        instance->ConnectionEstablished();
+
+        // If automatically parsing metadata, request metadata upon successful connection,
+        // after metadata is handled the SubscriberInstance will then initiate subscribe;
+        // otherwise, initiate subscribe immediately
+        if (instance->m_autoParseMetadata)
+            instance->SendMetadataRefreshCommand();
+        else
+            source->Subscribe();
+    }
+    else
+    {
+        source->Disconnect();
+        instance->StatusMessage("Connection retry attempts exceeded.");
+    }
 }

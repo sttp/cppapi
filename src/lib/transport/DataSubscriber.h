@@ -25,138 +25,16 @@
 
 #pragma once
 
-#include "../Timer.h"
 #include "../ThreadSafeQueue.h"
 #include "../ManualResetEvent.h"
 #include "TransportTypes.h"
+#include "SubscriptionInfo.h"
+#include "SubscriberConnector.h"
 #include "SignalIndexCache.h"
 
 namespace sttp::transport
 {
-    class DataSubscriber;
-
-    // Info structure used to configure subscriptions.
-    struct SubscriptionInfo
-    {
-        std::string FilterExpression;
-
-        // Down-sampling properties
-        bool Throttled;
-        float64_t PublishInterval;
-
-        // UDP channel properties
-        bool UdpDataChannel;
-        uint16_t DataChannelLocalPort;
-
-        // Compact measurement properties
-        bool IncludeTime;
-        float64_t LagTime;
-        float64_t LeadTime;
-        bool UseLocalClockAsRealTime;
-        bool UseMillisecondResolution;
-        bool RequestNaNValueFilter;
-
-        // Temporal playback properties
-        std::string StartTime;
-        std::string StopTime;
-        std::string ConstraintParameters;
-        int32_t ProcessingInterval;
-
-        std::string ExtraConnectionStringParameters;
-
-        SubscriptionInfo();
-    };
-
-    // Helper class to provide retry and auto-reconnect functionality to the subscriber.
-    class SubscriberConnector final // NOLINT
-    {
-    private:
-        typedef std::function<void(DataSubscriber*, const std::string&)> ErrorMessageCallback;
-        typedef std::function<void(DataSubscriber*)> ReconnectCallback;
-
-        ErrorMessageCallback m_errorMessageCallback;
-        ReconnectCallback m_reconnectCallback;
-
-        std::string m_hostname;
-        uint16_t m_port;
-        TimerPtr m_timer;
-
-        int32_t m_maxRetries;
-        int32_t m_retryInterval;
-        int32_t m_maxRetryInterval;
-        int32_t m_connectAttempt;
-        bool m_connectionRefused;
-        bool m_autoReconnect;
-        Thread m_autoReconnectThread;
-        std::atomic_bool m_cancel;
-
-        // Auto-reconnect handler.
-        static void AutoReconnect(DataSubscriber* subscriber);
-
-        int Connect(DataSubscriber& subscriber, bool autoReconnecting);
-
-    public:
-        static constexpr int ConnectSuccess = 1;
-        static constexpr int ConnectFailed = 0;
-        static constexpr int ConnectCanceled = -1;
-
-        // Creates a new instance.
-        SubscriberConnector();
-        ~SubscriberConnector() noexcept;
-
-        // Registers a callback to provide error messages each time
-        // the subscriber fails to connect during a connection sequence.
-        void RegisterErrorMessageCallback(const ErrorMessageCallback& errorMessageCallback);
-
-        // Registers a callback to notify after an automatic reconnection attempt has been made.
-        // This callback will be called whether the connection was successful or not, so it is
-        // recommended to check the connected state of the subscriber using the IsConnected() method.
-        void RegisterReconnectCallback(const ReconnectCallback& reconnectCallback);
-
-        // Begin connection sequence
-        int Connect(DataSubscriber& subscriber, const SubscriptionInfo& info);
-
-        // Cancel all current and
-        // future connection sequences.
-        void Cancel();
-
-        // Sets the hostname of the publisher to connect to.
-        void SetHostname(const std::string& hostname);
-
-        // Sets the port that the publisher is listening on.
-        void SetPort(uint16_t port);
-
-        // Sets the maximum number of retries during a connection sequence.
-        void SetMaxRetries(int32_t maxRetries);
-
-        // Sets the initial interval of idle time (in milliseconds) between connection attempts.
-        void SetRetryInterval(int32_t retryInterval);
-
-        // Sets maximum retry interval - connection retry attempts use exponential back-off
-        // algorithm up to this defined maximum.
-        void SetMaxRetryInterval(int32_t maxRetryInterval);
-
-        // Sets flag that determines whether the subscriber should
-        // automatically attempt to reconnect when the connection is terminated.
-        void SetAutoReconnect(bool autoReconnect);
-
-        // Sets flag indicating connection was refused.
-        void SetConnectionRefused(bool connectionRefused);
-
-        // Resets connector for a new connection
-        void ResetConnection();
-
-        // Getters for configurable settings.
-        std::string GetHostname() const;
-        uint16_t GetPort() const;
-        int32_t GetMaxRetries() const;
-        int32_t GetRetryInterval() const;
-        int32_t GetMaxRetryInterval() const;
-        bool GetAutoReconnect() const;
-        bool GetConnectionRefused() const;
-    };
-
-    class DataSubscriber // NOLINT
+    class DataSubscriber final : public DataClient // NOLINT
     {
     public:
         // Function pointer types
@@ -195,7 +73,7 @@ namespace sttp::transport
         std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
-        std::atomic_bool m_disposing;
+        //std::atomic_bool m_disposing;
         Mutex m_connectActionMutex;
         Thread m_disconnectThread;
         void* m_userData;
@@ -251,7 +129,7 @@ namespace sttp::transport
         MessageCallback m_processingCompleteCallback;
         ConfigurationChangedCallback m_configurationChangedCallback;
         ConnectionTerminatedCallback m_connectionTerminatedCallback;
-        ConnectionTerminatedCallback m_autoReconnectCallback;
+        ClientConnectionTerminatedCallback m_autoReconnectCallback;
 
         // Threads
         void RunCallbackThread();
@@ -302,7 +180,7 @@ namespace sttp::transport
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
 
-        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting);
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
         void Disconnect(bool joinThread, bool autoReconnecting);
         bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
 
@@ -312,7 +190,7 @@ namespace sttp::transport
 
         // Releases all threads and sockets
         // tied up by the subscriber.
-        ~DataSubscriber() noexcept;
+        ~DataSubscriber() noexcept override;
 
         // Callback registration
         //
@@ -338,7 +216,7 @@ namespace sttp::transport
         void RegisterProcessingCompleteCallback(const MessageCallback& processingCompleteCallback);
         void RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback);
         void RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback);
-        void RegisterAutoReconnectCallback(const ConnectionTerminatedCallback& autoReconnectCallback);
+        void RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback) override;
 
         const Guid& GetSubscriberID() const;
 
@@ -365,9 +243,9 @@ namespace sttp::transport
         void* GetUserData() const;
         void SetUserData(void* userData);
 
-        SubscriberConnector& GetSubscriberConnector();
+        SubscriberConnector& GetSubscriberConnector() override;
 
-        void SetSubscriptionInfo(const SubscriptionInfo& info);
+        void SetSubscriptionInfo(const SubscriptionInfo& info) override;
         const SubscriptionInfo& GetSubscriptionInfo() const;
 
         // Synchronously connects to publisher.
@@ -397,7 +275,7 @@ namespace sttp::transport
         //   ServerCommand::Subscribe
         //   ServerCommand::Unsubscribe
         void SendServerCommand(uint8_t commandCode);
-        void SendServerCommand(uint8_t commandCode, std::string message);
+        void SendServerCommand(uint8_t commandCode, const std::string& message);
         void SendServerCommand(uint8_t commandCode, const uint8_t* data, uint32_t offset, uint32_t length);
 
         // Convenience method to send the currently defined and/or supported
@@ -411,7 +289,7 @@ namespace sttp::transport
         uint64_t GetTotalMeasurementsReceived() const;
 
         // Determines if a DataSubscriber is currently connected to a DataPublisher.
-        bool IsConnected() const;
+        bool IsConnected() const override;
 
         // Waits for publisher response to define operational modes request.
         bool WaitForOperationalModesResponse(int32_t timeout = 5000);

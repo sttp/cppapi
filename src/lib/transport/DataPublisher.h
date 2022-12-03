@@ -40,7 +40,7 @@ namespace sttp::filterexpressions
 
 namespace sttp::transport
 {
-    class DataPublisher : public EnableSharedThisPtr<DataPublisher> // NOLINT
+    class DataPublisher final : public EnableSharedThisPtr<DataPublisher> // NOLINT
     {
     public:
         // Function pointer types
