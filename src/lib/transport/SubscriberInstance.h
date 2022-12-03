@@ -81,7 +81,7 @@ namespace sttp::transport
 #endif
         virtual void SetupSubscriberConnector(SubscriberConnector& connector);
         virtual SubscriptionInfo CreateSubscriptionInfo();
-        virtual void StatusMessage(const std::string& message);    // Defaults output to cout
+        virtual void StatusMessage(const std::string& message);   // Defaults output to cout
         virtual void ErrorMessage(const std::string& message);    // Defaults output to cerr
         virtual void DataStartTime(time_t unixSOC, uint16_t milliseconds);
         virtual void DataStartTime(datetime_t startTime);

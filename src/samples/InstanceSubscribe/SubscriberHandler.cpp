@@ -124,16 +124,16 @@ void SubscriberHandler::ParsedMetadata()
 // ReSharper disable CppDeclaratorNeverUsed
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {   
-    static const uint64_t interval = 10 * 60;
-    static const uint64_t maxToShow = 20;
+    static constexpr uint64_t interval = 10ULL * 60ULL;
+    static constexpr uint64_t maxToShow = 20ULL;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
-    uint64_t shown = 0;
 
     m_processCount += measurementCount;
 
     if (showMessage)
     {
+        uint64_t shown = 0;
         stringstream message;
 
         message << GetTotalMeasurementsReceived() << " measurements received so far..." << endl;
@@ -184,8 +184,7 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
         }
 
         // Only display messages every few seconds
-        if (showMessage)
-            StatusMessage(message.str());
+        StatusMessage(message.str());
     }
 }
 

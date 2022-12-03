@@ -188,7 +188,7 @@ void SetupSubscriberConnector(SubscriberConnector& connector, const string& host
 void ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     static uint64_t processCount = 0;
-    static constexpr uint64_t interval = 5 * 60;
+    static constexpr uint64_t interval = 5ULL * 60ULL;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (processCount + measurementCount >= (processCount / interval + 1) * interval);
 
