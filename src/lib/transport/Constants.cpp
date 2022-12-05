@@ -22,60 +22,195 @@
 //******************************************************************************************************
 
 #include "Constants.h"
+#include "../Convert.h"
 
+using namespace std;
+using namespace sttp;
 using namespace sttp::transport;
 
 MeasurementStateFlags sttp::transport::operator &(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) &
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        static_cast<underlying_type_t<MeasurementStateFlags>>(lhs) &
+        static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 }
 
 MeasurementStateFlags sttp::transport::operator ^(MeasurementStateFlags lhs, MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) ^
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        static_cast<underlying_type_t<MeasurementStateFlags>>(lhs) ^
+        static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 }
 
 MeasurementStateFlags sttp::transport::operator ~(MeasurementStateFlags rhs)
 {
     return static_cast<MeasurementStateFlags> (
-        ~static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        ~static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 }
 
-MeasurementStateFlags& sttp::transport::operator |=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator |=(MeasurementStateFlags& lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) |
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        static_cast<underlying_type_t<MeasurementStateFlags>>(lhs) |
+        static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 
     return lhs;
 }
 
-MeasurementStateFlags& sttp::transport::operator &=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator &=(MeasurementStateFlags& lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) &
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        static_cast<underlying_type_t<MeasurementStateFlags>>(lhs) &
+        static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 
     return lhs;
 }
 
-MeasurementStateFlags& sttp::transport::operator ^=(MeasurementStateFlags &lhs, MeasurementStateFlags rhs)
+MeasurementStateFlags& sttp::transport::operator ^=(MeasurementStateFlags& lhs, MeasurementStateFlags rhs)
 {
     lhs = static_cast<MeasurementStateFlags> (
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(lhs) ^
-        static_cast<std::underlying_type_t<MeasurementStateFlags>>(rhs)
-    );
+        static_cast<underlying_type_t<MeasurementStateFlags>>(lhs) ^
+        static_cast<underlying_type_t<MeasurementStateFlags>>(rhs)
+        );
 
     return lhs;
+}
+
+string ServerCommand::ToString(const uint8_t command)
+{
+    switch (command)
+    {
+    case ServerCommand::Connect:
+        return "Connect";
+    case ServerCommand::MetadataRefresh:
+        return "MetadataRefresh";
+    case ServerCommand::Subscribe:
+        return "Subscribe";
+    case ServerCommand::Unsubscribe:
+        return "Unsubscribe";
+    case ServerCommand::RotateCipherKeys:
+        return "RotateCipherKeys";
+    case ServerCommand::UpdateProcessingInterval:
+        return "UpdateProcessingInterval";
+    case ServerCommand::DefineOperationalModes:
+        return "DefineOperationalModes";
+    case ServerCommand::ConfirmNotification:
+        return "ConfirmNotification";
+    case ServerCommand::ConfirmBufferBlock:
+        return "ConfirmBufferBlock";
+    case ServerCommand::ConfirmUpdateSignalIndexCache:
+        return "ConfirmUpdateSignalIndexCache";
+    case ServerCommand::ConfirmUpdateCipherKeys:
+        return "ConfirmUpdateCipherKeys";
+    case ServerCommand::GetPrimaryMetadataSchema:
+        return "GetPrimaryMetadataSchema";
+    case ServerCommand::GetSignalSelectionSchema:
+        return "GetSignalSelectionSchema";
+    case ServerCommand::UserCommand00:
+        return "UserCommand00";
+    case ServerCommand::UserCommand01:
+        return "UserCommand01";
+    case ServerCommand::UserCommand02:
+        return "UserCommand02";
+    case ServerCommand::UserCommand03:
+        return "UserCommand03";
+    case ServerCommand::UserCommand04:
+        return "UserCommand04";
+    case ServerCommand::UserCommand05:
+        return "UserCommand05";
+    case ServerCommand::UserCommand06:
+        return "UserCommand06";
+    case ServerCommand::UserCommand07:
+        return "UserCommand07";
+    case ServerCommand::UserCommand08:
+        return "UserCommand08";
+    case ServerCommand::UserCommand09:
+        return "UserCommand09";
+    case ServerCommand::UserCommand10:
+        return "UserCommand10";
+    case ServerCommand::UserCommand11:
+        return "UserCommand11";
+    case ServerCommand::UserCommand12:
+        return "UserCommand12";
+    case ServerCommand::UserCommand13:
+        return "UserCommand13";
+    case ServerCommand::UserCommand14:
+        return "UserCommand14";
+    case ServerCommand::UserCommand15:
+        return "UserCommand15";
+    default:
+        return ToHex(command);
+    }
+}
+
+string ServerResponse::ToString(const uint8_t response)
+{
+    switch (response)
+    {
+    case ServerResponse::Succeeded:
+        return "Succeeded";
+    case ServerResponse::Failed:
+        return "Failed";
+    case ServerResponse::DataPacket:
+        return "DataPacket";
+    case ServerResponse::UpdateSignalIndexCache:
+        return "UpdateSignalIndexCache";
+    case ServerResponse::UpdateBaseTimes:
+        return "UpdateBaseTimes";
+    case ServerResponse::UpdateCipherKeys:
+        return "UpdateCipherKeys";
+    case ServerResponse::DataStartTime:
+        return "DataStartTime";
+    case ServerResponse::ProcessingComplete:
+        return "ProcessingComplete";
+    case ServerResponse::BufferBlock:
+        return "BufferBlock";
+    case ServerResponse::Notify:
+        return "Notify";
+    case ServerResponse::ConfigurationChanged:
+        return "ConfigurationChanged";
+    case ServerResponse::UserResponse00:
+        return "UserResponse00";
+    case ServerResponse::UserResponse01:
+        return "UserResponse01";
+    case ServerResponse::UserResponse02:
+        return "UserResponse02";
+    case ServerResponse::UserResponse03:
+        return "UserResponse03";
+    case ServerResponse::UserResponse04:
+        return "UserResponse04";
+    case ServerResponse::UserResponse05:
+        return "UserResponse05";
+    case ServerResponse::UserResponse06:
+        return "UserResponse06";
+    case ServerResponse::UserResponse07:
+        return "UserResponse07";
+    case ServerResponse::UserResponse08:
+        return "UserResponse08";
+    case ServerResponse::UserResponse09:
+        return "UserResponse09";
+    case ServerResponse::UserResponse10:
+        return "UserResponse10";
+    case ServerResponse::UserResponse11:
+        return "UserResponse11";
+    case ServerResponse::UserResponse12:
+        return "UserResponse12";
+    case ServerResponse::UserResponse13:
+        return "UserResponse13";
+    case ServerResponse::UserResponse14:
+        return "UserResponse14";
+    case ServerResponse::UserResponse15:
+        return "UserResponse15";
+    case ServerResponse::NoOP:
+        return "NoOP";
+    default:
+        return ToHex(response);
+    }
 }
 
 // Define "instances" of all static constants so values can be passed by reference and found by linker

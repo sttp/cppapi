@@ -40,8 +40,8 @@ SubscriberHandler::SubscriberHandler(string name) :
 
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {   
-    static const uint64_t interval = 30 * 2;
-    static const uint64_t exportCount = 500;
+    static constexpr uint64_t interval = 30ULL * 2ULL;
+    static constexpr uint64_t exportCount = 500ULL;
     const uint64_t measurementCount = measurements.size();
     const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
 

@@ -37,7 +37,7 @@ using namespace sttp::transport;
 struct UserCommandData
 {
     SubscriberConnection* connection {};
-    uint32_t command {};
+    uint8_t command {};
     vector<uint8_t> data;
 };
 
@@ -267,7 +267,7 @@ void DataPublisher::DispatchTemporalSubscriptionCanceled(SubscriberConnection* c
     Dispatch(&TemporalSubscriptionCanceledDispatcher, reinterpret_cast<uint8_t*>(&connection), 0, sizeof(SubscriberConnection**));
 }
 
-void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, const uint32_t command, const uint8_t* data, const uint32_t length)
+void DataPublisher::DispatchUserCommand(SubscriberConnection* connection, const uint8_t command, const uint8_t* data, const uint32_t length)
 {
     // ReSharper disable once CppNonReclaimedResourceAcquisition
     UserCommandData* userCommandData = new UserCommandData();
@@ -457,7 +457,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
         for (size_t i = 0; i < deviceMetadata.size(); i++)
         {
-            const DeviceMetadataPtr device = deviceMetadata[i];
+            const DeviceMetadataPtr& device = deviceMetadata[i];
 
             if (device == nullptr)
                 continue;
@@ -497,7 +497,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
         for (size_t i = 0; i < phasorMetadata.size(); i++)
         {
-            const PhasorMetadataPtr phasor = phasorMetadata[i];
+            const PhasorMetadataPtr& phasor = phasorMetadata[i];
 
             if (phasor == nullptr)
                 continue;
@@ -542,7 +542,7 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
 
         for (size_t i = 0; i < measurementMetadata.size(); i++)
         {
-            const MeasurementMetadataPtr measurement = measurementMetadata[i];
+            const MeasurementMetadataPtr& measurement = measurementMetadata[i];
             DataRowPtr row = measurementDetail->CreateRow();
 
             row->SetStringValue(deviceAcronym, measurement->DeviceAcronym);
@@ -841,7 +841,7 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
 
     for (size_t i = 0; i < rows.size(); i++)
     {
-        const DataRowPtr row = rows[i];
+        const DataRowPtr& row = rows[i];
         MeasurementMetadataPtr metadata = NewSharedPtr<MeasurementMetadata>();
 
         if (!row->ValueAsBoolean(enabled).GetValueOrDefault())

@@ -207,6 +207,9 @@ namespace sttp::transport
         static constexpr uint8_t UserCommand14 = 0xDE;
         // Defines a command code handling user-defined commands.
         static constexpr uint8_t UserCommand15 = 0xDF;
+
+        // Gets the ServerCommand enumeration value as a string.
+        static std::string ToString(uint8_t command);
     };
 
     // Although the server commands and responses will be on two different paths, the response enumeration values
@@ -284,6 +287,9 @@ namespace sttp::transport
         // Defines a response code for indicating a nil-operation keep-alive ping.
 	    // The command channel can remain quiet for some time, this command allows a period test of client connectivity.
         static constexpr uint8_t NoOP = 0xFF;
+
+        // Gets the ServerResponse enumeration value as a string.
+        static std::string ToString(uint8_t response);
     };
 
     // Operational modes are sent from a subscriber to a publisher to request operational behaviors for the

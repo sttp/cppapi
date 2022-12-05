@@ -30,6 +30,7 @@ namespace sttp::transport
 {
     class SubscriberConnector;
 
+    // Abstraction to allow client based connection from DataSubscriber or DataPublisher
     class DataClient // NOLINT
     {
     public:

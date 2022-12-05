@@ -542,7 +542,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
         {
             const uint8_t flags = data[0];
 
-            if ((flags & DataPacketFlags::Synchronized) > 0)
+            if (flags & DataPacketFlags::Synchronized)
             {
                 // Remotely synchronized subscriptions are currently disallowed by data publisher
                 HandleSubscribeFailure("Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.");
@@ -917,12 +917,11 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
 
     try
     {
-        uint32_t index = 0;
-
         // Note that these client provided meta-data filter expressions are applied only to the
         // in-memory DataSet and therefore are not subject to SQL injection attacks
         if (length > 4 && m_parent->m_metadata != nullptr)
         {
+            uint32_t index = 0;
             const uint32_t responseLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
             index += 4;
 
@@ -1030,13 +1029,14 @@ void SubscriberConnection::HandleDefineOperationalModes(const uint8_t* data, con
 
     const uint32_t operationalModes = EndianConverter::ToBigEndian<uint32_t>(data, 0);
 
+    // TODO: Setup to support version 1 to 3
     if ((operationalModes & OperationalModes::VersionMask) != 1U)
         m_parent->DispatchStatusMessage("Protocol version not supported. Operational modes may not be set correctly for client \"" + GetConnectionID() + "\".");
 
     SetOperationalModes(operationalModes);
 }
 
-void SubscriberConnection::HandleUserCommand(const uint32_t command, const uint8_t* data, const uint32_t length)
+void SubscriberConnection::HandleUserCommand(const uint8_t command, const uint8_t* data, const uint32_t length)
 {
     m_parent->DispatchUserCommand(m_parent->AddDispatchReference(GetReference()), command, data, length);
 }
@@ -1411,8 +1411,12 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
             case ServerCommand::DefineOperationalModes:
                 HandleDefineOperationalModes(data, length);
                 break;
-            case ServerCommand::ConfirmNotification:
-            case ServerCommand::ConfirmBufferBlock:
+            // TODO: Handle confirm notify
+            //case ServerCommand::ConfirmNotification:
+            //    break;
+            // TODO: Handle confirm buffer block
+            //case ServerCommand::ConfirmBufferBlock:
+            //    break;
             case ServerCommand::UserCommand00:
             case ServerCommand::UserCommand01:
             case ServerCommand::UserCommand02:
@@ -1437,7 +1441,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
 
                 messageStream << "\"" << m_connectionID << "\"";
                 messageStream << " sent an unrecognized server command: ";
-                messageStream << ToHex(command);
+                messageStream << ServerCommand::ToString(command);
 
                 const string message = messageStream.str();
                 SendResponse(ServerResponse::Failed, command, message);
@@ -1518,7 +1522,7 @@ DataSetPtr SubscriberConnection::FilterClientMetadata(const StringMap<Expression
 
     for (size_t i = 0; i < tables.size(); i++)
     {
-        const DataTablePtr table = tables[i];
+        const DataTablePtr& table = tables[i];
         const DataTablePtr filteredTable = dataSet->CreateTable(table->Name());
         ExpressionTreePtr expression;
 
@@ -1728,9 +1732,6 @@ bool SubscriberConnection::SendResponse(const uint8_t responseCode, const uint8_
 
 string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t offset, const uint32_t length) const
 {
-    // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
-    // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
-    static constexpr uint32_t enc_sizeof_wchar = 2;
     bool swapBytes = EndianConverter::IsBigEndian();
 
     switch (m_encoding)
@@ -1743,6 +1744,9 @@ string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t of
             [[fallthrough]];
         case OperationalEncoding::UTF16LE:
         {
+            // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
+            // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
+            static constexpr uint32_t enc_sizeof_wchar = 2U;
             wstring value(length / enc_sizeof_wchar, L'\0');
 
             for (uint32_t i = 0, j = 0; i < length; i += enc_sizeof_wchar, j++)
@@ -1766,9 +1770,6 @@ string SubscriberConnection::DecodeString(const uint8_t* data, const uint32_t of
 
 vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
 {
-    // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
-    // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
-    static constexpr uint32_t enc_sizeof_wchar = 2;
     bool swapBytes = EndianConverter::IsBigEndian();
     vector<uint8_t> result {};
 
@@ -1784,6 +1785,9 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
             [[fallthrough]];
         case OperationalEncoding::UTF16LE:
         {
+            // On Windows sizeof(wchar_t) == 2 and on Linux and OS X sizeof(wchar_t) == 4, so we do not use
+            // sizeof(wchar_t) to infer number of encoded bytes per wchar_t, which is always 2:
+            static constexpr uint32_t enc_sizeof_wchar = 2;
             const wstring utf16 = ToUTF16(value);            
             result.reserve(utf16.size() * enc_sizeof_wchar);
 

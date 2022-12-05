@@ -291,9 +291,9 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
             errorMessageStream << "Possible invalid protocol detected from \"";
             errorMessageStream << m_connector.GetHostname(); // TODO: For listening mode, change to resolved connection ID
             errorMessageStream << "\": encountered unexpected initial command / response code: ";
-            errorMessageStream << ToHex(commandCode);
+            errorMessageStream << ServerCommand::ToString(commandCode);
             errorMessageStream << " / ";
-            errorMessageStream << ToHex(responseCode);
+            errorMessageStream << ServerResponse::ToString(responseCode);
             errorMessageStream << " -- connection likely from non-STTP client, disconnecting.";
 
             DispatchErrorMessage(errorMessageStream.str());
@@ -347,7 +347,7 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
         default:
             stringstream errorMessageStream;
             errorMessageStream << "Encountered unexpected server response code: ";
-            errorMessageStream << ToHex(responseCode);
+            errorMessageStream << ServerResponse::ToString(responseCode);
             DispatchErrorMessage(errorMessageStream.str());
             break;
     }
@@ -359,23 +359,27 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
     const uint32_t messageLength = ConvertUInt32(length / sizeof(char));
     stringstream messageStream;
 
+    const std::function sendResponse = [&]()
+    {
+        if (data != nullptr)
+        {
+            char* messageStart = reinterpret_cast<char*>(data + offset);
+            const char* messageEnd = messageStart + messageLength;
+            messageStream << "Received success code in response to server command " << ServerCommand::ToString(commandCode) << ": ";
+
+            for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
+                messageStream << *messageIter;
+
+            DispatchStatusMessage(messageStream.str());
+        }
+    };
+
     switch (commandCode)
     {
         case ServerCommand::DefineOperationalModes:
             m_validated = true;
             m_defineOpModesCompleted.Set();
-
-            if (data != nullptr)
-            {
-                char* messageStart = reinterpret_cast<char*>(data + offset);
-                const char* messageEnd = messageStart + messageLength;
-                messageStream << "Received success code in response to server command " << ToHex(commandCode) << ": ";
-
-                for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
-                    messageStream << *messageIter;
-
-                DispatchStatusMessage(messageStream.str());
-            }
+            sendResponse();
             break;
         case ServerCommand::MetadataRefresh:
             // Metadata refresh message is not sent with a
@@ -392,23 +396,13 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
         case ServerCommand::RotateCipherKeys:
             // Each of these responses come with a message that will
             // be delivered to the user via the status message callback.
-            if (data != nullptr)
-            {
-                char* messageStart = reinterpret_cast<char*>(data + offset);
-                const char* messageEnd = messageStart + messageLength;
-                messageStream << "Received success code in response to server command " << ToHex(commandCode) << ": ";
-
-                for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
-                    messageStream << *messageIter;
-
-                DispatchStatusMessage(messageStream.str());
-            }
+            sendResponse();
             break;
         default:
             // If we don't know what the message is, we can't interpret
             // the data sent with the packet. Deliver an error message
             // to the user via the error message callback.
-            messageStream << "Received success code in response to unknown server command " << ToHex(commandCode);
+            messageStream << "Received success code in response to unknown server command " << ServerCommand::ToString(commandCode);
             DispatchErrorMessage(messageStream.str());
             break;
     }
@@ -436,7 +430,7 @@ void DataSubscriber::HandleFailed(const uint8_t commandCode, uint8_t* data, cons
     if (commandCode == ServerCommand::Connect)
         m_connector.SetConnectionRefused(true);
     else
-        messageStream << "Received failure code from server command " << ToHex(commandCode) << ": ";
+        messageStream << "Received failure code from server command " << ServerCommand::ToString(commandCode) << ": ";
 
     for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
         messageStream << *messageIter;

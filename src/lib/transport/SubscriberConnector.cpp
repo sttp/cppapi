@@ -86,7 +86,7 @@ void SubscriberConnector::AutoReconnect(DataClient* client)
     {
         // Reset connection attempt counter if last attempt was not refused
         if (!connector.m_connectionRefused)
-        connector.ResetConnection();
+            connector.ResetConnection();
 
         if (connector.m_maxRetries != -1 && connector.m_connectAttempt >= connector.m_maxRetries)
         {

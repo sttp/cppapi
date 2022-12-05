@@ -42,7 +42,7 @@ namespace sttp::transport
         static void HandleProcessingIntervalChangeRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleTemporalSubscriptionRequested(const DataPublisher* source, const SubscriberConnectionPtr& connection);
         static void HandleTemporalSubscriptionCanceled(const DataPublisher* source, const SubscriberConnectionPtr& connection);
-        static void HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
+        static void HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, uint8_t command, const std::vector<uint8_t>& buffer);
 
 #ifdef SWIG
     public:
@@ -56,7 +56,7 @@ namespace sttp::transport
         virtual void ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection);
         virtual void TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection);
         virtual void TemporalSubscriptionCanceled(const SubscriberConnectionPtr& connection);
-        virtual void HandleUserCommand(const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
+        virtual void HandleUserCommand(const SubscriberConnectionPtr& connection, uint8_t command, const std::vector<uint8_t>& buffer);
 
     public:
         PublisherInstance();

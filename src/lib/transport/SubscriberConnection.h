@@ -121,7 +121,7 @@ namespace sttp::transport
         void HandleRotateCipherKeys();
         void HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length);
         void HandleDefineOperationalModes(const uint8_t* data, uint32_t length);
-        void HandleUserCommand(uint32_t command, const uint8_t* data, uint32_t length);
+        void HandleUserCommand(uint8_t command, const uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
         void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);

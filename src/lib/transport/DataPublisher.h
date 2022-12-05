@@ -47,7 +47,7 @@ namespace sttp::transport
         typedef std::function<void(DataPublisher*, const std::vector<uint8_t>&)> DispatcherFunction;
         typedef std::function<void(DataPublisher*, const std::string&)> MessageCallback;
         typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&)> SubscriberConnectionCallback;
-        typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&, uint32_t, const std::vector<uint8_t>&)> UserCommandCallback;
+        typedef std::function<void(DataPublisher*, const SubscriberConnectionPtr&, uint8_t, const std::vector<uint8_t>&)> UserCommandCallback;
 
     private:
         // Structure used to dispatch
@@ -126,7 +126,7 @@ namespace sttp::transport
         void DispatchProcessingIntervalChangeRequested(SubscriberConnection* connection);
         void DispatchTemporalSubscriptionRequested(SubscriberConnection* connection);
         void DispatchTemporalSubscriptionCanceled(SubscriberConnection* connection);
-        void DispatchUserCommand(SubscriberConnection* connection, uint32_t command, const uint8_t* data, uint32_t length);
+        void DispatchUserCommand(SubscriberConnection* connection, uint8_t command, const uint8_t* data, uint32_t length);
 
         static void StatusMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static void ErrorMessageDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);

@@ -126,7 +126,7 @@ void PublisherInstance::HandleTemporalSubscriptionCanceled(const DataPublisher* 
     instance->TemporalSubscriptionCanceled(connection);
 }
 
-void PublisherInstance::HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
+void PublisherInstance::HandleReceivedUserCommand(const DataPublisher* source, const SubscriberConnectionPtr& connection, const uint8_t command, const std::vector<uint8_t>& buffer)
 {
     PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
 
@@ -171,12 +171,12 @@ void PublisherInstance::TemporalSubscriptionCanceled(const SubscriberConnectionP
     cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
 }
 
-void PublisherInstance::HandleUserCommand(const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer)
+void PublisherInstance::HandleUserCommand(const SubscriberConnectionPtr& connection, const uint8_t command, const std::vector<uint8_t>& buffer)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ToHex(command) << "\" with " << buffer.size() << " bytes of payload" << endl << endl;
+    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ServerCommand::ToString(command) << "\" with " << buffer.size() << " bytes of payload" << endl << endl;
 }
 
-void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, int32_t versionNumber) const
+void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber) const
 {
     m_publisher->DefineMetadata(deviceMetadata, measurementMetadata, phasorMetadata, versionNumber);
 }
