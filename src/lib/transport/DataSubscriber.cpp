@@ -1337,6 +1337,10 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode)
 // Sends a command along with the given message to the server.
 void DataSubscriber::SendServerCommand(const uint8_t commandCode, const string& message)
 {
+    // Note that for UTF-8 strings with extended characters, "size()" will properly
+    // return byte-length, not number of characters, which makes the following code
+    // accurate. That said, using the Windows command prompt with extended characters
+    // will likely not display properly without call to "SetConsoleOutputCP(CP_UTF8)"
     vector<uint8_t> buffer;
     uint32_t bigEndianMessageSize;
     const uint8_t* messagePtr = reinterpret_cast<const uint8_t*>(message.data());
