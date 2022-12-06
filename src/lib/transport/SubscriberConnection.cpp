@@ -51,6 +51,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_instanceID(NewGuid()),
     m_operationalModes(OperationalModes::NoFlags),
     m_encoding(OperationalEncoding::UTF8),
+    m_version(0),
     m_startTimeConstraint(DateTime::MaxValue),
     m_stopTimeConstraint(DateTime::MaxValue),
     m_processingInterval(-1),
@@ -64,8 +65,9 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_useMillisecondResolution(false), // Defaults to microsecond resolution
     m_trackLatestMeasurements(false),
     m_isNaNFiltered(m_parent->GetIsNaNValueFilterAllowed() && m_parent->GetIsNaNValueFilterForced()),
+    m_validated(false),
     m_connectionAccepted(false),
-    m_isSubscribed(false),
+    m_subscribed(false),
     m_startTimeSent(false),
     m_dataChannelActive(false),
     m_stopped(true),
@@ -77,6 +79,11 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_totalCommandChannelBytesSent(0LL),
     m_totalDataChannelBytesSent(0LL),
     m_totalMeasurementsSent(0LL),
+    m_signalIndexCache(SignalIndexCache::NullPtr),
+    m_nextSignalIndexCache(SignalIndexCache::NullPtr),
+    m_pendingSignalIndexCache(SignalIndexCache::NullPtr),
+    m_currentCacheIndex(0),
+    m_nextCacheIndex(0),
     m_baseTimeRotationTimer(nullptr),
     m_timeIndex(0),
     m_baseTimeOffsets{ 0LL, 0LL },
@@ -111,6 +118,16 @@ SubscriberConnectionPtr SubscriberConnection::GetReference()
 TcpSocket& SubscriberConnection::CommandChannelSocket()
 {
     return m_commandChannelSocket;
+}
+
+bool SubscriberConnection::IsValidated() const
+{
+    return m_validated;
+}
+
+uint8_t SubscriberConnection::GetVersion() const
+{
+    return m_version;
 }
 
 const sttp::Guid& SubscriberConnection::GetSubscriberID() const
@@ -152,6 +169,27 @@ void SubscriberConnection::SetOperationalModes(const uint32_t value)
 {
     m_operationalModes = value;
     m_encoding = value & OperationalModes::EncodingMask;
+
+    string message;
+
+    switch (m_encoding)
+    {
+        case OperationalEncoding::UTF8:
+            break;
+        case OperationalEncoding::UTF16LE:
+            message = "WARNING: Client requested UTF16 little-endian character encoding, this feature is deprecated and may be removed from future builds. IEEE 2664 will only support UTF8 encoding.";
+            break;
+        case OperationalEncoding::UTF16BE:
+            message = "WARNING: Client requested UTF16 big-endian character encoding, this feature is deprecated and may be removed from future builds. IEEE 2664 will only support UTF8 encoding.";
+            break;
+        default:
+            message = "WARNING: Unsupported character encoding detected: " + ToHex(m_encoding) + " -- defaulting to UTF8";
+            m_encoding = OperationalEncoding::UTF8;
+            break;
+    }
+
+    if (!message.empty())
+        m_parent->DispatchStatusMessage(message);
 }
 
 uint32_t SubscriberConnection::GetEncoding() const
@@ -301,12 +339,12 @@ void SubscriberConnection::SetIsNaNFiltered(const bool value)
 
 bool SubscriberConnection::GetIsSubscribed() const
 {
-    return m_isSubscribed;
+    return m_subscribed;
 }
 
 void SubscriberConnection::SetIsSubscribed(const bool value)
 {
-    m_isSubscribed = value;
+    m_subscribed = value;
 }
 
 const string& SubscriberConnection::GetSubscriptionInfo() const
@@ -344,21 +382,7 @@ void SubscriberConnection::SetSubscriptionInfo(const string& value)
 const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache()
 {
     ReaderLock readLock(m_signalIndexCacheLock);
-
     return m_signalIndexCache;
-}
-
-void SubscriberConnection::SetSignalIndexCache(SignalIndexCachePtr signalIndexCache)
-{
-    WriterLock writeLock(m_signalIndexCacheLock);
-
-    m_signalIndexCache = std::move(signalIndexCache);
-
-    // Update measurement routes for newly subscribed measurement signal IDs
-    m_parent->m_routingTables.UpdateRoutes(shared_from_this(), m_signalIndexCache->GetSignalIDs());
-
-    // Reset TSSC encoder on successful (re)subscription
-    m_tsscResetRequested = true;
 }
 
 uint64_t SubscriberConnection::GetTotalCommandChannelBytesSent() const
@@ -450,11 +474,12 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
     if (m_stopped)
         return;
 
-    if (m_isSubscribed)
+    if (m_subscribed)
         HandleUnsubscribe();
 
     try
     {
+        m_validated = false;
         m_stopped = true;
         m_pingTimer.Stop();
 
@@ -488,7 +513,7 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
 {
-    if (measurements.empty() || !m_isSubscribed)
+    if (measurements.empty() || !m_subscribed)
         return;
 
     if (!m_startTimeSent)
@@ -538,344 +563,344 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
 {
     try
     {
-        if (length >= 6)
+        if (length < 6)
         {
-            const uint8_t flags = data[0];
+            HandleSubscribeFailure("Not enough buffer was provided to parse client data subscription.");
+            return;
+        }
 
-            if (flags & DataPacketFlags::Synchronized)
+        const uint8_t flags = data[0];
+
+        if (flags & DataPacketFlags::Synchronized)
+        {
+            // Remotely synchronized subscriptions are currently disallowed by data publisher
+            HandleSubscribeFailure("Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.");
+            return;
+        }
+
+        int32_t index = 1;
+
+        // Cancel any existing subscription timers
+        if (m_baseTimeRotationTimer != nullptr)
+            m_baseTimeRotationTimer->Stop();
+
+        if (m_throttledPublicationTimer != nullptr)
+            m_throttledPublicationTimer->Stop();
+
+        // Clear out existing latest measurement cache, if any
+        m_latestMeasurementsLock.lock();
+        m_latestMeasurements.clear();
+        m_latestMeasurementsLock.unlock();
+
+        // Cancel any existing temporal subscription
+        if (m_subscribed)
+            CancelTemporalSubscription();
+
+        // Next 4 bytes are an integer representing the length of the connection string that follows
+        const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
+        index += 4;
+
+        if (byteLength <= 0 || length < byteLength + 6U)
+        {
+            HandleSubscribeFailure(byteLength > 0 ?
+               "Not enough buffer was provided to parse client data subscription." :
+               "Cannot initialize client data subscription without a connection string.");
+            return;
+        }
+
+        uint32_t operationalModes = GetOperationalModes();
+
+        // TODO: Update for IEEE 2664 supporting optional compression modes with DefineOperationalModes connection string
+        m_usingPayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
+
+        const string connectionString = DecodeString(data, index, byteLength);
+
+        if (!m_usingPayloadCompression && ((flags & DataPacketFlags::Compact) == 0 || (operationalModes & OperationalModes::CompressPayloadData) > 0))
+            m_parent->DispatchErrorMessage("WARNING: Data packets will be published in compact measurement format only when not compressing payload using TSSC.");
+
+        m_parent->DispatchStatusMessage("Successfully decoded " + ToString(connectionString.size()) + " character connection string from " + ToString(byteLength) + " bytes...");
+
+        StringMap<string> settings = ParseKeyValuePairs(connectionString);
+        string setting;
+
+        if (TryGetValue(settings, "includeTime", setting))
+            TryParseBoolean(setting, m_includeTime);
+        else
+            m_includeTime = true;
+
+        if (TryGetValue(settings, "useLocalClockAsRealTime", setting))
+            TryParseBoolean(setting, m_useLocalClockAsRealTime);
+        else
+            m_useLocalClockAsRealTime = false;
+
+        if (TryGetValue(settings, "lagTime", setting) && !setting.empty())
+            TryParseDouble(setting, m_lagTime, DefaultLagTime);
+        else
+            m_lagTime = DefaultLagTime;
+
+        if (TryGetValue(settings, "leadTime", setting) && !setting.empty())
+            TryParseDouble(setting, m_leadTime, DefaultLeadTime);
+        else
+            m_leadTime = DefaultLeadTime;
+
+        if (TryGetValue(settings, "publishInterval", setting) && !setting.empty())
+            TryParseDouble(setting, m_publishInterval, DefaultPublishInterval);
+        else
+            m_publishInterval = DefaultPublishInterval;
+
+        if (TryGetValue(settings, "useMillisecondResolution", setting))
+            TryParseBoolean(setting, m_useMillisecondResolution);
+        else
+            m_useMillisecondResolution = false;
+
+        if (TryGetValue(settings, "throttled", setting))
+            TryParseBoolean(setting, m_trackLatestMeasurements);
+        else
+            m_trackLatestMeasurements = false;
+
+        if (TryGetValue(settings, "requestNaNValueFilter", setting))
+        {
+            const bool nanFilterRequested = ParseBoolean(setting);
+
+            if (nanFilterRequested && !m_parent->GetIsNaNValueFilterAllowed() && !m_parent->GetIsNaNValueFilterForced())
             {
-                // Remotely synchronized subscriptions are currently disallowed by data publisher
-                HandleSubscribeFailure("Client request for remotely synchronized data subscription was denied. Data publisher currently does not allow for synchronized subscriptions.");
+                m_parent->DispatchErrorMessage("WARNING: NaN filter is disallowed by publisher, requestNaNValueFilter setting was set to false");
+                m_isNaNFiltered = false;
+            }
+            else if (!nanFilterRequested && m_parent->GetIsNaNValueFilterForced())
+            {
+                m_parent->DispatchErrorMessage("WARNING: NaN filter is required by publisher, requestNaNValueFilter setting was set to true");
+                m_isNaNFiltered = true;
             }
             else
             {
-                int32_t index = 1;
+                m_isNaNFiltered = nanFilterRequested;
+            }
+        }
 
-                // Cancel any existing subscription timers
-                if (m_baseTimeRotationTimer != nullptr)
-                    m_baseTimeRotationTimer->Stop();
+        if (TryGetValue(settings, "startTimeConstraint", setting))
+            m_startTimeConstraint = ParseRelativeTimestamp(setting.c_str());
+        else
+            m_startTimeConstraint = DateTime::MaxValue;
 
-                if (m_throttledPublicationTimer != nullptr)
-                    m_throttledPublicationTimer->Stop();
+        if (TryGetValue(settings, "stopTimeConstraint", setting))
+            m_stopTimeConstraint = ParseRelativeTimestamp(setting.c_str());
+        else
+            m_stopTimeConstraint = DateTime::MaxValue;
 
-                // Clear out existing latest measurement cache, if any
-                m_latestMeasurementsLock.lock();
-                m_latestMeasurements.clear();
-                m_latestMeasurementsLock.unlock();
+        if (TryGetValue(settings, "processingInterval", setting) && !setting.empty())
+            TryParseInt32(setting, m_processingInterval, -1);
 
-                // Cancel any existing temporal subscription
-                if (m_isSubscribed)
-                    CancelTemporalSubscription();
+        if (GetIsTemporalSubscription())
+        {
+            if (!m_parent->GetSupportsTemporalSubscriptions())
+                throw PublisherException("Publisher does not temporal subscriptions");
 
-                // Next 4 bytes are an integer representing the length of the connection string that follows
-                const uint32_t byteLength = EndianConverter::ToBigEndian<uint32_t>(data, index);
-                index += 4;
+            if (m_startTimeConstraint > m_stopTimeConstraint)
+                throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
 
-                if (byteLength > 0 && length >= byteLength + 6U)
-                {
-                    uint32_t operationalModes = GetOperationalModes();
-                    m_usingPayloadCompression = (operationalModes & OperationalModes::CompressPayloadData) > 0 && (operationalModes & CompressionModes::TSSC) > 0;
+            m_temporalSubscriptionCanceled = false;
+        }
 
-                    const string connectionString = DecodeString(data, index, byteLength);
-
-                    if (!m_usingPayloadCompression && ((flags & DataPacketFlags::Compact) == 0 || (operationalModes & OperationalModes::CompressPayloadData) > 0))
-                        m_parent->DispatchErrorMessage("WARNING: Data packets will be published in compact measurement format only when not compressing payload using TSSC.");
-
-                    m_parent->DispatchStatusMessage("Successfully decoded " + ToString(connectionString.size()) + " character connection string from " + ToString(byteLength) + " bytes...");
-
-                    StringMap<string> settings = ParseKeyValuePairs(connectionString);
-                    string setting;
-
-                    if (TryGetValue(settings, "includeTime", setting))
-                        TryParseBoolean(setting, m_includeTime);
-                    else
-                        m_includeTime = true;
-
-                    if (TryGetValue(settings, "useLocalClockAsRealTime", setting))
-                        TryParseBoolean(setting, m_useLocalClockAsRealTime);
-                    else
-                        m_useLocalClockAsRealTime = false;
-
-                    if (TryGetValue(settings, "lagTime", setting) && !setting.empty())
-                        TryParseDouble(setting, m_lagTime, DefaultLagTime);
-                    else
-                        m_lagTime = DefaultLagTime;
-
-                    if (TryGetValue(settings, "leadTime", setting) && !setting.empty())
-                        TryParseDouble(setting, m_leadTime, DefaultLeadTime);
-                    else
-                        m_leadTime = DefaultLeadTime;
-
-                    if (TryGetValue(settings, "publishInterval", setting) && !setting.empty())
-                        TryParseDouble(setting, m_publishInterval, DefaultPublishInterval);
-                    else
-                        m_publishInterval = DefaultPublishInterval;
-
-                    if (TryGetValue(settings, "useMillisecondResolution", setting))
-                        TryParseBoolean(setting, m_useMillisecondResolution);
-                    else
-                        m_useMillisecondResolution = false;
-
-                    if (TryGetValue(settings, "throttled", setting))
-                        TryParseBoolean(setting, m_trackLatestMeasurements);
-                    else
-                        m_trackLatestMeasurements = false;
-
-                    if (TryGetValue(settings, "requestNaNValueFilter", setting))
-                    {
-                        const bool nanFilterRequested = ParseBoolean(setting);
-
-                        if (nanFilterRequested && !m_parent->GetIsNaNValueFilterAllowed() && !m_parent->GetIsNaNValueFilterForced())
-                        {
-                            m_parent->DispatchErrorMessage("WARNING: NaN filter is disallowed by publisher, requestNaNValueFilter setting was set to false");
-                            m_isNaNFiltered = false;
-                        }
-                        else if (!nanFilterRequested && m_parent->GetIsNaNValueFilterForced())
-                        {
-                            m_parent->DispatchErrorMessage("WARNING: NaN filter is required by publisher, requestNaNValueFilter setting was set to true");
-                            m_isNaNFiltered = true;
-                        }
-                        else
-                        {
-                            m_isNaNFiltered = nanFilterRequested;
-                        }
-                    }
-
-                    if (TryGetValue(settings, "startTimeConstraint", setting))
-                        m_startTimeConstraint = ParseRelativeTimestamp(setting.c_str());
-                    else
-                        m_startTimeConstraint = DateTime::MaxValue;
-
-                    if (TryGetValue(settings, "stopTimeConstraint", setting))
-                        m_stopTimeConstraint = ParseRelativeTimestamp(setting.c_str());
-                    else
-                        m_stopTimeConstraint = DateTime::MaxValue;
-
-                    if (TryGetValue(settings, "processingInterval", setting) && !setting.empty())
-                        TryParseInt32(setting, m_processingInterval, -1);
-
-                    if (GetIsTemporalSubscription())
-                    {
-                        if (!m_parent->GetSupportsTemporalSubscriptions())
-                            throw PublisherException("Publisher does not temporal subscriptions");
-
-                        if (m_startTimeConstraint > m_stopTimeConstraint)
-                            throw PublisherException("Specified stop time of requested temporal subscription precedes start time");
-
-                        m_temporalSubscriptionCanceled = false;
-                    }
-
-                    TryGetValue(settings, "filterExpression", setting);
+        TryGetValue(settings, "filterExpression", setting);
                         
-                    if (IsEmptyOrWhiteSpace(setting))
-                        setting = ToString(Empty::Guid);
+        if (IsEmptyOrWhiteSpace(setting))
+            setting = ToString(Empty::Guid);
 
-                    bool success;
+        bool success;
                     
-                    // Apply subscriber filter expression and build signal index cache
-                    SignalIndexCachePtr signalIndexCache = ParseSubscriptionRequest(setting, success);
+        // Apply subscriber filter expression and build signal index cache
+        SignalIndexCachePtr signalIndexCache = ParseSubscriptionRequest(setting, success);
 
-                    if (!success)
-                        return;
+        if (!success)
+            return;
 
-                    // Pass subscriber assembly information to connection, if defined
-                    if (TryGetValue(settings, "assemblyInfo", setting))
+        // Pass subscriber assembly information to connection, if defined
+        if (TryGetValue(settings, "assemblyInfo", setting))
+        {
+            SetSubscriptionInfo(setting);
+            m_parent->DispatchStatusMessage("Reported STTP v" + ToString(static_cast<int32_t>(m_version)) + " client subscription info: " + GetSubscriptionInfo());
+        }
+
+        if (TryGetValue(settings, "dataChannel", setting))
+        {
+            auto remoteEndPoint = m_commandChannelSocket.remote_endpoint(); //-V821
+            auto localEndPoint = m_commandChannelSocket.local_endpoint();
+            string networkInterface = localEndPoint.address().to_string();
+            settings = ParseKeyValuePairs(setting);
+
+            // Remove any dual-stack prefix
+            if (StartsWith(networkInterface, "::ffff:"))
+                networkInterface = networkInterface.substr(7);
+
+            if (TryGetValue(settings, "port", setting) || TryGetValue(settings, "localport", setting))
+            {
+                // TODO: Implement IEEE 2664 support for UDP specific compression mode, GZip by default
+                if (m_usingPayloadCompression)
+                {
+                    // TSSC is a stateful compression algorithm which will not reliably support UDP
+                    m_parent->DispatchErrorMessage("WARNING: Cannot use TSSC compression mode with UDP - special compression mode disabled");
+
+                    // Disable TSSC compression processing
+                    m_usingPayloadCompression = false;
+
+                    // TODO: Future version may reject subscription - IEEE 2664 will not support dynamic changes to operational modes, even a benign one like this
+                    operationalModes &= ~CompressionModes::TSSC;
+                    operationalModes &= ~OperationalModes::CompressPayloadData;
+                    SetOperationalModes(operationalModes);
+                }
+
+                if (TryParseUInt16(setting, m_udpPort))
+                {
+                    const udp protocol = remoteEndPoint.protocol() == tcp::v6() ? udp::v6() : udp::v4();
+
+                    // Reset UDP socket on resubscribe
+                    if (m_dataChannelActive)
                     {
-                        SetSubscriptionInfo(setting);
-                        m_parent->DispatchStatusMessage("Reported client subscription info: " + GetSubscriptionInfo());
+                        m_dataChannelActive = false;
+                        m_dataChannelWaitHandle.notify_all();
+                        m_dataChannelSocket.shutdown(socket_base::shutdown_type::shutdown_both);
+                        m_dataChannelSocket.close();
+                        m_dataChannelService.stop();
                     }
 
-                    if (TryGetValue(settings, "dataChannel", setting))
-                    {
-                        auto remoteEndPoint = m_commandChannelSocket.remote_endpoint(); //-V821
-                        auto localEndPoint = m_commandChannelSocket.local_endpoint();
-                        string networkInterface = localEndPoint.address().to_string();
-                        settings = ParseKeyValuePairs(setting);
-
-                        // Remove any dual-stack prefix
-                        if (StartsWith(networkInterface, "::ffff:"))
-                            networkInterface = networkInterface.substr(7);
-
-                        if (TryGetValue(settings, "port", setting) || TryGetValue(settings, "localport", setting))
-                        {
-                            if (m_usingPayloadCompression)
-                            {
-                                // TSSC is a stateful compression algorithm which will not reliably support UDP
-                                m_parent->DispatchErrorMessage("WARNING: Cannot use TSSC compression mode with UDP - special compression mode disabled");
-
-                                // Disable TSSC compression processing
-                                m_usingPayloadCompression = false;
-                                operationalModes &= ~CompressionModes::TSSC;
-                                operationalModes &= ~OperationalModes::CompressPayloadData;
-                                SetOperationalModes(operationalModes);
-                            }
-
-                            if (TryParseUInt16(setting, m_udpPort))
-                            {
-                                const udp protocol = remoteEndPoint.protocol() == tcp::v6() ? udp::v6() : udp::v4();
-
-                                // Reset UDP socket on resubscribe
-                                if (m_dataChannelActive)
-                                {
-                                    m_dataChannelActive = false;
-                                    m_dataChannelWaitHandle.notify_all();
-                                    m_dataChannelSocket.shutdown(socket_base::shutdown_type::shutdown_both);
-                                    m_dataChannelSocket.close();
-                                    m_dataChannelService.stop();
-                                }
-
-                                m_dataChannelSocket.open(protocol);
-                                m_dataChannelSocket.bind(udp::endpoint(ip::address::from_string(networkInterface), 0));
-                                m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
-                                m_dataChannelActive = true;
+                    m_dataChannelSocket.open(protocol);
+                    m_dataChannelSocket.bind(udp::endpoint(ip::address::from_string(networkInterface), 0));
+                    m_dataChannelSocket.connect(udp::endpoint(remoteEndPoint.address(), m_udpPort));
+                    m_dataChannelActive = true;
                                 
-                                m_parent->m_threadPool.Queue([this]
-                                {
-                                    UniqueLock lock(m_dataChannelMutex);
+                    m_parent->m_threadPool.Queue([this]
+                    {
+                        UniqueLock lock(m_dataChannelMutex);
 
-                                    while (m_dataChannelActive)
-                                    {
-                                    #if BOOST_LEGACY
-                                        m_dataChannelService.reset();
-                                    #else
-                                        m_dataChannelService.restart();
-                                    #endif
-                                        m_dataChannelService.run();                                        
-                                        m_dataChannelWaitHandle.wait(lock);
-                                    }
-                                });
-                            }
+                        while (m_dataChannelActive)
+                        {
+                        #if BOOST_LEGACY
+                            m_dataChannelService.reset();
+                        #else
+                            m_dataChannelService.restart();
+                        #endif
+                            m_dataChannelService.run();                                        
+                            m_dataChannelWaitHandle.wait(lock);
                         }
-                    }
+                    });
+                }
+            }
+        }
 
-                    if (signalIndexCache == nullptr)
-                        throw PublisherException("Signal index cache is undefined.");
+        if (signalIndexCache == nullptr)
+            throw PublisherException("Signal index cache is undefined.");
 
-                    uint32_t signalCount = signalIndexCache->Count();
+        UpdateSignalIndexCache(signalIndexCache);
 
-                    // Send updated signal index cache to client with validated rights of the selected input measurement keys                        
-                    SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*signalIndexCache));
+        uint32_t signalCount = signalIndexCache->Count();
 
-                    SetSignalIndexCache(signalIndexCache);
+        // If using compact measurement format with base time offsets, setup base time rotation timer
+        if (!m_usingPayloadCompression && m_parent->GetUseBaseTimeOffsets() && m_includeTime)
+        {
+            // In compact format, clients will attempt to use base time offset
+            // to reduce timestamp serialization size
+            m_baseTimeOffsets[0] = 0LL;
+            m_baseTimeOffsets[1] = 0LL;
+            m_latestTimestamp = 0LL;
 
-                    // If using compact measurement format with base time offsets, setup base time rotation timer
-                    if (!m_usingPayloadCompression && m_parent->GetUseBaseTimeOffsets() && m_includeTime)
-                    {
-                        // In compact format, clients will attempt to use base time offset
-                        // to reduce timestamp serialization size
-                        m_baseTimeOffsets[0] = 0LL;
-                        m_baseTimeOffsets[1] = 0LL;
-                        m_latestTimestamp = 0LL;
+            m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](const Timer* timer, void*)
+            {
+                const int64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
 
-                        m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](const Timer* timer, void*)
-                        {
-                            const int64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
+                if (realTime == 0LL)
+                    return;
 
-                            if (realTime == 0LL)
-                                return;
+                if (m_baseTimeOffsets[0] == 0LL)
+                {
+                    // Initialize base time offsets
+                    m_baseTimeOffsets[0] = realTime;
+                    m_baseTimeOffsets[1] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
 
-                            if (m_baseTimeOffsets[0] == 0LL)
-                            {
-                                // Initialize base time offsets
-                                m_baseTimeOffsets[0] = realTime;
-                                m_baseTimeOffsets[1] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
-
-                                m_timeIndex = 0;
-                            }
-                            else
-                            {
-                                const uint32_t oldIndex = m_timeIndex;
-
-                                // Switch to next time base (client will already have access to this)
-                                m_timeIndex ^= 1;
-
-                                // Setup next time base
-                                m_baseTimeOffsets[oldIndex] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
-                            }
-
-                            // Send new base time offsets to client
-                            vector<uint8_t> buffer;
-                            buffer.reserve(20);
-
-                            EndianConverter::WriteBigEndianBytes(buffer, m_timeIndex);
-                            EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[0]);
-                            EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[1]);
-
-                            SendResponse(ServerResponse::UpdateBaseTimes, ServerCommand::Subscribe, buffer);
-                            
-                            m_parent->DispatchStatusMessage("Sent new base time offset to subscriber: " + ToString(FromTicks(m_baseTimeOffsets[m_timeIndex ^ 1])));
-                        },
-                        true);
-
-                        m_baseTimeRotationTimer->Start();
-                    }
-
-                    // Setup publication timer for throttled subscriptions
-                    if (m_trackLatestMeasurements)
-                    {
-                        int32_t publishInterval = static_cast<int32_t>(m_publishInterval * 1000);
-
-                        // Fall back on lag-time if publish interval is defined as zero
-                        if (publishInterval <= 0)
-                            publishInterval = static_cast<int32_t>((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); // NOLINT(clang-diagnostic-float-equal) //-V550
-
-                        m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [this](Timer*, void*)
-                        {
-                            if (m_latestMeasurements.empty())
-                                return;
-
-                            vector<MeasurementPtr> measurements;
-
-                            m_latestMeasurementsLock.lock();
-
-                            for (const auto& element : m_latestMeasurements)
-                            {
-                                MeasurementPtr measurement = element.second;
-
-                                if (!TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) && !GetIsTemporalSubscription())
-                                {
-                                    measurement->Value = NaN;
-                                    measurement->Flags |= MeasurementStateFlags::BadTime;
-                                }
-
-                                measurements.push_back(measurement);
-                            }
-
-                            m_latestMeasurementsLock.unlock();
-
-                            if (m_usingPayloadCompression)
-                                PublishTSSCMeasurements(measurements);
-                            else
-                                PublishCompactMeasurements(measurements);
-                        },
-                        true);
-
-                        m_throttledPublicationTimer->Start();
-                    }
-
-                    const string message = string("Client subscribed using ") + 
-                        (m_usingPayloadCompression ? "TSSC compression over " : "compact format over ") +
-                        (m_dataChannelActive ? "UDP" : "TCP") + " with " + ToString(signalCount) + " signals.";
-
-                    SetIsSubscribed(true);
-                    SendResponse(ServerResponse::Succeeded, ServerCommand::Subscribe, message);
-                    m_parent->DispatchStatusMessage(message);
-
-                    if (GetIsTemporalSubscription())
-                        m_parent->DispatchTemporalSubscriptionRequested(m_parent->AddDispatchReference(GetReference()));
+                    m_timeIndex = 0;
                 }
                 else
                 {
-                    HandleSubscribeFailure(byteLength > 0 ?
-                        "Not enough buffer was provided to parse client data subscription." :
-                        "Cannot initialize client data subscription without a connection string.");
-                }            
-            }            
+                    const uint32_t oldIndex = m_timeIndex;
+
+                    // Switch to next time base (client will already have access to this)
+                    m_timeIndex ^= 1;
+
+                    // Setup next time base
+                    m_baseTimeOffsets[oldIndex] = realTime + timer->GetInterval() * Ticks::PerMillisecond;
+                }
+
+                // Send new base time offsets to client
+                vector<uint8_t> buffer;
+                buffer.reserve(20);
+
+                EndianConverter::WriteBigEndianBytes(buffer, m_timeIndex);
+                EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[0]);
+                EndianConverter::WriteBigEndianBytes(buffer, m_baseTimeOffsets[1]);
+
+                SendResponse(ServerResponse::UpdateBaseTimes, ServerCommand::Subscribe, buffer);
+
+                m_parent->DispatchStatusMessage("Sent new base time offset to subscriber: " + ToString(FromTicks(m_baseTimeOffsets[m_timeIndex ^ 1])));
+            },
+            true);
+
+            m_baseTimeRotationTimer->Start();
         }
-        else
+
+        // Setup publication timer for throttled subscriptions
+        if (m_trackLatestMeasurements)
         {
-            HandleSubscribeFailure("Not enough buffer was provided to parse client data subscription.");
+            int32_t publishInterval = static_cast<int32_t>(m_publishInterval * 1000);
+
+            // Fall back on lag-time if publish interval is defined as zero
+            if (publishInterval <= 0)
+                publishInterval = static_cast<int32_t>((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); // NOLINT(clang-diagnostic-float-equal) //-V550
+
+            m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [this](Timer*, void*)
+            {
+                if (m_latestMeasurements.empty())
+                    return;
+
+                vector<MeasurementPtr> measurements;
+
+                m_latestMeasurementsLock.lock();
+
+                for (const auto& element : m_latestMeasurements)
+                {
+                    MeasurementPtr measurement = element.second;
+
+                    if (!TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) && !GetIsTemporalSubscription())
+                    {
+                        measurement->Value = NaN;
+                        measurement->Flags |= MeasurementStateFlags::BadTime;
+                    }
+
+                    measurements.push_back(measurement);
+                }
+
+                m_latestMeasurementsLock.unlock();
+
+                if (m_usingPayloadCompression)
+                    PublishTSSCMeasurements(measurements);
+                else
+                    PublishCompactMeasurements(measurements);
+            },
+            true);
+
+            m_throttledPublicationTimer->Start();
         }
+
+        const string message = string("Client subscribed using ") + 
+            (m_usingPayloadCompression ? "TSSC compression over " : "compact format over ") +
+            (m_dataChannelActive ? "UDP" : "TCP") + " with " + ToString(signalCount) + " signals.";
+
+        SetIsSubscribed(true);
+
+        SendResponse(ServerResponse::Succeeded, ServerCommand::Subscribe, message);
+        m_parent->DispatchStatusMessage(message);
+
+        if (GetIsTemporalSubscription())
+            m_parent->DispatchTemporalSubscriptionRequested(m_parent->AddDispatchReference(GetReference()));
     }
     catch (const PublisherException& ex)
     {
@@ -1002,6 +1027,7 @@ void SubscriberConnection::HandleMetadataRefresh(uint8_t* data, uint32_t length)
 
 void SubscriberConnection::HandleRotateCipherKeys()
 {
+    // TODO: Implement cipher key rotation for UDP encryption
 }
 
 void SubscriberConnection::HandleUpdateProcessingInterval(const uint8_t* data, const uint32_t length)
@@ -1028,12 +1054,115 @@ void SubscriberConnection::HandleDefineOperationalModes(const uint8_t* data, con
         return;
 
     const uint32_t operationalModes = EndianConverter::ToBigEndian<uint32_t>(data, 0);
+    const uint8_t version = operationalModes & OperationalModes::PreStandardVersionMask;
 
-    // TODO: Setup to support version 1 to 3
-    if ((operationalModes & OperationalModes::VersionMask) != 1U)
-        m_parent->DispatchStatusMessage("Protocol version not supported. Operational modes may not be set correctly for client \"" + GetConnectionID() + "\".");
+    if (version < 1 || version > 3)
+    {
+        const string message = "Client connection rejected: requested protocol version " + ToString(static_cast<int32_t>(version)) + " not supported. This STTP data publisher implementation only supports version 1 to 3 of the protocol.";
+        m_parent->DispatchErrorMessage(message + " Operational modes may not be set correctly for client \"" + GetConnectionID() + "\" -- disconnecting client");
+
+        m_validated = false;
+        SendResponse(ServerResponse::Failed, ServerCommand::DefineOperationalModes, message);
+
+        m_parent->m_threadPool.Queue([&]
+        {
+            // Allow a moment for failed response to be sent before disconnecting client
+            ThreadSleep(1000);
+            Stop();
+        });
+
+        return;
+    }
+
+    // TODO: Validate other operational modes
+    m_version = version;
+
+    if (m_version > 1)
+        m_currentCacheIndex = 1;
 
     SetOperationalModes(operationalModes);
+
+    const string message = "STTP v" + ToString(static_cast<int32_t>(m_version)) + " client connection accepted: requested operational modes applied.";
+    m_parent->DispatchStatusMessage(message);
+
+    m_validated = true;
+    SendResponse(ServerResponse::Succeeded, ServerCommand::DefineOperationalModes, message);
+}
+
+void SubscriberConnection::HandleConfirmUpdateSignalIndexCache(const uint8_t* data, const uint32_t length)
+{
+    WriterLock writeLock(m_signalIndexCacheLock);
+
+    // Swap over to next signal index cache
+    if (m_nextSignalIndexCache != nullptr)
+    {
+        if (m_signalIndexCache == nullptr)
+            m_parent->DispatchStatusMessage("Received confirmation of signal index cache update for subscriber \"" + GetConnectionID() + "\". Transitioning to cache index " + ToString(m_nextCacheIndex) + " with " + ToString(m_nextSignalIndexCache->Count()) + " records...");
+        else
+            m_parent->DispatchStatusMessage("Received confirmation of signal index cache update for subscriber \"" + GetConnectionID() + "\". Transitioning from cache index " + ToString(m_currentCacheIndex) + " with " + ToString(m_signalIndexCache->Count()) + " records to cache index " + ToString(m_nextCacheIndex) + " with " + ToString(m_nextSignalIndexCache->Count()) + " records...");
+
+        m_signalIndexCache = std::move(m_nextSignalIndexCache);
+        m_currentCacheIndex = m_nextCacheIndex;
+        m_nextSignalIndexCache = SignalIndexCache::NullPtr;
+
+        // Update measurement routes for newly subscribed measurement signal IDs
+        m_parent->m_routingTables.UpdateRoutes(shared_from_this(), m_signalIndexCache->GetSignalIDs());
+
+        // Reset TSSC encoder on successful (re)subscription
+        ScopeLock lock(m_tsscResetRequestedLock);
+        m_tsscResetRequested = true;
+    }
+
+    // Check for any pending signal index cache update
+    m_parent->m_threadPool.Queue([&]
+    {
+        string exceptionMessage;
+
+        try
+        {
+            SignalIndexCachePtr nextSignalIndexCache;
+
+            // Constrain lock to this block
+            {
+                ScopeLock lock(m_pendingSignalIndexCacheLock);
+
+                if (m_pendingSignalIndexCache == nullptr)
+                    return;
+
+                nextSignalIndexCache = m_pendingSignalIndexCache;
+                m_pendingSignalIndexCache = SignalIndexCache::NullPtr;
+            }
+
+            m_parent->DispatchStatusMessage("Applying pending signal cache update for subscriber \"" + GetConnectionID() + "\" with " + ToString(nextSignalIndexCache->Count()) + " records...");
+            UpdateSignalIndexCache(nextSignalIndexCache);
+        }
+        catch (const std::exception& ex)
+        {
+            exceptionMessage = "Pending signal index cache processing exception: " + string(ex.what());
+        }
+        catch (...)
+        {
+            exceptionMessage = "Pending signal index cache processing exception: " + boost::current_exception_diagnostic_information(true);
+        }
+
+        if (!exceptionMessage.empty())
+            m_parent->DispatchErrorMessage(exceptionMessage);
+    });
+}
+
+void SubscriberConnection::HandleConfirmNotification(const uint8_t* data, const uint32_t length)
+{
+    // TODO: Handle confirm notify
+}
+
+void SubscriberConnection::HandleConfirmBufferBlock(const uint8_t* data, const uint32_t length)
+{
+    // TODO: Handle confirm buffer block
+}
+
+void SubscriberConnection::HandleConfirmUpdateBaseTimes(const uint8_t* data, const uint32_t length)
+{
+    // TODO: Handle confirm update bases time (per IEEE 2664)
 }
 
 void SubscriberConnection::HandleUserCommand(const uint8_t command, const uint8_t* data, const uint32_t length)
@@ -1125,9 +1254,59 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
     return signalIndexCache;
 }
 
+void SubscriberConnection::UpdateSignalIndexCache(SignalIndexCachePtr signalIndexCache)
+{
+    WriterLock writeLock(m_signalIndexCacheLock);
+
+    if (m_version > 1)
+    {
+        if (m_nextSignalIndexCache == nullptr)
+        {
+            m_nextCacheIndex = m_currentCacheIndex ^ 1;
+            m_nextSignalIndexCache =  std::move(signalIndexCache);
+
+            // Update serialized cache with proper index
+            vector<uint8_t> serializedSignalIndexCache = SerializeSignalIndexCache(*m_nextSignalIndexCache);
+            serializedSignalIndexCache[0] = static_cast<uint8_t>(m_nextCacheIndex);
+
+            // Send updated signal index cache to data subscriber
+            SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, serializedSignalIndexCache);
+
+            ScopeLock lock(m_pendingSignalIndexCacheLock);
+            m_pendingSignalIndexCache = SignalIndexCache::NullPtr;
+        }
+        else
+        {
+            // Queue any pending update to be processed after current item - this handles
+            // updated subscription that may be occurring in quick succession
+            ScopeLock lock(m_pendingSignalIndexCacheLock);
+            m_pendingSignalIndexCache = std::move(signalIndexCache);
+        }
+    }
+    else
+    {
+        m_signalIndexCache = std::move(signalIndexCache);
+
+        // Send updated signal index cache to data subscriber
+        SendResponse(ServerResponse::UpdateSignalIndexCache, ServerCommand::Subscribe, SerializeSignalIndexCache(*m_signalIndexCache));
+
+        // Update measurement routes for newly subscribed measurement signal IDs
+        m_parent->m_routingTables.UpdateRoutes(shared_from_this(), m_signalIndexCache->GetSignalIDs());
+
+        // Reset TSSC encoder on successful (re)subscription
+        ScopeLock lock(m_tsscResetRequestedLock);
+        m_tsscResetRequested = true;
+    }
+}
+
 void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
     const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
+
+    // Cache not available while initializing
+    if (signalIndexCache == nullptr || signalIndexCache->Count() == 0)
+        return;
+
     const CompactMeasurement serializer(signalIndexCache, m_baseTimeOffsets, m_includeTime, m_useMillisecondResolution, m_timeIndex);
     vector<uint8_t> packet, buffer;
     int32_t count = 0;
@@ -1197,6 +1376,12 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 {
     const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
 
+    // Cache not available while initializing
+    if (signalIndexCache == nullptr || signalIndexCache->Count() == 0)
+        return;
+
+    ScopeLock lock(m_tsscResetRequestedLock);
+
     if (m_tsscResetRequested)
     {
         m_tsscResetRequested = false;
@@ -1206,20 +1391,19 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
             m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
 
         if (m_tsscSequenceNumber != 0)
-        {
             m_parent->DispatchStatusMessage("TSSC algorithm reset before sequence number: " + ToString(m_tsscSequenceNumber));
-            m_tsscSequenceNumber = 0;
-        }
+
+        m_tsscSequenceNumber = 0;
     }
 
     m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
-
     int32_t count = 0;
 
     for (const auto& measurement : measurements)
     {
         const int32_t runtimeID = signalIndexCache->GetSignalIndex(measurement->SignalID);
 
+        // Ignore unmapped signal
     	if (runtimeID == -1)
             continue;
     	
@@ -1227,6 +1411,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
         {
             PublishTSSCDataPacket(count);
             count = 0;
+
             m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
             m_tsscEncoder.TryAddMeasurement(runtimeID, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue()));
         }
@@ -1325,26 +1510,36 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
 
     const uint32_t packetSize = EndianConverter::ToBigEndian<uint32_t>(m_readBuffer.data(), 0);
 
-    if (packetSize > ConvertUInt32(m_readBuffer.size()))
+    if (!m_validated)
     {
-        // Validate packet size, anything larger than 256K should be considered invalid data
-        // TODO: Needs fix, validate initial packet only (see Go code)
-        // FUTURE: Consider allowing "continued" packet subscribes
-        //if (packetSize > static_cast<uint32_t>(UInt16::MaxValue * 4U))
-        //{
-        //    m_parent->m_threadPool.Queue([this, packetSize]
-        //    {
-        //        m_parent->DispatchErrorMessage("Possible invalid protocol detected: client requested " + ToString(packetSize) + " byte packet size. Closing connection.");
-        //        SendResponse(ServerResponse::Failed, ServerCommand::Subscribe, "Connection refused: invalid packet size requested.");
-        //        ThreadSleep(500);
-        //        Stop();
-        //    });
-        //    
-        //    return;
-        //}
+		// We need to check for a valid initial payload header size before attempting to resize
+		// the read buffer. The very first command received from the subscriber should be the
+		// DefineOperationalModes command. The packet payload size for this command, if any,
+		// should be a parameter string. Longer message sizes would be considered suspect data,
+		// likely from a non-STTP based client connection. In context of this initial command
+		// message, anything larger than 8KB of payload is considered suspect and will be
+		// evaluated as a non-STTP type request.
+		constexpr uint32_t MaxInitialPacketSize = Common::PayloadHeaderSize + 1 + 8192;
 
-        m_readBuffer.resize(packetSize);
+        if (packetSize > MaxInitialPacketSize)
+        {
+            stringstream messageStream;
+
+            messageStream << "Possible invalid protocol detected from client \"";
+            messageStream << m_connectionID;
+            messageStream << "\": encountered request for ";
+            messageStream << packetSize;
+            messageStream << " byte initial packet size -- connection likely from non-STTP client -- disconnecting client.";
+
+            m_parent->DispatchErrorMessage(messageStream.str());
+
+            Stop();
+            return;
+        }
     }
+
+    if (packetSize > ConvertUInt32(m_readBuffer.size()))
+        m_readBuffer.resize(packetSize);
 
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
@@ -1391,6 +1586,22 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
         // Forward data position beyond command byte
         data++;
 
+        if (!m_validated && command != ServerCommand::DefineOperationalModes)
+        {
+            stringstream messageStream;
+
+            messageStream << "Requested server command ";
+            messageStream << ServerCommand::ToString(command);
+            messageStream << " from client \"";
+            messageStream << m_connectionID;
+            messageStream << "\" rejected before operational modes validation -- possible non-STTP client -- disconnecting client";
+
+            m_parent->DispatchErrorMessage(messageStream.str());
+
+            Stop();
+            return;
+        }
+
         switch (command)
         {
             case ServerCommand::Subscribe:
@@ -1411,12 +1622,18 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
             case ServerCommand::DefineOperationalModes:
                 HandleDefineOperationalModes(data, length);
                 break;
-            // TODO: Handle confirm notify
-            //case ServerCommand::ConfirmNotification:
-            //    break;
-            // TODO: Handle confirm buffer block
-            //case ServerCommand::ConfirmBufferBlock:
-            //    break;
+            case ServerCommand::ConfirmUpdateSignalIndexCache:
+                HandleConfirmUpdateSignalIndexCache(data, length);
+                break;
+            case ServerCommand::ConfirmNotification:
+                HandleConfirmNotification(data, length);
+                break;
+            case ServerCommand::ConfirmBufferBlock:
+                HandleConfirmBufferBlock(data, length);
+                break;
+            case ServerCommand::ConfirmUpdateBaseTimes:
+                HandleConfirmUpdateBaseTimes(data, length);
+                break;
             case ServerCommand::UserCommand00:
             case ServerCommand::UserCommand01:
             case ServerCommand::UserCommand02:
@@ -1464,12 +1681,21 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(const Signa
 
     const uint32_t operationalModes = GetOperationalModes();
     const bool compressSignalIndexCache = (operationalModes & OperationalModes::CompressSignalIndexCache) > 0;
-    const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
+    const bool useGZipCompression = compressSignalIndexCache && (operationalModes & CompressionModes::GZip) > 0;
 
-    serializationBuffer.reserve(static_cast<size_t>(signalIndexCache.GetBinaryLength() * 0.02));
+    uint32_t binaryLength = signalIndexCache.GetBinaryLength();
+
+    if (m_version > 1)
+        binaryLength++;
+
+    serializationBuffer.reserve(static_cast<size_t>(binaryLength * 0.02));
+
+    if (m_version > 1 && !useGZipCompression)
+        serializationBuffer.push_back(UInt8::MaxValue); // Place-holder - actual value updated inside lock
+
     signalIndexCache.Encode(*this, serializationBuffer);
 
-    if (compressSignalIndexCache && useGZipCompression)
+    if (useGZipCompression)
     {
         const MemoryStream memoryStream(serializationBuffer);
         StreamBuffer streamBuffer;
@@ -1478,6 +1704,10 @@ std::vector<uint8_t> SubscriberConnection::SerializeSignalIndexCache(const Signa
         streamBuffer.push(memoryStream);
 
         vector<uint8_t> compressedBuffer;
+
+        if (m_version > 1)
+            compressedBuffer.push_back(UInt8::MaxValue);
+
         CopyStream(&streamBuffer, compressedBuffer);
         return compressedBuffer;
     }
@@ -1491,11 +1721,11 @@ std::vector<uint8_t> SubscriberConnection::SerializeMetadata(const sttp::data::D
 
     const uint32_t operationalModes = GetOperationalModes();
     const bool compressMetadata = (operationalModes & OperationalModes::CompressMetadata) > 0;
-    const bool useGZipCompression = (operationalModes & CompressionModes::GZip) > 0;
+    const bool useGZipCompression = compressMetadata && (operationalModes & CompressionModes::GZip) > 0;
 
     metadata->WriteXml(serializationBuffer);
 
-    if (compressMetadata && useGZipCompression)
+    if (useGZipCompression)
     {
         const MemoryStream memoryStream(serializationBuffer);
         StreamBuffer streamBuffer;

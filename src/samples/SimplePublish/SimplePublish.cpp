@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-bool RunPublisher(uint16_t port)
+bool RunPublisher(const uint16_t port)
 {
     string errorMessage;
     bool running = false;

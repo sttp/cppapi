@@ -302,6 +302,8 @@ namespace sttp::transport
     {
         // Defines a bit mask used to get version number of protocol.
         static constexpr uint32_t VersionMask = 0x000000FF;
+        // Defines a bit mask used to get version number of pre-IEEE standard implementations of protocol.
+        static constexpr uint32_t PreStandardVersionMask = 0x0000001F;
         // Defines a bit mask used to get character encoding used when exchanging messages between publisher and subscriber.
 	    // STTP currently only supports UTF-8 string encoding.
         static constexpr uint32_t EncodingMask = 0x00000300;

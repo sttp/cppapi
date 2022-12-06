@@ -55,6 +55,7 @@ namespace sttp::transport
         std::string m_subscriptionInfo;
         uint32_t m_operationalModes;
         uint32_t m_encoding;
+        uint8_t m_version;
         sttp::datetime_t m_startTimeConstraint;
         sttp::datetime_t m_stopTimeConstraint;
         int32_t m_processingInterval;
@@ -68,8 +69,9 @@ namespace sttp::transport
         bool m_useMillisecondResolution;
         bool m_trackLatestMeasurements;
         bool m_isNaNFiltered;
+        std::atomic_bool m_validated;
         std::atomic_bool m_connectionAccepted;
-        std::atomic_bool m_isSubscribed;
+        std::atomic_bool m_subscribed;
         std::atomic_bool m_startTimeSent;
         std::atomic_bool m_dataChannelActive;
         std::atomic_bool m_stopped;
@@ -100,6 +102,11 @@ namespace sttp::transport
         // Measurement parsing
         SignalIndexCachePtr m_signalIndexCache;
         sttp::SharedMutex m_signalIndexCacheLock;
+        SignalIndexCachePtr m_nextSignalIndexCache;
+        SignalIndexCachePtr m_pendingSignalIndexCache;
+        sttp::Mutex m_pendingSignalIndexCacheLock;
+        int32_t m_currentCacheIndex;
+        int32_t m_nextCacheIndex;
         TimerPtr m_baseTimeRotationTimer;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
@@ -110,7 +117,8 @@ namespace sttp::transport
         TimerPtr m_throttledPublicationTimer;
         tssc::TSSCEncoder m_tsscEncoder;
         uint8_t m_tsscWorkingBuffer[TSSCBufferSize];
-        bool m_tsscResetRequested;
+        std::atomic_bool m_tsscResetRequested;
+        sttp::Mutex m_tsscResetRequestedLock;
         uint16_t m_tsscSequenceNumber;
 
         // Server request handlers
@@ -121,9 +129,14 @@ namespace sttp::transport
         void HandleRotateCipherKeys();
         void HandleUpdateProcessingInterval(const uint8_t* data, uint32_t length);
         void HandleDefineOperationalModes(const uint8_t* data, uint32_t length);
+        void HandleConfirmUpdateSignalIndexCache(const uint8_t* data, uint32_t length);
+        void HandleConfirmNotification(const uint8_t* data, uint32_t length);
+        void HandleConfirmBufferBlock(const uint8_t* data, uint32_t length);
+        void HandleConfirmUpdateBaseTimes(const uint8_t* data, uint32_t length);
         void HandleUserCommand(uint8_t command, const uint8_t* data, uint32_t length);
 
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
+        void UpdateSignalIndexCache(SignalIndexCachePtr signalIndexCache);
         void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);
         void PublishCompactDataPacket(const std::vector<uint8_t>& packet, int32_t count);
         void PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements);
@@ -149,6 +162,13 @@ namespace sttp::transport
         SubscriberConnectionPtr GetReference();
 
         sttp::TcpSocket& CommandChannelSocket();
+
+        // Gets flag that determines if subscriber is validated, i.e., requested operational modes
+        // from subscriber were accepted by the publisher
+        bool IsValidated() const;
+
+        // Gets reported subscriber version. Value only valid after subscriber has been validated.
+        uint8_t GetVersion() const;
 
         // Gets or sets subscriber UUID used when subscriber is known and pre-established
         const sttp::Guid& GetSubscriberID() const;
@@ -244,9 +264,8 @@ namespace sttp::transport
         const std::string& GetSubscriptionInfo() const;
         void SetSubscriptionInfo(const std::string& value);
 
-        // Gets or sets signal index cache for subscriber representing run-time mappings for subscribed points
+        // Gets signal index cache for subscriber representing run-time mappings for subscribed points
         const SignalIndexCachePtr& GetSignalIndexCache();
-        void SetSignalIndexCache(SignalIndexCachePtr signalIndexCache);
 
         // Statistical functions
         uint64_t GetTotalCommandChannelBytesSent() const;
