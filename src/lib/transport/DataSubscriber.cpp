@@ -1431,15 +1431,23 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, const size_t bytesTran
 // and/or supported operational modes to the server.
 void DataSubscriber::SendOperationalModes()
 {
-    uint32_t operationalModes = CompressionModes::GZip;
+    uint32_t operationalModes = OperationalModes::NoFlags;
     uint32_t bigEndianOperationalModes;
 
     operationalModes |= OperationalModes::VersionMask & m_version;
     operationalModes |= OperationalEncoding::UTF8;
 
+    if (m_version < 10)
+        operationalModes |= CompressionModes::GZip;
+
     // TSSC compression only works with stateful connections
     if (m_compressPayloadData && !m_subscriptionInfo.UdpDataChannel)
-        operationalModes |= OperationalModes::CompressPayloadData | CompressionModes::TSSC;
+    {
+        operationalModes |= OperationalModes::CompressPayloadData;
+        
+        if (m_version < 10)
+            operationalModes |= CompressionModes::TSSC;
+    }
 
     if (m_compressMetadata)
         operationalModes |= OperationalModes::CompressMetadata;
