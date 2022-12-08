@@ -154,9 +154,9 @@ namespace sttp::transport
         void DataChannelSendAsync();
         void DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
-        void Start(bool connectionAccepted);
-        void Stop(bool shutdownSocket);
-        void HandleSocketError();
+        void StartConnection(bool connectionAccepted);
+        void StopConnection();
+        void HandleConnectionError();
 
         static void PingTimerElapsed(Timer*, void* userData);
 

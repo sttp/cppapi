@@ -444,7 +444,7 @@ vector<uint8_t> SubscriberConnection::IVs(const int32_t cipherIndex)
     return m_ivs[cipherIndex];
 }
 
-void SubscriberConnection::Start(const bool connectionAccepted)
+void SubscriberConnection::StartConnection(const bool connectionAccepted)
 {
     m_connectionAccepted = connectionAccepted;
 
@@ -533,7 +533,7 @@ void SubscriberConnection::Connect(const string& hostname, const uint16_t port, 
     m_commandChannelService.restart();
 #endif
 
-    Start(true);
+    StartConnection(true);
 }
 
 void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReconnecting)
@@ -574,7 +574,7 @@ void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReco
             m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + boost::current_exception_diagnostic_information(true));
         }
 
-        Stop(true);
+        StopConnection();
 
         // Disconnect complete
         m_disconnecting = false;
@@ -597,7 +597,7 @@ void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReco
         m_disconnectThread.join();
 }
 
-void SubscriberConnection::Stop(const bool shutdownSocket)
+void SubscriberConnection::StopConnection()
 {
     if (m_stopped)
         return;
@@ -617,9 +617,7 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
         if (m_throttledPublicationTimer != nullptr)
             m_throttledPublicationTimer->Stop();
 
-        if (shutdownSocket)
-            m_commandChannelSocket.shutdown(socket_base::shutdown_both);
-
+        m_commandChannelSocket.shutdown(socket_base::shutdown_both);
         m_commandChannelSocket.cancel();
 
         if (m_dataChannelActive)
@@ -648,16 +646,16 @@ void SubscriberConnection::Stop()
     if (m_parent->IsReverseConnection())
         Disconnect(false, false);
     else
-        Stop(true);
+        StopConnection();
 }
 
-void SubscriberConnection::HandleSocketError()
+void SubscriberConnection::HandleConnectionError()
 {
     // For reverse connection, this handles connection closed by peer; terminate connection
     if (m_parent->IsReverseConnection())
         m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
     else
-        Stop(false);
+        StopConnection();
 }
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
@@ -1639,7 +1637,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -1654,7 +1652,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -1708,7 +1706,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -1723,7 +1721,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -1951,7 +1949,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -1966,7 +1964,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        HandleSocketError();
+        HandleConnectionError();
     }
 
     if (!m_tcpWriteBuffers.empty())
@@ -1996,7 +1994,7 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        HandleSocketError();
+        HandleConnectionError();
         return;
     }
 
@@ -2011,7 +2009,7 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        HandleSocketError();
+        HandleConnectionError();
     }
 
     if (!m_udpWriteBuffers.empty())

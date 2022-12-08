@@ -106,7 +106,7 @@ void DataPublisher::AcceptConnection(const SubscriberConnectionPtr& connection, 
         m_subscriberConnections.insert(connection);
 
         // Initiate connection, if connection is not accepted, at least resolve connection info
-        connection->Start(connectionAccepted);
+        connection->StartConnection(connectionAccepted);
         
         if (connectionAccepted)
         {

@@ -96,7 +96,7 @@ void SubscriberConnector::AutoReconnect(DataClient* client)
         }
 
         // Apply exponential back-off algorithm for retry attempt delays
-        const int32_t exponent = (connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt) - 1;
+        const int32_t exponent = connector.m_connectAttempt > 13 ? 13 : connector.m_connectAttempt;
         int32_t retryInterval = connector.m_connectAttempt > 0 ? connector.m_retryInterval * static_cast<int32_t>(pow(2, exponent)) : 0;
 
         if (retryInterval > connector.m_maxRetryInterval)
@@ -115,9 +115,14 @@ void SubscriberConnector::AutoReconnect(DataClient* client)
             errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
 
             if (retryInterval > 0)
+            {
                 errorMessageStream << "Attempting to reconnect in " << retryInterval / 1000.0 << " seconds...";
+            }
             else
+            {
+                retryInterval = connector.m_retryInterval;
                 errorMessageStream << "Attempting to reconnect...";
+            }
 
             connector.m_clientErrorMessageCallback(client, errorMessageStream.str());
         }
