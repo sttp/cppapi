@@ -51,6 +51,7 @@ DataPublisher::DataPublisher() :
     m_supportsTemporalSubscriptions(false),
     m_useBaseTimeOffsets(true),
     m_cipherKeyRotationPeriod(60000),
+    m_reverseConnection(false),
     m_started(false),
     m_shuttingDown(false),
     m_stopped(false),
@@ -59,28 +60,11 @@ DataPublisher::DataPublisher() :
 {
 }
 
-DataPublisher::DataPublisher(const TcpEndPoint& endpoint) :
-    DataPublisher()
-{
-    Start(endpoint);
-}
-
-DataPublisher::DataPublisher(const uint16_t port, const bool ipV6) :
-    DataPublisher()
-{
-    Start(port, ipV6);
-}
-
-DataPublisher::DataPublisher(const string& networkInterfaceIP, const uint16_t port) :
-    DataPublisher()
-{
-    Start(networkInterfaceIP, port);
-}
-
 DataPublisher::~DataPublisher() noexcept
 {
     try
     {
+        m_disposing = true;
         m_threadPool.ShutDown();
         ShutDown(true);
     }
@@ -163,6 +147,7 @@ void DataPublisher::ConnectionTerminated(const SubscriberConnectionPtr& connecti
 void DataPublisher::RemoveConnection(const SubscriberConnectionPtr& connection)
 {
     m_routingTables.RemoveRoutes(connection);
+
     connection->Stop();
 
     WriterLock writeLock(m_subscriberConnectionsLock);
@@ -864,6 +849,9 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
 
 void DataPublisher::Start(const TcpEndPoint& endpoint)
 {
+    if (IsReverseConnection())
+        throw PublisherException("Cannot start a listening connection, DataPublisher is already established in reverse connection mode.");
+
     if (m_started)
         ShutDown(true);
 
@@ -881,7 +869,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false); //-V601
     
     // Run call-back thread
-    m_commandChannelAcceptThread = Thread([this]
+    m_callbackThread = Thread([this]
     {
         while (true)
         {
@@ -898,7 +886,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     });
 
     // Run command channel accept thread
-    m_callbackThread = Thread([this]
+    m_commandChannelAcceptThread = Thread([this]
     {
         StartAccept();
         m_commandChannelService.run();
@@ -915,6 +903,85 @@ void DataPublisher::Start(const uint16_t port, const bool ipV6)
 void DataPublisher::Start(const string& networkInterfaceIP, const uint16_t port)
 {
     Start(TcpEndPoint(make_address(networkInterfaceIP), port));
+}
+
+SubscriberConnectionPtr DataPublisher::GetSingleConnection()
+{
+    // In reverse connection there is only a single subscriber connection, so write lock here
+    // will have little contention. This also avoids needing to upgrade read lock to a write
+    // lock which could cause possible dead locks.
+    WriterLock writeLock(m_subscriberConnectionsLock);
+
+    if (!m_subscriberConnections.empty())
+        return *m_subscriberConnections.begin();
+
+    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
+
+    m_subscriberConnections.insert(connection);
+
+    return connection;
+}
+
+void DataPublisher::Connect(const std::string& hostname, const uint16_t port, const bool autoReconnecting)
+{
+    const SubscriberConnectionPtr& connection = GetSingleConnection();
+    connection->Connect(hostname, port, autoReconnecting);
+
+    // Run call-back thread
+    m_callbackThread = Thread([this]
+    {
+        while (true)
+        {
+            m_callbackQueue.WaitForData();
+
+            if (IsShuttingDown())
+                break;
+
+            const CallbackDispatcher dispatcher = m_callbackQueue.Dequeue();
+
+            if (dispatcher.Function != nullptr)
+                dispatcher.Function(dispatcher.Source, *dispatcher.Data);
+        }
+    });
+
+    m_commandChannelAcceptThread = Thread([&]
+    {
+        // Accepting single connection in reverse connection mode
+        DispatchClientConnected(AddDispatchReference(connection));
+        m_commandChannelService.run();
+    });
+
+    m_started = true;
+}
+
+void DataPublisher::Connect(const std::string& hostname, const uint16_t port)
+{
+    if (IsStarted())
+        throw PublisherException("Cannot start a reverse connection, DataPublisher is already established in listening connection mode.");
+
+    m_reverseConnection = true;
+
+    // User requests to connect are not an auto-reconnect attempt
+    Connect(hostname, port, false);
+}
+
+SubscriberConnector& DataPublisher::GetSubscriberConnector()
+{
+    return GetSingleConnection()->m_connector;
+}
+
+bool DataPublisher::IsConnected()
+{
+    if (IsReverseConnection())
+        return GetSingleConnection()->IsConnected();
+
+    // Proxy IsStarted result for standard operations
+    return IsStarted();
+}
+
+bool DataPublisher::IsReverseConnection() const
+{
+    return m_reverseConnection;
 }
 
 void DataPublisher::Stop()
@@ -969,6 +1036,10 @@ void DataPublisher::ShutDown(const bool joinThread)
                 }
 
                 m_subscriberConnections.clear();
+
+                // Reset reverse connection state, this allows same DataPublisher instance
+                // to be reused in listening connection mode if desired
+                m_reverseConnection = false;
             });
 
             // Release queues and close sockets so
@@ -1217,6 +1288,11 @@ void DataPublisher::RegisterUserCommandCallback(const UserCommandCallback& userC
     m_userCommandCallback = userCommandCallback;
 }
 
+void DataPublisher::RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback)
+{
+    m_autoReconnectCallback = autoReconnectCallback;
+}
+
 void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionIteratorHandlerFunction& iteratorHandler, void* userData)
 {
     if (iteratorHandler == nullptr)
@@ -1230,7 +1306,14 @@ void DataPublisher::IterateSubscriberConnections(const SubscriberConnectionItera
 
 void DataPublisher::DisconnectSubscriber(const SubscriberConnectionPtr& connection)
 {
-    if (connection != nullptr)
+    if (connection == nullptr)
+        return;
+
+    // Reverse connection only has a single connection - in this case we do not want remove the single
+    // SubscriberConnection from the list of connections, we just want to disconnect it.
+    if (IsReverseConnection())
+        connection->Disconnect(false, false);
+    else
         RemoveConnection(connection);
 }
 

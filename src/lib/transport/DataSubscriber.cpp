@@ -132,8 +132,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t byte
 
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
+        HandleSocketError();
         return;
     }
 
@@ -211,8 +210,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransf
 
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
+        HandleSocketError();
         return;
     }
 
@@ -701,7 +699,7 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
         errorMessageStream << "Failed to parse TSSC measurements - disconnecting: ";
         errorMessageStream << errorMessage;
         DispatchErrorMessage(errorMessageStream.str());
-        m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
+        HandleSocketError();
         return;
     }
 
@@ -910,15 +908,6 @@ void DataSubscriber::ConfigurationChangedDispatcher(DataSubscriber* source, cons
 
     if (configurationChangedCallback != nullptr)
         configurationChangedCallback(source);
-}
-
-// Dispatcher for connection terminated. This is called from its own separate thread
-// in order to cleanly shut down the subscriber in case the connection was terminated
-// by the peer. Additionally, this allows the user to automatically reconnect in their
-// callback function without having to spawn their own separate thread.
-void DataSubscriber::ConnectionTerminatedDispatcher()
-{
-    Disconnect(false, true);
 }
 
 // Registers the status message callback.
@@ -1194,11 +1183,11 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         }
         catch (SystemError& ex)
         {
-            cerr << "Exception while disconnecting data subscriber: " << ex.what();
+            DispatchErrorMessage("Exception while disconnecting data subscriber: " + string(ex.what()));
         }
         catch (...)
         {
-            cerr << "Exception while disconnecting data subscriber: " << boost::current_exception_diagnostic_information(true);
+            DispatchErrorMessage("Exception while disconnecting data subscriber: " + boost::current_exception_diagnostic_information(true));
         }
 
         // Disconnect complete
@@ -1221,6 +1210,21 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
 
     if (joinThread)
         m_disconnectThread.join();
+}
+
+// Dispatcher for connection terminated. This is called from its own separate thread
+// in order to cleanly shut down the subscriber in case the connection was terminated
+// by the peer. Additionally, this allows the user to automatically reconnect in their
+// callback function without having to spawn their own separate thread.
+void DataSubscriber::ConnectionTerminatedDispatcher()
+{
+    Disconnect(false, true);
+}
+
+void DataSubscriber::HandleSocketError()
+{
+    // Connection closed by peer; terminate connection
+    m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
 }
 
 void DataSubscriber::Subscribe(const SubscriptionInfo& info)
@@ -1411,8 +1415,7 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, const size_t bytesTran
 
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        // Connection closed by peer; terminate connection
-        m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
+        HandleSocketError();
         return;
     }
 
@@ -1481,7 +1484,7 @@ uint64_t DataSubscriber::GetTotalMeasurementsReceived() const
 }
 
 // Indicates whether the subscriber is connected.
-bool DataSubscriber::IsConnected() const
+bool DataSubscriber::IsConnected()
 {
     return m_connected;
 }
@@ -1508,7 +1511,7 @@ bool DataSubscriber::IsValidated() const
     return m_validated;
 }
 
-bool DataSubscriber::IsListening() const
+bool DataSubscriber::IsReverseConnection() const
 {
     return false; // TODO: Enable response when listening mode is implemented
 }

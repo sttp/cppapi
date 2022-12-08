@@ -42,7 +42,7 @@ namespace sttp::transport
         virtual void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) = 0;
         virtual void SetSubscriptionInfo(const SubscriptionInfo& info);
         virtual void RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback) = 0;
-        virtual bool IsConnected() const = 0;
+        virtual bool IsConnected() = 0;
 
         std::atomic_bool m_disposing;
     };
@@ -112,7 +112,7 @@ namespace sttp::transport
         void RegisterReconnectCallback(const PublisherReconnectCallback& reconnectCallback);
 
         // Begin connection sequence
-        int Connect(DataClient& client, const SubscriptionInfo& info);
+        int Connect(DataClient& client, const SubscriptionInfo& info = SubscriptionInfo());
 
         // Cancel all current and
         // future connection sequences.

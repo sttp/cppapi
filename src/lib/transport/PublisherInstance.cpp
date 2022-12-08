@@ -23,7 +23,6 @@
 
 #include "PublisherInstance.h"
 #include "../Convert.h"
-#include <iostream>
 
 using namespace std;
 using namespace pugi;
@@ -33,6 +32,11 @@ using namespace sttp::transport;
 using namespace boost::asio::ip;
 
 PublisherInstance::PublisherInstance() :
+    m_hostname("localhost"),
+    m_port(7165),
+    m_maxRetries(-1),
+    m_retryInterval(2000),
+    m_autoReconnect(true),
     m_userData(nullptr)
 {
     // Reference this PublisherInstance in DataPublisher user data
@@ -52,8 +56,47 @@ PublisherInstance::PublisherInstance() :
 
 PublisherInstance::~PublisherInstance()
 {
-    if (m_publisher != nullptr)
-        m_publisher->ShutDown(true);
+    try
+    {
+        if (m_publisher != nullptr)
+            m_publisher->ShutDown(true);
+    }
+    catch (...)
+    {
+    }
+
+    try
+    {
+        m_connectThread.join();
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
+}
+
+// private functions
+
+// The following member methods are defined as static so they
+// can be used as callback registrations for DataPublisher
+
+void PublisherInstance::HandleReconnect(const DataPublisher* source)
+{
+    PublisherInstance* instance = static_cast<PublisherInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
+    if (instance->IsConnected())
+    {
+        instance->ClientConnected(instance->m_publisher->GetSingleConnection());
+    }
+    else
+    {
+        instance->Stop();
+        instance->StatusMessage("Connection retry attempts exceeded.");
+    }
 }
 
 void PublisherInstance::HandleStatusMessage(const DataPublisher* source, const string& message)
@@ -136,6 +179,27 @@ void PublisherInstance::HandleReceivedUserCommand(const DataPublisher* source, c
     instance->HandleUserCommand(connection, command, buffer);
 }
 
+// protected functions
+
+// The following member methods are overridable by derived classes
+// to allow for functionality customization
+
+void PublisherInstance::SetupSubscriberConnector(SubscriberConnector& connector)
+{
+    // SubscriberConnector is another helper object which allows the
+    // user to modify settings for auto-reconnects and retry cycles.
+
+    // Register callbacks
+    connector.RegisterErrorMessageCallback(&HandleErrorMessage);
+    connector.RegisterReconnectCallback(&HandleReconnect);
+
+    connector.SetHostname(m_hostname);
+    connector.SetPort(m_port);
+    connector.SetMaxRetries(m_maxRetries);
+    connector.SetRetryInterval(m_retryInterval);
+    connector.SetAutoReconnect(m_autoReconnect);
+}
+
 void PublisherInstance::StatusMessage(const string& message)
 {
     cout << message << endl << endl;
@@ -148,33 +212,65 @@ void PublisherInstance::ErrorMessage(const string& message)
 
 void PublisherInstance::ClientConnected(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " connected..." << endl << endl;
+    stringstream message;
+
+    if (IsReverseConnection())
+        message << "Reverse connection to client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " established...";
+    else
+        message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " connected...";
+
+    StatusMessage(message.str());
 }
 
 void PublisherInstance::ClientDisconnected(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " disconnected..." << endl << endl;
+    stringstream message;
+
+    if (IsReverseConnection())
+        message << "Reverse connection to client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " disconnected...";
+    else
+        message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " disconnected...";
+
+    StatusMessage(message.str());
 }
 
 void PublisherInstance::ProcessingIntervalChangeRequested(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
+    stringstream message;
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms";
+
+    StatusMessage(message.str());
 }
 
 void PublisherInstance::TemporalSubscriptionRequested(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
+    stringstream message;
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint());
+
+    StatusMessage(message.str());
 }
 
 void PublisherInstance::TemporalSubscriptionCanceled(const SubscriberConnectionPtr& connection)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl << endl;
+    stringstream message;
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has canceled the temporal subscription starting at " << ToString(connection->GetStartTimeConstraint());
+
+    StatusMessage(message.str());
 }
 
 void PublisherInstance::HandleUserCommand(const SubscriberConnectionPtr& connection, const uint8_t command, const std::vector<uint8_t>& buffer)
 {
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ServerCommand::ToString(command) << "\" with " << buffer.size() << " bytes of payload" << endl << endl;
+    stringstream message;
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " sent user-defined command \"" << ServerCommand::ToString(command) << "\" with " << buffer.size() << " bytes of payload";
+
+    StatusMessage(message.str());
 }
+
+// public functions
 
 void PublisherInstance::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber) const
 {
@@ -228,14 +324,84 @@ bool PublisherInstance::Start(const TcpEndPoint& endpoint)
     return m_publisher->IsStarted();
 }
 
-bool PublisherInstance::Start(uint16_t port, bool ipV6)
+bool PublisherInstance::Start(const uint16_t port, const bool ipV6)
 {
     return Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
 
-bool PublisherInstance::Start(const string& networkInterfaceIP, uint16_t port)
+bool PublisherInstance::Start(const string& networkInterfaceIP, const uint16_t port)
 {
     return Start(TcpEndPoint(make_address(networkInterfaceIP), port));
+}
+
+void PublisherInstance::Initialize(const std::string& hostname, const uint16_t port)
+{
+    m_publisher->m_reverseConnection = true;
+    m_hostname = hostname;
+    m_port = port;
+}
+
+bool PublisherInstance::GetAutoReconnect() const
+{
+    return m_autoReconnect;
+}
+
+void PublisherInstance::SetAutoReconnect(const bool autoReconnect)
+{
+    m_autoReconnect = autoReconnect;
+}
+
+int16_t PublisherInstance::GetMaxRetries() const
+{
+    return m_maxRetries;
+}
+
+void PublisherInstance::SetMaxRetries(const int16_t maxRetries)
+{
+    m_maxRetries = maxRetries;
+}
+
+int16_t PublisherInstance::GetRetryInterval() const
+{
+    return m_retryInterval;
+}
+
+void PublisherInstance::SetRetryInterval(const int16_t retryInterval)
+{
+    m_retryInterval = retryInterval;
+}
+
+void PublisherInstance::ConnectAsync()
+{
+    m_connectThread = Thread([&]{ Connect(); });
+}
+
+void PublisherInstance::Connect()
+{
+    SubscriberConnector& connector = m_publisher->GetSubscriberConnector();
+    connector.ResetConnection();
+
+    // Set up helper objects (derived classes can override behavior and settings)
+    SetupSubscriberConnector(connector);
+
+    if (m_hostname.empty())
+        throw PublisherException("No hostname specified for reverse connection: call Initialize before Connect");
+
+    if (m_port == 0)
+        throw PublisherException("No port specified for reverse connection: call Initialize before Connect");
+
+    // Connect to subscriber
+    const int result = connector.Connect(*m_publisher);
+
+    if (result == SubscriberConnector::ConnectSuccess)
+    {
+        ClientConnected(m_publisher->GetSingleConnection());
+    }
+    else
+    {
+        if (result == SubscriberConnector::ConnectFailed)
+            ErrorMessage("All connection attempts failed");
+    }
 }
 
 void PublisherInstance::Stop()
@@ -243,12 +409,22 @@ void PublisherInstance::Stop()
     m_publisher->Stop();
 }
 
+bool PublisherInstance::IsConnected() const
+{
+    return m_publisher->IsConnected();
+}
+
+bool PublisherInstance::IsReverseConnection() const
+{
+    return m_publisher->IsReverseConnection();
+}
+
 bool PublisherInstance::IsStarted() const
 {
     return m_publisher->IsStarted();
 }
 
-void PublisherInstance::PublishMeasurements(const SimpleMeasurement* measurements, int32_t count) const
+void PublisherInstance::PublishMeasurements(const SimpleMeasurement* measurements, const int32_t count) const
 {
     vector<MeasurementPtr> measurementPtrs(count);
 

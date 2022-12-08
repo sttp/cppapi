@@ -176,13 +176,18 @@ namespace sttp::transport
         const std::string& GetMetadataFilters() const;
         void SetMetadataFilters(const std::string& metadataFilters);
 
-        // Starts the connection cycle to an STTP publisher. Upon connection, meta-data will be requested,
-        // when received, a subscription will be established.
-        void Connect();
-        void ConnectAsync();
+        // Synchronously connects to an STTP publisher. This establishes an automatic reconnect cycle when
+        // GetAutoReconnect is true. Upon connection, meta-data will be requested, when received, a new
+        // subscription will be established.
+        virtual void Connect();
+
+        // Asynchronously connects to an STTP publisher. This establishes an automatic reconnect cycle when
+        // GetAutoReconnect is true. Upon connection, meta-data will be requested, when received, a new
+        // subscription will be established.
+        virtual void ConnectAsync();
 
         // Disconnects from the STTP publisher
-        void Disconnect() const;
+        virtual void Disconnect() const;
 
         // Historical subscription functions
 
@@ -243,7 +248,7 @@ namespace sttp::transport
 
         // Determines if a subscriber is currently listening for a publisher
         // connection, i.e., subscriber is in reverse connection mode.
-        bool IsListening() const;
+        bool IsReverseConnection() const;
 
         // Determines if a subscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;

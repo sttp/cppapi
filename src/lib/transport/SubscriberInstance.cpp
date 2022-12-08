@@ -35,7 +35,7 @@ using namespace sttp::transport;
 
 SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
-    m_port(6165),
+    m_port(7165),
     m_udpPort(0U),
     m_autoReconnect(true),
     m_autoParseMetadata(true),
@@ -53,6 +53,16 @@ SubscriberInstance::SubscriberInstance() :
     // Reference this SubscriberInstance in DataSubsciber user data
     m_subscriber = NewSharedPtr<DataSubscriber>();
     m_subscriber->SetUserData(this);
+
+    // Register callbacks
+    m_subscriber->RegisterStatusMessageCallback(&HandleStatusMessage);
+    m_subscriber->RegisterErrorMessageCallback(&HandleErrorMessage);
+    m_subscriber->RegisterDataStartTimeCallback(&HandleDataStartTime);
+    m_subscriber->RegisterMetadataCallback(&HandleMetadata);
+    m_subscriber->RegisterSubscriptionUpdatedCallback(&HandleSubscriptionUpdated);
+    m_subscriber->RegisterNewMeasurementsCallback(&HandleNewMeasurements);
+    m_subscriber->RegisterConfigurationChangedCallback(&HandleConfigurationChanged);
+    m_subscriber->RegisterConnectionTerminatedCallback(&HandleConnectionTerminated);
 }
 
 SubscriberInstance::~SubscriberInstance() noexcept
@@ -176,17 +186,14 @@ void SubscriberInstance::Connect()
 
     // Set up helper objects (derived classes can override behavior and settings)
     SetupSubscriberConnector(connector);
-    m_subscriptionInfo = CreateSubscriptionInfo();
 
-    // Register callbacks
-    m_subscriber->RegisterStatusMessageCallback(&HandleStatusMessage);
-    m_subscriber->RegisterErrorMessageCallback(&HandleErrorMessage);
-    m_subscriber->RegisterDataStartTimeCallback(&HandleDataStartTime);
-    m_subscriber->RegisterMetadataCallback(&HandleMetadata);
-    m_subscriber->RegisterSubscriptionUpdatedCallback(&HandleSubscriptionUpdated);
-    m_subscriber->RegisterNewMeasurementsCallback(&HandleNewMeasurements);
-    m_subscriber->RegisterConfigurationChangedCallback(&HandleConfigurationChanged);
-    m_subscriber->RegisterConnectionTerminatedCallback(&HandleConnectionTerminated);
+    if (m_hostname.empty())
+        throw SubscriberException("No hostname specified for connection: call Initialize before Connect");
+
+    if (m_port == 0)
+        throw SubscriberException("No port specified for connection: call Initialize before Connect");
+
+    m_subscriptionInfo = CreateSubscriptionInfo();
 
     if (!m_startTime.empty() && !m_stopTime.empty())
     {
@@ -314,7 +321,7 @@ int32_t SubscriberInstance::GetOperationalModesResponseTimeout() const
     return m_operationalModesResponseTimeout;
 }
 
-void SubscriberInstance::SetOperationalModesResponseTimeout(int32_t value)
+void SubscriberInstance::SetOperationalModesResponseTimeout(const int32_t value)
 {
     m_operationalModesResponseTimeout = value;
 }
@@ -349,9 +356,9 @@ bool SubscriberInstance::IsValidated() const
     return m_subscriber->IsValidated();
 }
 
-bool SubscriberInstance::IsListening() const
+bool SubscriberInstance::IsReverseConnection() const
 {
-    return m_subscriber->IsListening();
+    return m_subscriber->IsReverseConnection();
 }
 
 bool SubscriberInstance::IsSubscribed() const

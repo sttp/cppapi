@@ -73,7 +73,6 @@ namespace sttp::transport
         std::atomic_bool m_subscribed;
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
-        //std::atomic_bool m_disposing;
         Mutex m_connectActionMutex;
         Thread m_disconnectThread;
         void* m_userData;
@@ -174,15 +173,16 @@ namespace sttp::transport
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
 
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
+        void Disconnect(bool joinThread, bool autoReconnecting);
+        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
+
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
         // safely close all sockets and stop all subscriber threads
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
-
-        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
-        void Disconnect(bool joinThread, bool autoReconnecting);
-        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
+        void HandleSocketError();
 
     public:
         // Creates a new instance of the data subscriber.
@@ -204,6 +204,7 @@ namespace sttp::transport
         //   void HandleProcessingComplete(DataSubscriber* source, const string& message)
         //   void HandleConfigurationChanged(DataSubscriber* source)
         //   void HandleConnectionTerminated(DataSubscriber* source)
+        //   void HandleAutoReconnect(DataClient* source)
         //
         // Metadata is provided to the user as zlib-compressed XML,
         // and must be decompressed and interpreted before it can be used.
@@ -289,7 +290,7 @@ namespace sttp::transport
         uint64_t GetTotalMeasurementsReceived() const;
 
         // Determines if a DataSubscriber is currently connected to a DataPublisher.
-        bool IsConnected() const override;
+        bool IsConnected() override;
 
         // Waits for publisher response to define operational modes request.
         bool WaitForOperationalModesResponse(int32_t timeout = 5000);
@@ -302,7 +303,7 @@ namespace sttp::transport
 
         // Determines if a DataSubscriber is currently listening for a DataPublisher
         // connection, i.e., DataSubscriber is in reverse connection mode.
-        bool IsListening() const;
+        bool IsReverseConnection() const;
 
         // Determines if a DataSubscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;

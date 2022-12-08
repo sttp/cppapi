@@ -28,6 +28,7 @@
 #include "../ThreadPool.h"
 #include "../data/DataSet.h"
 #include "SubscriberConnection.h"
+#include "SubscriberConnector.h"
 #include "RoutingTables.h"
 #include "TransportTypes.h"
 #include "Constants.h"
@@ -40,7 +41,10 @@ namespace sttp::filterexpressions
 
 namespace sttp::transport
 {
-    class DataPublisher final : public EnableSharedThisPtr<DataPublisher> // NOLINT
+    class DataPublisher;
+    typedef SharedPtr<DataPublisher> DataPublisherPtr;
+
+    class DataPublisher final : public DataClient, public EnableSharedThisPtr<DataPublisher> // NOLINT
     {
     public:
         // Function pointer types
@@ -75,6 +79,7 @@ namespace sttp::transport
         bool m_supportsTemporalSubscriptions;
         bool m_useBaseTimeOffsets;
         uint32_t m_cipherKeyRotationPeriod;
+        std::atomic_bool m_reverseConnection;
         std::atomic_bool m_started;
         std::atomic_bool m_shuttingDown;
         std::atomic_bool m_stopped;
@@ -112,6 +117,7 @@ namespace sttp::transport
         SubscriberConnectionCallback m_temporalSubscriptionRequestedCallback;
         SubscriberConnectionCallback m_temporalSubscriptionCanceledCallback;
         UserCommandCallback m_userCommandCallback;
+        ClientConnectionTerminatedCallback m_autoReconnectCallback;
 
         SubscriberConnection* AddDispatchReference(SubscriberConnectionPtr connectionRef);
         SubscriberConnectionPtr ReleaseDispatchReference(SubscriberConnection* connectionPtr);
@@ -140,19 +146,17 @@ namespace sttp::transport
 
         void ShutDown(bool joinThread);
         bool IsShuttingDown() const { return m_shuttingDown || m_stopped; }
-    
+
+        SubscriberConnectionPtr GetSingleConnection();
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
+
     public:
         // Creates a new instance of the data publisher.
         DataPublisher();
 
-        // The following constructors will auto-start DataPublisher using specified connection info
-        explicit DataPublisher(const TcpEndPoint& endpoint);
-        explicit DataPublisher(uint16_t port, bool ipV6 = false);                        // Bind to default NIC
-        explicit DataPublisher(const std::string& networkInterfaceIP, uint16_t port);    // Bind to specified NIC IP, format determines IP version
-
         // Releases all threads and sockets
         // tied up by the publisher.
-        ~DataPublisher() noexcept;
+        ~DataPublisher() noexcept override;
 
         // Iterator handler delegates
         typedef std::function<void(SubscriberConnectionPtr, void* userData)> SubscriberConnectionIteratorHandlerFunction;
@@ -179,7 +183,19 @@ namespace sttp::transport
         void Start(const TcpEndPoint& endpoint);
         void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
-        
+
+        // Synchronously establishes reverse connection to a DataSubscriber.
+        void Connect(const std::string& hostname, uint16_t port);
+
+        // Get subscriber connector used to assign settings for in reverse connection mode.
+        SubscriberConnector& GetSubscriberConnector() override;
+
+        // Determines if a DataPublisher is currently connected to a DataSubscriber for reverse connection mode.
+        bool IsConnected() override;
+
+        // Determines if DataPublisher is setup in reverse connection mode.
+        bool IsReverseConnection() const;
+
         // Shuts down DataPublisher
         //
         // The method does not return until all connections have been closed
@@ -250,6 +266,7 @@ namespace sttp::transport
         //   void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection);
         //   void HandleUserCommand(DataPublisher* source, const SubscriberConnectionPtr& connection, uint32_t command, const std::vector<uint8_t>& buffer);
+        //   void HandleAutoReconnect(DataClient* source)
         void RegisterStatusMessageCallback(const MessageCallback& statusMessageCallback);
         void RegisterErrorMessageCallback(const MessageCallback& errorMessageCallback);
         void RegisterClientConnectedCallback(const SubscriberConnectionCallback& clientConnectedCallback);
@@ -258,6 +275,7 @@ namespace sttp::transport
         void RegisterTemporalSubscriptionRequestedCallback(const SubscriberConnectionCallback& temporalSubscriptionRequestedCallback);
         void RegisterTemporalSubscriptionCanceledCallback(const SubscriberConnectionCallback& temporalSubscriptionCanceledCallback);
         void RegisterUserCommandCallback(const UserCommandCallback& userCommandCallback);
+        void RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback) override;
 
         // SubscriberConnection iteration function - note that full lock will be maintained on source collection
         // for the entire call, so keep work time minimized or clone collection before work
@@ -266,9 +284,9 @@ namespace sttp::transport
         void DisconnectSubscriber(const SubscriberConnectionPtr& connection);
         void DisconnectSubscriber(const Guid& instanceID);
 
+        static const DataPublisherPtr NullPtr;
+
         friend class SubscriberConnection;
         friend class PublisherInstance;
     };
-
-    typedef SharedPtr<DataPublisher> DataPublisherPtr;
 }

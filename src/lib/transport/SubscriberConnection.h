@@ -28,6 +28,7 @@
 #include "../data/DataSet.h"
 #include "SignalIndexCache.h"
 #include "TransportTypes.h"
+#include "SubscriberConnector.h"
 #include "tssc/TSSCEncoder.h"
 #include <deque>
 
@@ -153,7 +154,29 @@ namespace sttp::transport
         void DataChannelSendAsync();
         void DataChannelWriteHandler(const ErrorCode& error, size_t bytesTransferred);
 
+        void Start(bool connectionAccepted);
+        void Stop(bool shutdownSocket);
+        void HandleSocketError();
+
         static void PingTimerElapsed(Timer*, void* userData);
+
+        // Reverse connection
+        SubscriberConnector m_connector;
+        std::atomic_bool m_disconnecting;
+        Mutex m_connectActionMutex;
+        Thread m_disconnectThread;
+        Thread m_connectionTerminationThread;
+
+        // The connection terminated callback is a special case that
+        // must be called on its own separate thread so that it can
+        // safely close all sockets and stop all subscriber threads
+        // (including the callback thread) before executing the callback.
+        void ConnectionTerminatedDispatcher();
+
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting);
+        void Disconnect(bool joinThread, bool autoReconnecting);
+        bool IsDisconnecting() const { return m_disconnecting || m_stopped; }
+
     public:
         explicit SubscriberConnection(DataPublisherPtr parent, sttp::IOContext& commandChannelService);
         ~SubscriberConnection();
@@ -166,6 +189,9 @@ namespace sttp::transport
         // Gets flag that determines if subscriber is validated, i.e., requested operational modes
         // from subscriber were accepted by the publisher
         bool IsValidated() const;
+
+        // Determines if connection is established to a DataSubscriber.
+        bool IsConnected() const;
 
         // Gets reported subscriber version. Value only valid after subscriber has been validated.
         uint8_t GetVersion() const;
@@ -276,9 +302,6 @@ namespace sttp::transport
         std::vector<uint8_t> Keys(int32_t cipherIndex);
         std::vector<uint8_t> IVs(int32_t cipherIndex);
 
-        void Start(bool connectionAccepted = true);
-        void Stop(bool shutdownSocket = true);
-
         void PublishMeasurements(const std::vector<MeasurementPtr>& measurements);
         void CancelTemporalSubscription();
 
@@ -288,10 +311,14 @@ namespace sttp::transport
 
         std::string DecodeString(const uint8_t* data, uint32_t offset, uint32_t length) const;
         std::vector<uint8_t> EncodeString(const std::string& value) const;
+
+        // Shutdown subscriber connection
+        void Stop();
+
+        static const SubscriberConnectionPtr NullPtr;
+
+        friend class DataPublisher;
     };
-
-    typedef sttp::SharedPtr<SubscriberConnection> SubscriberConnectionPtr;
-
 }
 
 // Setup standard hash code for SubscriberConnectionPtr

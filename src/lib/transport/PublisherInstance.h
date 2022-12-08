@@ -32,9 +32,16 @@ namespace sttp::transport
     private:
         // Publication members
         DataPublisherPtr m_publisher;
+        std::string m_hostname;
+        uint16_t m_port;
+        int16_t m_maxRetries;
+        int16_t m_retryInterval;
+        bool m_autoReconnect;
+        sttp::Thread m_connectThread;
         void* m_userData;
 
         // Internal subscription event handlers
+        static void HandleReconnect(const DataPublisher* source);
         static void HandleStatusMessage(const DataPublisher* source, const std::string& message);
         static void HandleErrorMessage(const DataPublisher* source, const std::string& message);
         static void HandleClientConnected(const DataPublisher* source, const SubscriberConnectionPtr& connection);
@@ -49,7 +56,8 @@ namespace sttp::transport
 #else
     protected:
 #endif
-        virtual void StatusMessage(const std::string& message);    // Defaults output to cout
+        virtual void SetupSubscriberConnector(SubscriberConnector& connector);
+        virtual void StatusMessage(const std::string& message);   // Defaults output to cout
         virtual void ErrorMessage(const std::string& message);    // Defaults output to cerr
         virtual void ClientConnected(const SubscriberConnectionPtr& connection);
         virtual void ClientDisconnected(const SubscriberConnectionPtr& connection);
@@ -80,15 +88,45 @@ namespace sttp::transport
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
-        // Starts or restarts publisher using specified connection info
+        // Starts or restarts publisher using specified connection info in listening connection mode
         virtual bool Start(const sttp::TcpEndPoint& endpoint);
         virtual bool Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         virtual bool Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
         
-        // Shuts down publisher
+        // Shuts down publisher, listening or reverse connection mode
         virtual void Stop();
 
-        // Determines if publisher has been started
+        // Initialize publisher as a reverse connection with host name, port, this function must be
+        // called before the Connect method is called
+        void Initialize(const std::string& hostname, uint16_t port);
+
+        // Gets or sets flag that determines if auto-reconnect is enabled for reverse connection mode
+        bool GetAutoReconnect() const;
+        void SetAutoReconnect(bool autoReconnect);
+
+        // Gets or sets maximum connection retries for reverse connection mode
+        int16_t GetMaxRetries() const;
+        void SetMaxRetries(int16_t maxRetries);
+
+        // Gets or sets delay between connection retries for reverse connection mode
+        int16_t GetRetryInterval() const;
+        void SetRetryInterval(int16_t retryInterval);
+
+        // Synchronously connects to an STTP subscriber using a reverse connection
+        // This establishes an automatic reconnect cycle when GetAutoReconnect is true
+        virtual void Connect();
+
+        // Asynchronously connects to an STTP subscriber using a reverse connection
+        // This establishes an automatic reconnect cycle when GetAutoReconnect is true
+        void ConnectAsync();
+
+        // Determines if publisher is currently connected to a subscriber for reverse connection mode
+        bool IsConnected() const;
+
+        // Determines if publisher is setup in reverse connection mode
+        bool IsReverseConnection() const;
+
+        // Determines if publisher has been started, listening or reverse connection mode
         bool IsStarted() const;
 
         void PublishMeasurements(const SimpleMeasurement* measurements, int32_t count) const;

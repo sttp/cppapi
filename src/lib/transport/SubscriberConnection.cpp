@@ -91,7 +91,8 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_lastPublishTime(Empty::DateTime),
     m_throttledPublicationTimer(nullptr),
     m_tsscResetRequested(false),
-    m_tsscSequenceNumber(0)
+    m_tsscSequenceNumber(0),
+    m_disconnecting(false)
 {
     for (size_t i = 0; i < TSSCBufferSize; i++)
         m_tsscWorkingBuffer[i] = static_cast<uint8_t>(0);
@@ -103,7 +104,24 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_pingTimer.SetUserData(this);
 }
 
-SubscriberConnection::~SubscriberConnection() = default;
+SubscriberConnection::~SubscriberConnection()
+{
+    if (!m_parent->IsReverseConnection())
+        return;
+
+    // Handle reverse connection style shutdown
+    try
+    {
+        m_parent->m_disposing = true;
+        m_connector.Cancel();
+        Disconnect(true, false);
+    }
+    catch (...)
+    {
+        // ReSharper disable once CppRedundantControlFlowJump
+        return;
+    }
+}
 
 const DataPublisherPtr& SubscriberConnection::GetParent() const
 {
@@ -123,6 +141,11 @@ TcpSocket& SubscriberConnection::CommandChannelSocket()
 bool SubscriberConnection::IsValidated() const
 {
     return m_validated;
+}
+
+bool SubscriberConnection::IsConnected() const
+{
+    return m_connectionAccepted;
 }
 
 uint8_t SubscriberConnection::GetVersion() const
@@ -469,6 +492,111 @@ void SubscriberConnection::Start(const bool connectionAccepted)
     ReadCommandChannel();
 }
 
+// Dispatcher for connection terminated. This is called from its own separate thread
+// in order to cleanly shut down the subscriber in case the connection was terminated
+// by the peer. Additionally, this allows the user to automatically reconnect in their
+// callback function without having to spawn their own separate thread.
+void SubscriberConnection::ConnectionTerminatedDispatcher()
+{
+    Disconnect(false, true);
+}
+
+void SubscriberConnection::Connect(const string& hostname, const uint16_t port, const bool autoReconnecting)
+{
+    if (m_connectionAccepted)
+        throw PublisherException("Publisher is already connected; disconnect first");
+
+    // Let any pending connect or disconnect operation complete before new connect - prevents destruction disconnect before connection is completed
+    ScopeLock lock(m_connectActionMutex);
+    DnsResolver resolver(m_commandChannelService);
+    const DnsResolver::query dnsQuery(hostname, to_string(port));
+    ErrorCode error;
+
+    m_stopped = false;
+    
+    if (!autoReconnecting)
+        m_connector.ResetConnection();
+
+    m_connector.SetConnectionRefused(false);
+
+    connect(m_commandChannelSocket, resolver.resolve(dnsQuery), error);
+
+    if (error)
+        throw SystemError(error);
+
+    if (!m_commandChannelSocket.is_open())
+        throw PublisherException("Failed to connect to host");
+
+#if BOOST_LEGACY
+    m_commandChannelService.reset();
+#else
+    m_commandChannelService.restart();
+#endif
+
+    Start(true);
+}
+
+void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReconnecting)
+{
+    // Check if disconnect thread is running or subscriber has already disconnected
+    if (IsDisconnecting())
+    {
+        if (!autoReconnecting && m_disconnecting && !m_stopped)
+            m_connector.Cancel();
+        
+        if (joinThread && !m_stopped)
+            m_disconnectThread.join();
+
+        return;
+    }
+    
+    // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
+    m_disconnecting = true;
+
+    m_disconnectThread = Thread([this, autoReconnecting]
+    {
+        try
+        {
+            // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+            if (!autoReconnecting)
+            {
+                m_connector.Cancel();
+                m_connectionTerminationThread.join();
+                m_connectActionMutex.lock();
+            }
+        }
+        catch (SystemError& ex)
+        {
+            m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + string(ex.what()));
+        }
+        catch (...)
+        {
+            m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + boost::current_exception_diagnostic_information(true));
+        }
+
+        Stop(true);
+
+        // Disconnect complete
+        m_disconnecting = false;
+
+        if (autoReconnecting)
+        {
+            // Handling auto-connect callback separately from connection terminated callback
+            // since they serve two different use cases and current implementation does not
+            // support multiple callback registrations
+            if (m_parent->m_autoReconnectCallback != nullptr && !m_parent->m_disposing)
+                m_parent->m_autoReconnectCallback(m_parent.get());
+        }
+        else
+        {
+            m_connectActionMutex.unlock();
+        }
+    });
+
+    if (joinThread)
+        m_disconnectThread.join();
+}
+
 void SubscriberConnection::Stop(const bool shutdownSocket)
 {
     if (m_stopped)
@@ -503,12 +631,33 @@ void SubscriberConnection::Stop(const bool shutdownSocket)
             m_dataChannelSocket.close();
         }
     }
+    catch (SystemError& ex)
+    {
+        m_parent->DispatchErrorMessage("Exception during data subscriber connection termination: " + string(ex.what()));
+    }
     catch (...)
     {
-        m_parent->DispatchErrorMessage("Exception during subscriber connection termination: " + boost::current_exception_diagnostic_information(true));
+        m_parent->DispatchErrorMessage("Exception during data subscriber connection termination: " + boost::current_exception_diagnostic_information(true));
     }
 
     m_parent->ConnectionTerminated(shared_from_this());
+}
+
+void SubscriberConnection::Stop()
+{
+    if (m_parent->IsReverseConnection())
+        Disconnect(false, false);
+    else
+        Stop(true);
+}
+
+void SubscriberConnection::HandleSocketError()
+{
+    // For reverse connection, this handles connection closed by peer; terminate connection
+    if (m_parent->IsReverseConnection())
+        m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
+    else
+        Stop(false);
 }
 
 void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& measurements)
@@ -1469,10 +1618,11 @@ bool SubscriberConnection::SendDataStartTime(const uint64_t timestamp)
 
     return result;
 }
+
 // All commands received from the client are handled by this thread.
 void SubscriberConnection::ReadCommandChannel()
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
@@ -1483,13 +1633,13 @@ void SubscriberConnection::ReadCommandChannel()
 
 void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_t bytesTransferred)
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1504,7 +1654,7 @@ void SubscriberConnection::ReadPayloadHeader(const ErrorCode& error, const size_
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1558,7 +1708,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1573,7 +1723,7 @@ void SubscriberConnection::ParseCommand(const ErrorCode& error, const size_t byt
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1780,7 +1930,7 @@ DataSetPtr SubscriberConnection::FilterClientMetadata(const StringMap<Expression
 
 void SubscriberConnection::CommandChannelSendAsync()
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     vector<uint8_t>& data = *m_tcpWriteBuffers[0];
@@ -1793,7 +1943,7 @@ void SubscriberConnection::CommandChannelSendAsync()
 
 void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, const size_t bytesTransferred)
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     m_tcpWriteBuffers.pop_front();
@@ -1801,7 +1951,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1816,7 +1966,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop(false);
+        HandleSocketError();
     }
 
     if (!m_tcpWriteBuffers.empty())
@@ -1825,7 +1975,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
 
 void SubscriberConnection::DataChannelSendAsync()
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     vector<uint8_t>& data = *m_udpWriteBuffers[0];
@@ -1838,7 +1988,7 @@ void SubscriberConnection::DataChannelSendAsync()
 
 void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const size_t bytesTransferred)
 {
-    if (m_stopped)
+    if (IsDisconnecting())
         return;
 
     m_udpWriteBuffers.pop_front();
@@ -1846,7 +1996,7 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
     // Stop cleanly, i.e., don't report, on these errors
     if (error == error::connection_aborted || error == error::connection_reset || error == error::eof)
     {
-        Stop(false);
+        HandleSocketError();
         return;
     }
 
@@ -1861,7 +2011,7 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
 
         m_parent->DispatchErrorMessage(messageStream.str());
 
-        Stop(false);
+        HandleSocketError();
     }
 
     if (!m_udpWriteBuffers.empty())
