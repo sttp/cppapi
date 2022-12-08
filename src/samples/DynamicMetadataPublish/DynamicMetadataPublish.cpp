@@ -28,8 +28,8 @@ using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
 
-const int32_t UpdateInterval = 10000;
-const int32_t MaxDeviceCount = 20;
+constexpr int32_t UpdateInterval = 10000;
+constexpr int32_t MaxDeviceCount = 20;
 int32_t deviceCount = 1;
 
 int main(int argc, char* argv[])
@@ -53,10 +53,11 @@ int main(int argc, char* argv[])
         TryParseBoolean(argv[2], autoUpdateMetadata);
 
     PublisherHandler* publisher = new PublisherHandler("Publisher");
-    string line;
-    
+
     if (publisher->Start(port, false))
     {
+        string line;
+
         if (autoUpdateMetadata)
         {
             // Setup thread to continually update meta-data

@@ -30,7 +30,7 @@ using namespace sttp;
 using namespace sttp::data;
 using namespace sttp::transport;
 
-GenHistory::GenHistory(uint16_t port) :
+GenHistory::GenHistory(const uint16_t port) :
     m_history(nullptr),
     m_port(port)
 {
@@ -41,7 +41,7 @@ GenHistory::GenHistory(uint16_t port) :
 void GenHistory::StartArchive()
 {
     m_history = NewSharedPtr<DataSet>();
-    DataTablePtr history = m_history->CreateTable("History");
+    const DataTablePtr history = m_history->CreateTable("History");
 
     history->AddColumn(history->CreateColumn("SignalID", DataType::Guid));
     history->AddColumn(history->CreateColumn("Timestamp", DataType::Int64));
@@ -76,7 +76,7 @@ void GenHistory::StopArchive() const
     }
 }
 
-void GenHistory::ProcessMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& measurements)
+void GenHistory::ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementPtr>& measurements)
 {
     static const GenHistory& instance = *static_cast<const GenHistory*>(source->GetUserData());
     static DataTable& history = *instance.m_history->Table("History");
@@ -86,7 +86,7 @@ void GenHistory::ProcessMeasurements(DataSubscriber* source, const vector<Measur
 
     for (const auto& measurement : measurements)
     {
-        DataRowPtr row = history.CreateRow();
+        const DataRowPtr row = history.CreateRow();
         
         row->SetGuidValue(signalIDColumn, measurement->SignalID);
         row->SetInt64Value(timestampColumn, measurement->Timestamp);

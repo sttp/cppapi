@@ -30,7 +30,6 @@ class PublisherHandler : public sttp::transport::PublisherInstance
 {
 private:
     std::string m_name;
-    uint64_t m_processCount;
     sttp::TimerPtr m_publishTimer;
     int32_t m_metadataVersion;
     std::vector<sttp::transport::DeviceMetadataPtr> m_deviceMetadata;

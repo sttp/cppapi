@@ -35,12 +35,12 @@ private:
     const uint16_t m_port;
 
 public:
-    GenHistory(uint16_t port);
+    explicit GenHistory(uint16_t port);
 
     void StartArchive();
     void StopArchive() const;
 
-    static void ProcessMeasurements(sttp::transport::DataSubscriber* source, const std::vector<sttp::transport::MeasurementPtr>& measurements);
+    static void ProcessMeasurements(const sttp::transport::DataSubscriber* source, const std::vector<sttp::transport::MeasurementPtr>& measurements);
 };
 
 typedef sttp::SharedPtr<GenHistory> GenHistoryPtr;

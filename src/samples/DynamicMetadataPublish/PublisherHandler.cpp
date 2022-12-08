@@ -31,7 +31,6 @@ Mutex PublisherHandler::s_coutLock{};
 
 PublisherHandler::PublisherHandler(string name) :
     m_name(std::move(name)),
-    m_processCount(0L),
     m_publishTimer(nullptr),
     m_metadataVersion(0)
 {
@@ -102,7 +101,7 @@ void PublisherHandler::DefineMetadata(int32_t devices)
         // Data publisher needs to make sure device acronym are unique
         int count = 1;
 
-        while (deviceAcronyms.find(device1Metadata->Acronym) != deviceAcronyms.end())
+        while (deviceAcronyms.contains(device1Metadata->Acronym))
             device1Metadata->Acronym = device1Metadata->Acronym + ToString(++count);
 
         deviceAcronyms.insert(device1Metadata->Acronym);
@@ -196,8 +195,8 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
     if (!PublisherInstance::Start(port, ipV6))
         return false;
 
-    static float64_t randMax = static_cast<float64_t>(RAND_MAX);
-    static const uint64_t interval = 1000;
+    constexpr float64_t randMax = RAND_MAX;
+    static constexpr uint64_t interval = 1000;
 
     const int32_t maxConnections = GetMaximumAllowedConnections();
     StatusMessage("\nListening on port: " + ToString(GetPort()) + ", max connections = " + (maxConnections == -1 ? "unlimited" : ToString(maxConnections)) + "...\n");

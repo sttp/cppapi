@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable CppClangTidyConcurrencyMtUnsafe
 #include "../../lib/transport/DataPublisher.h"
 #include <iostream>
 
@@ -87,7 +88,8 @@ bool RunPublisher(const uint16_t port)
 
     try
     {
-        Publisher = NewSharedPtr<DataPublisher>(port);
+        Publisher = NewSharedPtr<DataPublisher>();
+        Publisher->Start(port);
         running = true;
     }
     catch (PublisherException& ex)
@@ -163,16 +165,24 @@ bool RunPublisher(const uint16_t port)
 
 void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-    cout << ">> New Client Connected:" << endl;
-    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
-    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
+    stringstream message;
+
+    message << ">> New Client Connected:" << endl;
+    message << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    message << "   Connection ID: " << ToString(connection->GetConnectionID());
+
+    DisplayStatusMessage(source, message.str());
 }
 
 void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-    cout << ">> Client Disconnected:" << endl;
-    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
-    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
+    stringstream message;
+
+    message << ">> Client Disconnected:" << endl;
+    message << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    message << "   Connection ID: " << ToString(connection->GetConnectionID());
+
+    DisplayStatusMessage(source, message.str());
 }
 
 // Callback which is called to display status messages from the subscriber.

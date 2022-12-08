@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 // ReSharper disable CppAssignedValueIsNeverUsed
+// ReSharper disable CppClangTidyConcurrencyMtUnsafe
 #include "../../lib/transport/DataPublisher.h"
 #include "GenHistory.h"
 #include "TemporalSubscriber.h"
@@ -187,15 +188,16 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-bool RunPublisher(uint16_t port, bool genHistory)
+bool RunPublisher(const uint16_t port, const bool genHistory)
 {
-    static float64_t randMax = static_cast<float64_t>(RAND_MAX);
+    constexpr float64_t randMax = RAND_MAX;
     string errorMessage;
     bool running = false;
 
     try
     {
-        Publisher = NewSharedPtr<DataPublisher>(port);
+        Publisher = NewSharedPtr<DataPublisher>();
+        Publisher->Start(port);
         running = true;
     }
     catch (PublisherException& ex)
@@ -262,7 +264,7 @@ bool RunPublisher(uint16_t port, bool genHistory)
                 const float64_t sign = randFraction > 0.5 ? 1.0 : -1.0;
                 float64_t value;
 
-                switch (metadata->Reference.Kind)
+                switch (metadata->Reference.Kind)  // NOLINT
                 {
                     case SignalKind::Frequency:
                         value = 60.0 + sign * randFraction * 0.1;
@@ -310,16 +312,24 @@ bool RunPublisher(uint16_t port, bool genHistory)
 
 void DisplayClientConnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-    cout << ">> New Client Connected:" << endl;
-    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
-    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
+    stringstream message;
+
+    message << ">> New Client Connected:" << endl;
+    message << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    message << "   Connection ID: " << ToString(connection->GetConnectionID());
+
+    DisplayStatusMessage(source, message.str());
 }
 
 void DisplayClientDisconnected(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-    cout << ">> Client Disconnected:" << endl;
-    cout << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
-    cout << "   Connection ID: " << ToString(connection->GetConnectionID()) << endl << endl;
+    stringstream message;
+
+    message << ">> Client Disconnected:" << endl;
+    message << "   Subscriber ID: " << ToString(connection->GetSubscriberID()) << endl;
+    message << "   Connection ID: " << ToString(connection->GetConnectionID());
+
+    DisplayStatusMessage(source, message.str());
 }
 
 // Callback which is called to display status messages from the subscriber.
@@ -336,35 +346,48 @@ void DisplayErrorMessage(DataPublisher* source, const string& message)
 
 void HandleProcessingIntervalChangeRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
-    if (UpdateTemporalSubscriptionProcessingInterval(connection))
-        cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms" << endl << endl;
+    if (!UpdateTemporalSubscriptionProcessingInterval(connection))
+        return;
+
+    stringstream message;
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested to change its temporal processing interval to " << ToString(connection->GetProcessingInterval()) << "ms";
+
+    DisplayStatusMessage(source, message.str());
 }
 
 void HandleTemporalSubscriptionRequested(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
+    stringstream message;
     bool completed;
     
-    cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << " has requested a temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
 
     RemoveTemporalSubscription(connection, completed);
     
     if (CreateNewTemporalSubscription(connection))
     {
         const size_t count = TemporalSubscriptions.size();
-        cout << "Created new temporal subscription - " <<  count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
+        message << "Created new temporal subscription - " <<  count << (count == 1 ? " is" : " are") << " now active...";
     }
+
+    DisplayStatusMessage(source, message.str());
 }
 
 void HandleTemporalSubscriptionCanceled(DataPublisher* source, const SubscriberConnectionPtr& connection)
 {
     bool completed;
 
-    if (RemoveTemporalSubscription(connection, completed))
-    {
-        const size_t count = TemporalSubscriptions.size();
-        cout << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << (completed ? " completed" : " canceled") << " temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
-        cout << "Temporal subscription removed - " << count << (count == 1 ? " is" : " are") << " now active..." << endl << endl;
-    }
+    if (!RemoveTemporalSubscription(connection, completed))
+        return;
+
+    stringstream message;
+    const size_t count = TemporalSubscriptions.size();
+
+    message << "Client \"" << connection->GetConnectionID() << "\" with subscriber ID " << ToString(connection->GetSubscriberID()) << (completed ? " completed" : " canceled") << " temporal subscription starting at " << ToString(connection->GetStartTimeConstraint()) << endl;
+    message << "Temporal subscription removed - " << count << (count == 1 ? " is" : " are") << " now active...";
+
+    DisplayStatusMessage(source, message.str());
 }
 
 bool UpdateTemporalSubscriptionProcessingInterval(const SubscriberConnectionPtr& connection)
@@ -390,12 +413,11 @@ bool UpdateTemporalSubscriptionProcessingInterval(const SubscriberConnectionPtr&
 TemporalSubscriberPtr CreateNewTemporalSubscription(const SubscriberConnectionPtr& connection)
 {
     const sttp::Guid& instanceID = connection->GetInstanceID();
-    TemporalSubscriberPtr temporalSubscription;
 
     TemporalSubscriptionsLock.lock();
 
-    temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
-    TemporalSubscriptions.insert(pair<sttp::Guid, TemporalSubscriberPtr>(instanceID, temporalSubscription));
+    TemporalSubscriberPtr temporalSubscription = NewSharedPtr<TemporalSubscriber>(connection);
+    TemporalSubscriptions.insert(pair(instanceID, temporalSubscription));
 
     TemporalSubscriptionsLock.unlock();
 
