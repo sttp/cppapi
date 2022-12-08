@@ -41,6 +41,7 @@ SubscriberInstance::SubscriberInstance() :
     m_autoParseMetadata(true),
     m_maxRetries(-1),
     m_retryInterval(2000),
+    m_maxRetryInterval(120000),
     m_operationalModesResponseTimeout(5000),
     m_filterExpression(SubscribeAllNoStatsExpression),
 #ifdef SWIG
@@ -121,24 +122,34 @@ void SubscriberInstance::SetAutoParseMetadata(const bool autoParseMetadata)
     m_autoParseMetadata = autoParseMetadata;
 }
 
-int16_t SubscriberInstance::GetMaxRetries() const
+int32_t SubscriberInstance::GetMaxRetries() const
 {
     return m_maxRetries;
 }
 
-void SubscriberInstance::SetMaxRetries(const int16_t maxRetries)
+void SubscriberInstance::SetMaxRetries(const int32_t maxRetries)
 {
     m_maxRetries = maxRetries;
 }
 
-int16_t SubscriberInstance::GetRetryInterval() const
+int32_t SubscriberInstance::GetRetryInterval() const
 {
     return m_retryInterval;
 }
 
-void SubscriberInstance::SetRetryInterval(const int16_t retryInterval)
+void SubscriberInstance::SetRetryInterval(const int32_t retryInterval)
 {
     m_retryInterval = retryInterval;
+}
+
+int32_t SubscriberInstance::GetMaxRetryInterval() const
+{
+    return m_maxRetryInterval;
+}
+
+void SubscriberInstance::SetMaxRetryInterval(const int32_t maxRetryInterval)
+{
+    m_maxRetryInterval = maxRetryInterval;
 }
 
 void SubscriberInstance::EstablishHistoricalRead(const string& startTime, const string& stopTime)
@@ -174,13 +185,15 @@ void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
     m_metadataFilters = metadataFilters;
 }
 
-void SubscriberInstance::ConnectAsync()
+bool SubscriberInstance::Connect()
 {
-    m_connectThread = Thread([this]{ Connect(); });
-}
+    if (IsConnected())
+        throw SubscriberException("Subscriber is already connected; disconnect first");
 
-void SubscriberInstance::Connect()
-{
+    // TODO: Implement for reverse connection mode
+    //if (IsStarted())
+    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
+
     SubscriberConnector& connector = m_subscriber->GetSubscriberConnector();
     connector.ResetConnection();
 
@@ -216,13 +229,13 @@ void SubscriberInstance::Connect()
         if (m_subscriber->GetVersion() > 2 && !m_subscriber->WaitForOperationalModesResponse(m_operationalModesResponseTimeout))
         {
             ErrorMessage("Timed out waiting for define operational modes response, cancelling automated connection steps...");
-            return;
+            return false;
         }
 
         if (!m_subscriber->IsValidated())
         {
             ErrorMessage("Data publisher rejected connection, cancelling automated connection steps...");
-            return;
+            return false;
         }
 
         ConnectionEstablished();
@@ -234,12 +247,26 @@ void SubscriberInstance::Connect()
             SendMetadataRefreshCommand();
         else
             m_subscriber->Subscribe();
+
+        return true;
     }
-    else
-    {
-        if (result == SubscriberConnector::ConnectFailed)
-            ErrorMessage("All connection attempts failed");
-    }
+
+    if (result == SubscriberConnector::ConnectFailed)
+        ErrorMessage("All connection attempts failed");
+
+    return false;
+}
+
+void SubscriberInstance::ConnectAsync()
+{
+    if (IsConnected())
+        throw SubscriberException("Subscriber is already connected; disconnect first");
+
+    // TODO: Implement for reverse connection mode
+    //if (IsStarted())
+    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
+
+    m_connectThread = Thread([this]{ Connect(); });
 }
 
 void SubscriberInstance::Disconnect() const
@@ -689,6 +716,7 @@ void SubscriberInstance::SetupSubscriberConnector(SubscriberConnector& connector
     connector.SetPort(m_port);
     connector.SetMaxRetries(m_maxRetries);
     connector.SetRetryInterval(m_retryInterval);
+    connector.SetMaxRetryInterval(m_maxRetryInterval);
     connector.SetAutoReconnect(m_autoReconnect);
 }
 

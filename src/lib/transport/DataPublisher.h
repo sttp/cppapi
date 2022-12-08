@@ -179,7 +179,7 @@ namespace sttp::transport
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
-        // Starts or restarts DataPublisher using specified connection info
+        // Starts DataPublisher using specified connection info.
         void Start(const TcpEndPoint& endpoint);
         void Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         void Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version

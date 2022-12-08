@@ -36,6 +36,7 @@ PublisherInstance::PublisherInstance() :
     m_port(7165),
     m_maxRetries(-1),
     m_retryInterval(2000),
+    m_maxRetryInterval(120000),
     m_autoReconnect(true),
     m_userData(nullptr)
 {
@@ -197,6 +198,7 @@ void PublisherInstance::SetupSubscriberConnector(SubscriberConnector& connector)
     connector.SetPort(m_port);
     connector.SetMaxRetries(m_maxRetries);
     connector.SetRetryInterval(m_retryInterval);
+    connector.SetMaxRetryInterval(m_maxRetryInterval);
     connector.SetAutoReconnect(m_autoReconnect);
 }
 
@@ -299,6 +301,12 @@ vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& f
 
 bool PublisherInstance::Start(const TcpEndPoint& endpoint)
 {
+    if (IsStarted())
+        throw PublisherException("Publisher is already started; stop first");
+
+    if (IsReverseConnection())
+        throw PublisherException("Cannot start a listening connection, publisher is already established in reverse connection mode");
+
     string errorMessage{};
 
     try
@@ -351,33 +359,44 @@ void PublisherInstance::SetAutoReconnect(const bool autoReconnect)
     m_autoReconnect = autoReconnect;
 }
 
-int16_t PublisherInstance::GetMaxRetries() const
+int32_t PublisherInstance::GetMaxRetries() const
 {
     return m_maxRetries;
 }
 
-void PublisherInstance::SetMaxRetries(const int16_t maxRetries)
+void PublisherInstance::SetMaxRetries(const int32_t maxRetries)
 {
     m_maxRetries = maxRetries;
 }
 
-int16_t PublisherInstance::GetRetryInterval() const
+int32_t PublisherInstance::GetRetryInterval() const
 {
     return m_retryInterval;
 }
 
-void PublisherInstance::SetRetryInterval(const int16_t retryInterval)
+void PublisherInstance::SetRetryInterval(const int32_t retryInterval)
 {
     m_retryInterval = retryInterval;
 }
 
-void PublisherInstance::ConnectAsync()
+int32_t PublisherInstance::GetMaxRetryInterval() const
 {
-    m_connectThread = Thread([&]{ Connect(); });
+    return m_maxRetryInterval;
 }
 
-void PublisherInstance::Connect()
+void PublisherInstance::SetMaxRetryInterval(const int32_t maxRetryInterval)
 {
+    m_maxRetryInterval = maxRetryInterval;
+}
+
+bool PublisherInstance::Connect()
+{
+    if (IsStarted())
+        throw PublisherException("Cannot start a reverse connection, publisher is already established in listening connection mode");
+
+    if (IsConnected())
+        throw PublisherException("Publisher is already connected; disconnect first");
+
     SubscriberConnector& connector = m_publisher->GetSubscriberConnector();
     connector.ResetConnection();
 
@@ -390,18 +409,32 @@ void PublisherInstance::Connect()
     if (m_port == 0)
         throw PublisherException("No port specified for reverse connection: call Initialize before Connect");
 
+    m_publisher->m_reverseConnection = true;
+
     // Connect to subscriber
     const int result = connector.Connect(*m_publisher);
 
     if (result == SubscriberConnector::ConnectSuccess)
     {
         ClientConnected(m_publisher->GetSingleConnection());
+        return true;
     }
-    else
-    {
-        if (result == SubscriberConnector::ConnectFailed)
-            ErrorMessage("All connection attempts failed");
-    }
+
+    if (result == SubscriberConnector::ConnectFailed)
+        ErrorMessage("All connection attempts failed");
+
+    return false;
+}
+
+void PublisherInstance::ConnectAsync()
+{
+    if (IsStarted())
+        throw PublisherException("Cannot start a reverse connection, publisher is already established in listening connection mode");
+
+    if (IsConnected())
+        throw PublisherException("Publisher is already connected; disconnect first");
+
+    m_connectThread = Thread([&]{ Connect(); });
 }
 
 void PublisherInstance::Stop()

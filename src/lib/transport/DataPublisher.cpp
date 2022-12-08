@@ -847,13 +847,15 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
     return measurementMetadata;
 }
 
+// public
 void DataPublisher::Start(const TcpEndPoint& endpoint)
 {
-    if (IsReverseConnection())
-        throw PublisherException("Cannot start a listening connection, DataPublisher is already established in reverse connection mode.");
+    // This function fails by exception, consumers should try/catch calls to Start
+    if (IsStarted())
+        throw PublisherException("DataPublisher is already started; stop first");
 
-    if (m_started)
-        ShutDown(true);
+    if (IsReverseConnection())
+        throw PublisherException("Cannot start a listening connection, DataPublisher is already established in reverse connection mode");
 
     // Let any pending start operation complete before possible stop - prevents destruction stop before start is completed
     ScopeLock lock(m_connectActionMutex);
@@ -895,16 +897,19 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
     m_started = true;
 }
 
+// public
 void DataPublisher::Start(const uint16_t port, const bool ipV6)
 {
     Start(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
 
+// public
 void DataPublisher::Start(const string& networkInterfaceIP, const uint16_t port)
 {
     Start(TcpEndPoint(make_address(networkInterfaceIP), port));
 }
 
+// private
 SubscriberConnectionPtr DataPublisher::GetSingleConnection()
 {
     // In reverse connection there is only a single subscriber connection, so write lock here
@@ -922,6 +927,7 @@ SubscriberConnectionPtr DataPublisher::GetSingleConnection()
     return connection;
 }
 
+// private
 void DataPublisher::Connect(const std::string& hostname, const uint16_t port, const bool autoReconnecting)
 {
     const SubscriberConnectionPtr& connection = GetSingleConnection();
@@ -954,10 +960,15 @@ void DataPublisher::Connect(const std::string& hostname, const uint16_t port, co
     m_started = true;
 }
 
+// public
 void DataPublisher::Connect(const std::string& hostname, const uint16_t port)
 {
+    // This function fails by exception, consumers should try/catch calls to Connect
     if (IsStarted())
-        throw PublisherException("Cannot start a reverse connection, DataPublisher is already established in listening connection mode.");
+        throw PublisherException("Cannot start a reverse connection, DataPublisher is already established in listening connection mode");
+
+    if (IsConnected())
+        throw PublisherException("DataPublisher is already connected; disconnect first");
 
     m_reverseConnection = true;
 

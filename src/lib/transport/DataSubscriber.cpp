@@ -1065,8 +1065,13 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port)
 // private:
 void DataSubscriber::Connect(const string& hostname, const uint16_t port, const bool autoReconnecting)
 {
-    if (m_connected)
+    // This function fails by exception, consumers should try/catch calls to Connect
+    if (IsConnected())
         throw SubscriberException("Subscriber is already connected; disconnect first");
+
+    // TODO: Implement for reverse connection mode
+    //if (IsStarted())
+    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
 
     // Let any pending connect or disconnect operation complete before new connect - prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);

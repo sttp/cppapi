@@ -38,8 +38,9 @@ namespace sttp::transport
         uint16_t m_udpPort;
         bool m_autoReconnect;
         bool m_autoParseMetadata;
-        int16_t m_maxRetries;
-        int16_t m_retryInterval;
+        int32_t m_maxRetries;
+        int32_t m_retryInterval;
+        int32_t m_maxRetryInterval;
         int32_t m_operationalModesResponseTimeout;
         std::string m_filterExpression;
         std::string m_metadataFilters;
@@ -139,13 +140,19 @@ namespace sttp::transport
         bool GetAutoParseMetadata() const;
         void SetAutoParseMetadata(bool autoParseMetadata);
 
-        // Gets or sets maximum connection retries
-        int16_t GetMaxRetries() const;
-        void SetMaxRetries(int16_t maxRetries);
+        // Gets or sets maximum connection retries - set to -1 for infinite
+        int32_t GetMaxRetries() const;
+        void SetMaxRetries(int32_t maxRetries);
 
-        // Gets or sets delay between connection retries
-        int16_t GetRetryInterval() const;
-        void SetRetryInterval(int16_t retryInterval);
+        // Gets or sets initial delay, in milliseconds, between connection retries,
+        // delays will be an increasing multiple of this interval at each connection retry
+        int32_t GetRetryInterval() const;
+        void SetRetryInterval(int32_t retryInterval);
+
+        // Gets or sets maximum retry interval, in milliseconds - retry attempt
+        // intervals use exponential back-off algorithm up to this defined maximum
+        int32_t GetMaxRetryInterval() const;
+        void SetMaxRetryInterval(int32_t maxRetryInterval);
 
         // The following are example filter expression formats:
         //
@@ -179,11 +186,14 @@ namespace sttp::transport
         // Synchronously connects to an STTP publisher. This establishes an automatic reconnect cycle when
         // GetAutoReconnect is true. Upon connection, meta-data will be requested, when received, a new
         // subscription will be established.
-        virtual void Connect();
+        // Returns true if subscriber was successfully connected; otherwise, false
+        // Throws SubscriberException for implementation logic errors
+        virtual bool Connect();
 
         // Asynchronously connects to an STTP publisher. This establishes an automatic reconnect cycle when
         // GetAutoReconnect is true. Upon connection, meta-data will be requested, when received, a new
         // subscription will be established.
+        // Throws SubscriberException for implementation logic errors
         virtual void ConnectAsync();
 
         // Disconnects from the STTP publisher

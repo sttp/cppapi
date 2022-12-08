@@ -34,8 +34,9 @@ namespace sttp::transport
         DataPublisherPtr m_publisher;
         std::string m_hostname;
         uint16_t m_port;
-        int16_t m_maxRetries;
-        int16_t m_retryInterval;
+        int32_t m_maxRetries;
+        int32_t m_retryInterval;
+        int32_t m_maxRetryInterval;
         bool m_autoReconnect;
         sttp::Thread m_connectThread;
         void* m_userData;
@@ -88,7 +89,9 @@ namespace sttp::transport
         // Filters primary MeasurementDetail metadata returning values as measurement metadata records
         std::vector<MeasurementMetadataPtr> FilterMetadata(const std::string& filterExpression) const;
 
-        // Starts or restarts publisher using specified connection info in listening connection mode
+        // Starts publisher using specified connection info in listening connection mode
+        // Returns true if publisher was successfully started
+        // Throws PublisherException for implementation logic errors
         virtual bool Start(const sttp::TcpEndPoint& endpoint);
         virtual bool Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         virtual bool Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
@@ -96,7 +99,7 @@ namespace sttp::transport
         // Shuts down publisher, listening or reverse connection mode
         virtual void Stop();
 
-        // Initialize publisher as a reverse connection with host name, port, this function must be
+        // Initialize publisher as a reverse connection with host name, port - this function must be
         // called before the Connect method is called
         void Initialize(const std::string& hostname, uint16_t port);
 
@@ -104,20 +107,29 @@ namespace sttp::transport
         bool GetAutoReconnect() const;
         void SetAutoReconnect(bool autoReconnect);
 
-        // Gets or sets maximum connection retries for reverse connection mode
-        int16_t GetMaxRetries() const;
-        void SetMaxRetries(int16_t maxRetries);
+        // Gets or sets maximum connection retries for reverse connection mode - set to -1 for infinite
+        int32_t GetMaxRetries() const;
+        void SetMaxRetries(int32_t maxRetries);
 
-        // Gets or sets delay between connection retries for reverse connection mode
-        int16_t GetRetryInterval() const;
-        void SetRetryInterval(int16_t retryInterval);
+        // Gets or sets initial delay, in milliseconds, between connection retries for reverse connection
+        // mode - delays will be an increasing multiple of this interval at each connection retry
+        int32_t GetRetryInterval() const;
+        void SetRetryInterval(int32_t retryInterval);
+
+        // Gets or sets maximum retry interval, in milliseconds, for reverse connection mode - retry
+        // attempt intervals use exponential back-off algorithm up to this defined maximum
+        int32_t GetMaxRetryInterval() const;
+        void SetMaxRetryInterval(int32_t maxRetryInterval);
 
         // Synchronously connects to an STTP subscriber using a reverse connection
         // This establishes an automatic reconnect cycle when GetAutoReconnect is true
-        virtual void Connect();
+        // Returns true if publisher was successfully connected; otherwise, false
+        // Throws PublisherException for implementation logic errors
+        virtual bool Connect();
 
         // Asynchronously connects to an STTP subscriber using a reverse connection
         // This establishes an automatic reconnect cycle when GetAutoReconnect is true
+        // Throws PublisherException for implementation logic errors
         void ConnectAsync();
 
         // Determines if publisher is currently connected to a subscriber for reverse connection mode
