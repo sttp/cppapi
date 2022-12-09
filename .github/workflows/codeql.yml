@@ -64,14 +64,13 @@ jobs:
         
     - name: Install dependencies
       run: |        
-        sudo apt-get install --assume-yes \
-            libboost1.74-all-dev \
-            build-essential \
-            cmake \
-        sudo apt install gcc-10 g++-10
+        sudo apt install --assume-yes libboost1.74-all-dev
+        sudo apt install --assume-yes build-essential
+        sudo apt install --assume-yes cmake
+        sudo apt install --assume-yes gcc-10 g++-10
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
-        sudo apt install zlib1g-dev
-        sudo apt install libbz2-dev
+        sudo apt install --assume-yes zlib1g-dev
+        sudo apt install --assume-yes libbz2-dev
         
     - name: Build
       run: |        
