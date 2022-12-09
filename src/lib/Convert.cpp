@@ -181,7 +181,7 @@ datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
 datetime_t sttp::FromTicks(const int64_t ticks)
 {
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
-    const int64_t pticks = static_cast<int64_t>(ticks % Ticks::PerSecond * DateTimeTicksPerSecond / Ticks::PerSecond);
+    const int64_t pticks = ticks % Ticks::PerSecond * DateTimeTicksPerSecond / Ticks::PerSecond;
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
@@ -190,7 +190,7 @@ int64_t sttp::ToTicks(const datetime_t& time)
     static const int64_t tickInterval = static_cast<int64_t>(pow(10LL, TimeSpan::num_fractional_digits()));
     const TimeSpan offset = time - DateTimeEpoch;
     return Ticks::PTimeBaseOffset + offset.total_seconds() * Ticks::PerSecond +
-        static_cast<int64_t>(offset.fractional_seconds() * Ticks::PerSecond / tickInterval);
+        offset.fractional_seconds() * Ticks::PerSecond / tickInterval;
 }
 
 bool sttp::IsLeapSecond(int64_t ticks)
@@ -579,7 +579,7 @@ Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
     }
 
     for (Guid::iterator iter = id.begin(); iter != id.end(); ++iter, ++encodedBytes)
-        *iter = static_cast<Guid::value_type>(*encodedBytes);
+        *iter = *encodedBytes;
 
     return id;
 }

@@ -792,7 +792,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     // Step 2: Load string into an XML parser
     xml_document document;
 
-    const xml_parse_result result = document.load_buffer_inplace(static_cast<void*>(uncompressedBuffer.data()), uncompressedBuffer.size());
+    const xml_parse_result result = document.load_buffer_inplace(uncompressedBuffer.data(), uncompressedBuffer.size());
 
     if (result.status != xml_parse_status::status_ok)
     {

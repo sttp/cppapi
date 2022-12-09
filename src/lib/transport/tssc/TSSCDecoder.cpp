@@ -131,7 +131,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
             errorMessageStream << "Expecting code >= ";
             errorMessageStream << static_cast<int>(TSSCCodeWords::TimeDelta1Forward);
             errorMessageStream << " Received ";
-            errorMessageStream << static_cast<int>(code);
+            errorMessageStream << code;
             errorMessageStream << " at position ";
             errorMessageStream << static_cast<int>(m_position);
             errorMessageStream << " with last position ";
@@ -173,7 +173,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
             errorMessageStream << "Expecting code >= ";
             errorMessageStream << static_cast<int>(TSSCCodeWords::Quality2);
             errorMessageStream << " Received ";
-            errorMessageStream << static_cast<int>(code);
+            errorMessageStream << code;
             errorMessageStream << " at position ";
             errorMessageStream << static_cast<int>(m_position);
             errorMessageStream << " with last position ";
@@ -200,7 +200,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
             errorMessageStream << "Expecting code >= ";
             errorMessageStream << static_cast<int>(TSSCCodeWords::Value1);
             errorMessageStream << " Received ";
-            errorMessageStream << static_cast<int>(code);
+            errorMessageStream << code;
             errorMessageStream << " at position ";
             errorMessageStream << static_cast<int>(m_position);
             errorMessageStream << " with last position ";
@@ -281,7 +281,7 @@ bool TSSCDecoder::TryGetMeasurement(int32_t& id, int64_t& timestamp, uint32_t& q
                 stringstream errorMessageStream;
 
                 errorMessageStream << "Invalid code received ";
-                errorMessageStream << static_cast<int>(code);
+                errorMessageStream << code;
                 errorMessageStream << " at position ";
                 errorMessageStream << static_cast<int>(m_position);
                 errorMessageStream << " with last position ";

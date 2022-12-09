@@ -809,13 +809,13 @@ void DataSet::GenerateXml(xml_document& document, const string& dataSetName) con
                     case DataType::Int8:
                     {
                         auto result = row->ValueAsInt8(columnIndex);
-                        nodeText.set(static_cast<int>(result.GetValueOrDefault()));
+                        nodeText.set(result.GetValueOrDefault());
                         break;
                     }
                     case DataType::Int16:
                     {
                         auto result = row->ValueAsInt16(columnIndex);
-                        nodeText.set(static_cast<int>(result.GetValueOrDefault()));
+                        nodeText.set(result.GetValueOrDefault());
                         break;
                     }
                     case DataType::Int32:
