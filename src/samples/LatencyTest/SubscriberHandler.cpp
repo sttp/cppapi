@@ -32,7 +32,7 @@ Mutex SubscriberHandler::s_coutLock{};
 
 SubscriberHandler::SubscriberHandler(string name) :
     m_name(std::move(name)),
-    m_processCount(0ULL),
+    m_lastMessage(DateTime::MinValue),
     m_total(0.0),
     m_count(0ULL),
     m_unreasonable(0ULL)
@@ -41,26 +41,25 @@ SubscriberHandler::SubscriberHandler(string name) :
 
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {
-    static const double_t unreasonableLatency = 60.0 * 5.0;
-    static const uint64_t interval = 500000;
-    const uint64_t measurementCount = measurements.size();
-    const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
-
-    m_processCount += measurementCount;
+    static constexpr double_t unreasonableLatency = 60 * 5;
 
     // Only display messages every few seconds
-    if (showMessage)
+    if (TimeSince(m_lastMessage) > 5.0F)
     {
-        stringstream receivedUpdate;
-        receivedUpdate << GetTotalMeasurementsReceived() << " measurements received so far..." << endl << endl;
-        receivedUpdate << "Average latency: " << setprecision(3) << m_total / m_count << " seconds" << endl;
-        receivedUpdate << "   Total values: " << m_count << endl;
-        receivedUpdate << "   Unreasonable: " << m_unreasonable << endl;
-        StatusMessage(receivedUpdate.str());
+        if (m_lastMessage > DateTime::MinValue)
+        {
+            stringstream receivedUpdate;
+            receivedUpdate << GetTotalMeasurementsReceived() << " measurements received so far..." << endl << endl;
+            receivedUpdate << "Average latency: " << setprecision(3) << m_total / static_cast<double_t>(m_count) << " seconds" << endl;
+            receivedUpdate << "   Total values: " << m_count << endl;
+            receivedUpdate << "   Unreasonable: " << m_unreasonable << endl;
+            StatusMessage(receivedUpdate.str());
+        }
 
         // Reset latency stats
         m_total = 0.0;
         m_count = m_unreasonable = 0ULL;
+        m_lastMessage = UtcNow();
     }
 
     // Process measurements

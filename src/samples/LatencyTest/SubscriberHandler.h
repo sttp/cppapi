@@ -30,7 +30,7 @@ class SubscriberHandler : public sttp::transport::SubscriberInstance
 {
 private:
     std::string m_name;
-    uint64_t m_processCount;
+    sttp::datetime_t m_lastMessage;
     double_t m_total;
     uint64_t m_count;
     uint64_t m_unreasonable;
