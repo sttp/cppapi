@@ -1,5 +1,5 @@
-// Auto-generated on Fri Dec 18 12:06:16 2020
-// EmbedFile.exe MetadataSchema D:\Projects\sttp\cppapi\src\lib\transport\MetadataSchema.xml -namespace=sttp::transport::
+// Auto-generated on Fri Dec  9 14:48:16 2022
+// EmbedFile.exe MetadataSchema D:\Projects\sttp\cppapi\src\lib\transport\MetadataSchema.xml -namespace=sttp::transport
 
 #include "MetadataSchema.h"
 
@@ -335,4 +335,4 @@ const uint8_t sttp::transport::MetadataSchema[] = {
     0x74, 0x3E
 };
 
-const uint32_t sttp::transport::MetadataSchemaLength = sizeof(sttp::transport::MetadataSchema);
+constexpr uint32_t sttp::transport::MetadataSchemaLength = sizeof(sttp::transport::MetadataSchema);

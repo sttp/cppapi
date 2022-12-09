@@ -1,5 +1,5 @@
-// Auto-generated on Fri Dec 18 12:07:31 2020
-// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\sttp\cppapi\src\lib\transport\ActiveMeasurementsSchema.xml -namespace=sttp::transport::
+// Auto-generated on Fri Dec  9 14:48:51 2022
+// EmbedFile.exe ActiveMeasurementsSchema D:\Projects\sttp\cppapi\src\lib\transport\ActiveMeasurementsSchema.xml -namespace=sttp::transport
 
 #include "ActiveMeasurementsSchema.h"
 
@@ -209,4 +209,4 @@ const uint8_t sttp::transport::ActiveMeasurementsSchema[] = {
     0x2F, 0x49, 0x61, 0x6F, 0x6E, 0x3E
 };
 
-const uint32_t sttp::transport::ActiveMeasurementsSchemaLength = sizeof(sttp::transport::ActiveMeasurementsSchema);
+constexpr uint32_t sttp::transport::ActiveMeasurementsSchemaLength = sizeof(sttp::transport::ActiveMeasurementsSchema);
