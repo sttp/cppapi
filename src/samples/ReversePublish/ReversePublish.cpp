@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
     // measurements would simply be passed to PublishMeasurements when received.
     Publisher->StartDataPublication();
 
-    // The following is the only thing special about a publisher in reverse connection mode:
+    // The following code (up to Connect) is the only thing special about
+    // a data publisher in reverse connection mode:
     Publisher->Initialize(hostname, port);
 
     // Available reverse connection settings:
