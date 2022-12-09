@@ -28,6 +28,10 @@ using namespace std;
 using namespace sttp;
 using namespace sttp::transport;
 
+#ifdef __unix
+#define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),(mode)))==NULL
+#endif
+
 Mutex SubscriberHandler::s_coutLock{};
 
 SubscriberHandler::SubscriberHandler(string name) :
@@ -71,17 +75,17 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
 
             StatusMessage("Export started for measurement " + ToString(measurement->SignalID) + " timestamp at " + ToString(measurement->GetDateTime()));
 
-            fprintf(m_export, ("Export for measurement " + ToString(measurement->SignalID) + "\n\n").c_str());
+            fprintf(m_export, "%s", ("Export for measurement " + ToString(measurement->SignalID) + "\n\n").c_str());
             fprintf(m_export, "Timestamp,Value,Flags\n");
         }
 
-        fprintf(m_export, "%s,%.*f,%i\n", ToString(measurement->GetDateTime()).c_str(), 10, measurement->Value, measurement->Flags);
+        fprintf(m_export, "%s,%.*f,%i\n", ToString(measurement->GetDateTime()).c_str(), 10, measurement->Value, static_cast<uint32_t>(measurement->Flags));
 
         m_processCount++;
 
         if (m_processCount >= exportCount)
         {
-            Thread([this]{ Disconnect(); });
+            auto _ = Thread([this]{ Disconnect(); });
             break;
         }
     }
@@ -120,7 +124,7 @@ void SubscriberHandler::ConnectionEstablished()
     if (fopen_s(&m_export, fileName.c_str(), "w") != 0)
     {
         ErrorMessage("InteropTest canceled: failed to open export file \"" + ToString(fileName) + "\"");
-        Thread([this]{ Disconnect(); });
+        auto _ = Thread([this]{ Disconnect(); });
     }
 }
 
