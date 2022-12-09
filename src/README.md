@@ -39,7 +39,7 @@ mklink /D C:\projects\sttp\boost C:\boost_1_80_0
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with v1.66, v1.71, v1.75 and v1.80 of Boost.
+has been tested with v1.66, v1.71, v1.74, v1.75 and v1.80 of Boost.
 
 Note that you will need to compile Boost in order to execute the sample
 applications found in:
