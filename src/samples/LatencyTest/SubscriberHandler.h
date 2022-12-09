@@ -46,7 +46,7 @@ protected:
     void ConnectionTerminated() override;
 
 public:
-    SubscriberHandler(std::string name);
+    explicit SubscriberHandler(std::string name);
 };
 
 typedef sttp::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;

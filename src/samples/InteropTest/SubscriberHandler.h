@@ -30,6 +30,7 @@ class SubscriberHandler : public sttp::transport::SubscriberInstance
 {
 private:
     std::string m_name;
+    sttp::datetime_t m_lastMessage;
     uint64_t m_processCount;
     FILE* m_export;
     bool m_ready;
@@ -45,7 +46,7 @@ protected:
     void ConnectionTerminated() override;
 
 public:
-    SubscriberHandler(std::string name);
+    explicit SubscriberHandler(std::string name);
 };
 
 typedef sttp::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;

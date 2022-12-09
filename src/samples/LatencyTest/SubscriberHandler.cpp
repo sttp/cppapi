@@ -46,7 +46,11 @@ void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& me
     // Only display messages every few seconds
     if (TimeSince(m_lastMessage) > 5.0F)
     {
-        if (m_lastMessage > DateTime::MinValue)
+        if (m_lastMessage == DateTime::MinValue)
+        {
+            StatusMessage("Receiving measurements...");
+        }
+        else
         {
             stringstream receivedUpdate;
             receivedUpdate << GetTotalMeasurementsReceived() << " measurements received so far..." << endl << endl;

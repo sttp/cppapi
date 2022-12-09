@@ -36,7 +36,8 @@ Mutex SubscriberHandler::s_coutLock{};
 
 SubscriberHandler::SubscriberHandler(string name) :
     m_name(std::move(name)),
-    m_processCount(0ULL),
+    m_lastMessage(DateTime::MinValue),
+    m_processCount(0LL),
     m_export(nullptr),
     m_ready(false)
 {
@@ -44,20 +45,17 @@ SubscriberHandler::SubscriberHandler(string name) :
 
 void SubscriberHandler::ReceivedNewMeasurements(const vector<MeasurementPtr>& measurements)
 {   
-    static constexpr uint64_t interval = 30ULL * 2ULL;
     static constexpr uint64_t exportCount = 500ULL;
-    const uint64_t measurementCount = measurements.size();
-    const bool showMessage = (m_processCount + measurementCount >= (m_processCount / interval + 1) * interval);
-
-    if (m_processCount >= exportCount)
-        return;
 
     // Only display messages every few seconds
-    if (showMessage)
+    if (TimeSince(m_lastMessage) > 5.0F)
     {
-        stringstream receivedUpdate;
-        receivedUpdate << GetTotalMeasurementsReceived() << " measurements received so far..." << endl << endl;
-        StatusMessage(receivedUpdate.str());
+        if (m_lastMessage == DateTime::MinValue)
+            StatusMessage("Receiving measurements...");
+        else
+            StatusMessage(ToString(GetTotalMeasurementsReceived()) + " measurements received so far...");
+
+        m_lastMessage = UtcNow();
     }
 
     // Process measurements
