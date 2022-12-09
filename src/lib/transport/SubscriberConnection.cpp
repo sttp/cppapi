@@ -538,6 +538,8 @@ void SubscriberConnection::Connect(const string& hostname, const uint16_t port, 
 
 void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReconnecting)
 {
+    m_connectionAccepted = false;
+
     // Check if disconnect thread is running or subscriber has already disconnected
     if (IsDisconnecting())
     {

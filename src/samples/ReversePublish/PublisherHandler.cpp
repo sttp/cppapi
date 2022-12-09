@@ -174,7 +174,6 @@ void PublisherHandler::DefineMetadata()
 void PublisherHandler::StartDataPublication()
 {
     static constexpr float64_t randMax = RAND_MAX;
-    const int32_t maxConnections = GetMaximumAllowedConnections();
 
     // Setup data publication timer - for this publishing sample we send
     // data type reasonable random values every 33 milliseconds
@@ -228,9 +227,10 @@ void PublisherHandler::StartDataPublication()
         PublishMeasurements(measurements);
 
         // Display a processing message every few seconds
-        if (TimeSince(m_lastMessage) <  5.0F)
+        if (TimeSince(m_lastMessage) <  10.0F)
             return;
 
+        // Total published measurements will be zero when no clients are connected
         if (m_lastMessage == DateTime::MinValue)
             StatusMessage("Publishing data...\n");
         else

@@ -321,7 +321,7 @@ void DataPublisher::ClientDisconnectedDispatcher(DataPublisher* source, const st
         if (clientDisconnectedCallback != nullptr)
             clientDisconnectedCallback(source, connectionRef);
 
-        source->RemoveConnection(connectionRef);
+        source->DisconnectSubscriber(connectionRef);
     }
 }
 

@@ -110,7 +110,7 @@ void SubscriberConnector::AutoReconnect(DataClient* client)
             errorMessageStream << "Connection";
 
             if (connector.m_connectAttempt > 0)
-                errorMessageStream << " attempt " << connector.m_connectAttempt + 1;
+                errorMessageStream << " attempt " << connector.m_connectAttempt;
 
             errorMessageStream << " to \"" << connector.m_hostname << ":" << connector.m_port << "\" was terminated. ";
 
@@ -265,7 +265,7 @@ int SubscriberConnector::Connect(DataClient& client, bool autoReconnecting)
                 errorMessageStream << "Connection";
 
                 if (m_connectAttempt > 0)
-                    errorMessageStream << " attempt " << m_connectAttempt + 1;
+                    errorMessageStream << " attempt " << m_connectAttempt;
 
                 errorMessageStream << " to \"" << m_hostname << ":" << m_port << "\" failed: " << errorMessage << ". ";
 
