@@ -1965,6 +1965,7 @@ void SubscriberConnection::CommandChannelWriteHandler(const ErrorCode& error, co
         m_parent->DispatchErrorMessage(messageStream.str());
 
         HandleConnectionError();
+        return;
     }
 
     if (!m_tcpWriteBuffers.empty())
@@ -2010,6 +2011,7 @@ void SubscriberConnection::DataChannelWriteHandler(const ErrorCode& error, const
         m_parent->DispatchErrorMessage(messageStream.str());
 
         HandleConnectionError();
+        return;
     }
 
     if (!m_udpWriteBuffers.empty())

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29411.108
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sttp.cpp", "lib\sttp.cpp.vcxproj", "{759721EF-40AE-4763-B225-6CD2710219F8}"
 EndProject
@@ -77,6 +77,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LatencyTest", "samples\Late
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InteropTest", "samples\InteropTest\InteropTest.vcxproj", "{0E771B2E-798A-48D0-B304-6D87F5488F6A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReversePublish", "samples\ReversePublish\ReversePublish.vcxproj", "{A2162AF5-C7ED-40DB-96C4-2BD12C402023}"
 	ProjectSection(ProjectDependencies) = postProject
 		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
 	EndProjectSection
@@ -185,6 +190,14 @@ Global
 		{0E771B2E-798A-48D0-B304-6D87F5488F6A}.Release|x64.Build.0 = Release|x64
 		{0E771B2E-798A-48D0-B304-6D87F5488F6A}.Release|x86.ActiveCfg = Release|Win32
 		{0E771B2E-798A-48D0-B304-6D87F5488F6A}.Release|x86.Build.0 = Release|Win32
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Debug|x64.ActiveCfg = Debug|x64
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Debug|x64.Build.0 = Debug|x64
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Debug|x86.ActiveCfg = Debug|Win32
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Debug|x86.Build.0 = Debug|Win32
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x64.ActiveCfg = Release|x64
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x64.Build.0 = Release|x64
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x86.ActiveCfg = Release|Win32
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -204,6 +217,7 @@ Global
 		{A6E76664-BD9B-4202-BFE2-AB3E6AA77DEE} = {4AFD4846-A95B-426F-839D-D2204C236BAF}
 		{BF9568F3-D767-4C01-9F88-DB97594D5D6C} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{0E771B2E-798A-48D0-B304-6D87F5488F6A} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
+		{A2162AF5-C7ED-40DB-96C4-2BD12C402023} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}

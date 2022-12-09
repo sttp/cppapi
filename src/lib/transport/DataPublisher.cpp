@@ -950,7 +950,7 @@ void DataPublisher::Connect(const std::string& hostname, const uint16_t port, co
         }
     });
 
-    m_commandChannelAcceptThread = Thread([&]
+    m_commandChannelAcceptThread = Thread([this, connection]() mutable
     {
         // Accepting single connection in reverse connection mode
         DispatchClientConnected(AddDispatchReference(connection));
