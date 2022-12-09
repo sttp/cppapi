@@ -466,9 +466,9 @@ file (COPY "samples/SimplePublish/Metadata.xml" DESTINATION ${CMAKE_RUNTIME_OUTP
 file (COPY "samples/FilterExpressionTests/MetadataSample1.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 file (COPY "samples/FilterExpressionTests/MetadataSample2.xml" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-# SimpleSubscribe sample
-add_executable (SimpleSubscribe EXCLUDE_FROM_ALL samples/SimpleSubscribe/SimpleSubscribe.cpp)
-target_link_libraries (SimpleSubscribe sttp)
+# AdvancedPublish sample
+add_executable (AdvancedPublish EXCLUDE_FROM_ALL samples/AdvancedPublish/AdvancedPublish.cpp samples/AdvancedPublish/GenHistory.cpp samples/AdvancedPublish/TemporalSubscriber.cpp)
+target_link_libraries (AdvancedPublish sttp)
 
 # AdvancedSubscribe sample
 add_executable (AdvancedSubscribe EXCLUDE_FROM_ALL samples/AdvancedSubscribe/AdvancedSubscribe.cpp)
@@ -478,14 +478,6 @@ target_link_libraries (AdvancedSubscribe sttp)
 add_executable (AverageFrequencyCalculator EXCLUDE_FROM_ALL samples/AverageFrequencyCalculator/AverageFrequencyCalculator.cpp)
 target_link_libraries (AverageFrequencyCalculator sttp)
 
-# InstanceSubscribe sample
-add_executable (InstanceSubscribe EXCLUDE_FROM_ALL samples/InstanceSubscribe/InstanceSubscribe.cpp samples/InstanceSubscribe/SubscriberHandler.cpp)
-target_link_libraries (InstanceSubscribe sttp)
-
-# InstancePublish sample
-add_executable (InstancePublish EXCLUDE_FROM_ALL samples/InstancePublish/InstancePublish.cpp samples/InstancePublish/PublisherHandler.cpp)
-target_link_libraries (InstancePublish sttp)
-
 # DynamicMetadataPublish sample
 add_executable (DynamicMetadataPublish EXCLUDE_FROM_ALL samples/DynamicMetadataPublish/DynamicMetadataPublish.cpp samples/DynamicMetadataPublish/PublisherHandler.cpp)
 target_link_libraries (DynamicMetadataPublish sttp)
@@ -494,23 +486,46 @@ target_link_libraries (DynamicMetadataPublish sttp)
 add_executable (FilterExpressionTests EXCLUDE_FROM_ALL samples/FilterExpressionTests/FilterExpressionTests.cpp)
 target_link_libraries (FilterExpressionTests sttp boost_filesystem)
 
+# InstancePublish sample
+add_executable (InstancePublish EXCLUDE_FROM_ALL samples/InstancePublish/InstancePublish.cpp samples/InstancePublish/PublisherHandler.cpp)
+target_link_libraries (InstancePublish sttp)
+
+# InstanceSubscribe sample
+add_executable (InstanceSubscribe EXCLUDE_FROM_ALL samples/InstanceSubscribe/InstanceSubscribe.cpp samples/InstanceSubscribe/SubscriberHandler.cpp)
+target_link_libraries (InstanceSubscribe sttp)
+
+# InteropTest sample
+add_executable (InteropTest EXCLUDE_FROM_ALL samples/InteropTest/InteropTest.cpp samples/InteropTest/SubscriberHandler.cpp)
+target_link_libraries (InteropTest sttp)
+
+# LatencyTest sample
+add_executable (LatencyTest EXCLUDE_FROM_ALL samples/LatencyTest/LatencyTest.cpp samples/LatencyTest/SubscriberHandler.cpp)
+target_link_libraries (LatencyTest sttp)
+
+# ReversePublish sample
+add_executable (ReversePublish EXCLUDE_FROM_ALL samples/ReversePublish/ReversePublish.cpp samples/ReversePublish/PublisherHandler.cpp)
+target_link_libraries (ReversePublish sttp)
+
 # SimplePublish sample
 add_executable (SimplePublish EXCLUDE_FROM_ALL samples/SimplePublish/SimplePublish.cpp)
 target_link_libraries (SimplePublish sttp)
 
-# AdvancedPublish sample
-add_executable (AdvancedPublish EXCLUDE_FROM_ALL samples/AdvancedPublish/AdvancedPublish.cpp samples/AdvancedPublish/GenHistory.cpp samples/AdvancedPublish/TemporalSubscriber.cpp)
-target_link_libraries (AdvancedPublish sttp)
+# SimpleSubscribe sample
+add_executable (SimpleSubscribe EXCLUDE_FROM_ALL samples/SimpleSubscribe/SimpleSubscribe.cpp)
+target_link_libraries (SimpleSubscribe sttp)
 
 # Build with 'make samples'
 add_custom_target (samples DEPENDS 
-    SimpleSubscribe
+    AdvancedPublish
     AdvancedSubscribe
     AverageFrequencyCalculator
-    InstanceSubscribe
-    InstancePublish
     DynamicMetadataPublish
     FilterExpressionTests
+    InstancePublish
+    InstanceSubscribe
+    InteropTest
+    LatencyTest
+    ReversePublish
+    SimpleSubscribe
     SimplePublish
-    AdvancedPublish
 )

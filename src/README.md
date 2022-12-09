@@ -168,15 +168,18 @@ make -j6 samples
 Individual sample applications can be built as follows:
 
 ```bash
-make SimpleSubscribe
+make AdvancedPublish
 make AdvancedSubscribe
 make AverageFrequencyCalculator
-make InstanceSubscribe
-make InstancePublish
 make DynamicMetadataPublish
 make FilterExpressionTests
+make InstancePublish
+make InstanceSubscribe
+make InteropTest
+make LatencyTest
+make ReversePublish
+make SimpleSubscribe
 make SimplePublish
-make AdvancedPublish
 ```
 
 ### Installation
