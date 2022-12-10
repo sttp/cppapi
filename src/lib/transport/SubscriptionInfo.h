@@ -42,6 +42,7 @@ namespace sttp::transport
 
         // Compact measurement properties
         bool IncludeTime;
+        bool EnableTimeReasonabilityCheck;
         float64_t LagTime;
         float64_t LeadTime;
         bool UseLocalClockAsRealTime;

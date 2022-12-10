@@ -492,7 +492,7 @@ SecurityMode PublisherInstance::GetSecurityMode() const
     return m_publisher->GetSecurityMode();
 }
 
-void PublisherInstance::SetSecurityMode(SecurityMode securityMode) const
+void PublisherInstance::SetSecurityMode(const SecurityMode securityMode) const
 {
     m_publisher->SetSecurityMode(securityMode);
 }
@@ -502,7 +502,7 @@ int32_t PublisherInstance::GetMaximumAllowedConnections() const
     return m_publisher->GetMaximumAllowedConnections();
 }
 
-void PublisherInstance::SetMaximumAllowedConnections(int32_t value) const
+void PublisherInstance::SetMaximumAllowedConnections(const int32_t value) const
 {
     m_publisher->SetMaximumAllowedConnections(value);
 }
@@ -512,7 +512,7 @@ bool PublisherInstance::IsMetadataRefreshAllowed() const
     return m_publisher->GetIsMetadataRefreshAllowed();
 }
 
-void PublisherInstance::SetMetadataRefreshAllowed(bool allowed) const
+void PublisherInstance::SetMetadataRefreshAllowed(const bool allowed) const
 {
     m_publisher->SetIsMetadataRefreshAllowed(allowed);
 }
@@ -522,7 +522,7 @@ bool PublisherInstance::IsNaNValueFilterAllowed() const
     return m_publisher->GetIsNaNValueFilterAllowed();
 }
 
-void PublisherInstance::SetNaNValueFilterAllowed(bool allowed) const
+void PublisherInstance::SetNaNValueFilterAllowed(const bool allowed) const
 {
     m_publisher->SetNaNValueFilterAllowed(allowed);
 }
@@ -532,7 +532,7 @@ bool PublisherInstance::IsNaNValueFilterForced() const
     return m_publisher->GetIsNaNValueFilterForced();
 }
 
-void PublisherInstance::SetNaNValueFilterForced(bool forced) const
+void PublisherInstance::SetNaNValueFilterForced(const bool forced) const
 {
     m_publisher->SetIsNaNValueFilterForced(forced);
 }
@@ -542,7 +542,7 @@ bool PublisherInstance::GetSupportsTemporalSubscriptions() const
     return m_publisher->GetSupportsTemporalSubscriptions();
 }
 
-void PublisherInstance::SetSupportsTemporalSubscriptions(bool value) const
+void PublisherInstance::SetSupportsTemporalSubscriptions(const bool value) const
 {
     m_publisher->SetSupportsTemporalSubscriptions(value);
 }
@@ -552,7 +552,7 @@ uint32_t PublisherInstance::GetCipherKeyRotationPeriod() const
     return m_publisher->GetCipherKeyRotationPeriod();
 }
 
-void PublisherInstance::SetCipherKeyRotationPeriod(uint32_t period) const
+void PublisherInstance::SetCipherKeyRotationPeriod(const uint32_t period) const
 {
     m_publisher->SetCipherKeyRotationPeriod(period);
 }

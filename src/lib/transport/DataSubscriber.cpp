@@ -1255,6 +1255,7 @@ void DataSubscriber::Subscribe()
     connectionStream << "throttled=" << m_subscriptionInfo.Throttled << ";";
     connectionStream << "publishInterval=" << m_subscriptionInfo.PublishInterval << ";";
     connectionStream << "includeTime=" << m_subscriptionInfo.IncludeTime << ";";
+    connectionStream << "enableTimeReasonabilityCheck=" << m_subscriptionInfo.EnableTimeReasonabilityCheck << ";";
     connectionStream << "lagTime=" << m_subscriptionInfo.LagTime << ";";
     connectionStream << "leadTime=" << m_subscriptionInfo.LeadTime << ";";
     connectionStream << "useLocalClockAsRealTime=" << m_subscriptionInfo.UseLocalClockAsRealTime << ";";

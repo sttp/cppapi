@@ -39,7 +39,7 @@ using namespace sttp::filterexpressions;
 using namespace sttp::transport;
 
 static constexpr uint32_t MaxPacketSize = 32768U;
-static constexpr float64_t DefaultLagTime = 5.0;
+static constexpr float64_t DefaultLagTime = 10.0;
 static constexpr float64_t DefaultLeadTime = 5.0;
 static constexpr float64_t DefaultPublishInterval = 1.0;
 
@@ -59,6 +59,7 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_usingPayloadCompression(false),
     m_includeTime(true),
     m_useLocalClockAsRealTime(false),
+    m_enableTimeReasonabilityCheck(false),
     m_lagTime(DefaultLagTime),
     m_leadTime(DefaultLeadTime),
     m_publishInterval(DefaultPublishInterval),
@@ -677,7 +678,7 @@ void SubscriberConnection::PublishMeasurements(const vector<MeasurementPtr>& mea
         {
             const Guid signalID = measurement->SignalID;
 
-            if (TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription())
+            if (!m_enableTimeReasonabilityCheck || TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription())
             {
                 m_latestMeasurements.insert_or_assign(signalID, measurement);
             }
@@ -781,6 +782,11 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             TryParseBoolean(setting, m_useLocalClockAsRealTime);
         else
             m_useLocalClockAsRealTime = false;
+
+        if (TryGetValue(settings, "enableTimeReasonabilityCheck", setting))
+            TryParseBoolean(setting, m_enableTimeReasonabilityCheck);
+        else
+            m_enableTimeReasonabilityCheck = true;
 
         if (TryGetValue(settings, "lagTime", setting) && !setting.empty())
             TryParseDouble(setting, m_lagTime, DefaultLagTime);
@@ -1018,7 +1024,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
                 {
                     MeasurementPtr measurement = element.second;
 
-                    if (!TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) && !GetIsTemporalSubscription())
+                    if (m_enableTimeReasonabilityCheck && !TimestampIsReasonable(measurement->Timestamp, m_lagTime, m_leadTime) && !GetIsTemporalSubscription())
                     {
                         measurement->Value = NaN;
                         measurement->Flags |= MeasurementStateFlags::BadTime;
@@ -1489,7 +1495,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
         count++; //-V127
 
         // Track latest timestamp
-        if (!m_useLocalClockAsRealTime && timestamp > m_latestTimestamp && (TimestampIsReasonable(timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription()))
+        if (!m_useLocalClockAsRealTime && timestamp > m_latestTimestamp && (!m_enableTimeReasonabilityCheck || TimestampIsReasonable(timestamp, m_lagTime, m_leadTime) || GetIsTemporalSubscription()))
             m_latestTimestamp = timestamp;
     }
 

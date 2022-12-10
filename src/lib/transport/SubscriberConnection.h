@@ -64,6 +64,7 @@ namespace sttp::transport
         bool m_usingPayloadCompression;
         bool m_includeTime;
         bool m_useLocalClockAsRealTime;
+        bool m_enableTimeReasonabilityCheck;
         float64_t m_lagTime;
         float64_t m_leadTime;
         float64_t m_publishInterval;

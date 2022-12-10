@@ -31,6 +31,7 @@ SubscriptionInfo::SubscriptionInfo() :
     UdpDataChannel(false),
     DataChannelLocalPort(9500),
     IncludeTime(true),
+    EnableTimeReasonabilityCheck(false),
     LagTime(10.0),
     LeadTime(5.0),
     UseLocalClockAsRealTime(false),
