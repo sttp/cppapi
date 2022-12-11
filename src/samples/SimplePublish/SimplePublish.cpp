@@ -125,7 +125,7 @@ bool RunPublisher(const uint16_t port)
 
         // Setup data publication timer - for this simple publishing sample we just
         // send random values every 33 milliseconds
-        PublishTimer = NewSharedPtr<Timer>(33, [](Timer*, void*)
+        PublishTimer = NewSharedPtr<Timer>(33, [](const TimerPtr&, void*)
         {
             // If metadata can change, the following integer should not be static:
             static uint32_t count = ConvertUInt32(MeasurementsToPublish.size());

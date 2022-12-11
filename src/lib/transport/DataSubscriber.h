@@ -34,6 +34,9 @@
 
 namespace sttp::transport
 {
+    class DataSubscriber;
+    typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
+
     class DataSubscriber final : public DataClient // NOLINT
     {
     public:
@@ -74,6 +77,8 @@ namespace sttp::transport
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
         Mutex m_connectActionMutex;
+        Thread m_connectionTerminationThread;
+        Mutex m_disconnectThreadMutex;
         Thread m_disconnectThread;
         void* m_userData;
 
@@ -104,7 +109,6 @@ namespace sttp::transport
         // Callback thread members
         Thread m_callbackThread;
         ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
-        Thread m_connectionTerminationThread;
 
         // Command channel
         Thread m_commandChannelResponseThread;
@@ -173,15 +177,16 @@ namespace sttp::transport
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
 
-        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
-        void Disconnect(bool joinThread, bool autoReconnecting);
-        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
-
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
         // safely close all sockets and stop all subscriber threads
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
+
+        void WaitOnDisconnectThread();
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
+        void Disconnect(bool joinThread, bool autoReconnecting);
+        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
         void HandleSocketError();
 
     public:
@@ -312,8 +317,8 @@ namespace sttp::transport
         void GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const;
         void SetAssemblyInfo(const std::string& source, const std::string& version, const std::string& updatedOn);
 
+        static const DataSubscriberPtr NullPtr;
+
         friend class SubscriberConnector;
     };
-
-    typedef SharedPtr<DataSubscriber> DataSubscriberPtr;
 }

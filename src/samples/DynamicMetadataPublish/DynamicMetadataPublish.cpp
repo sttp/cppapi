@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
         if (autoUpdateMetadata)
         {
             // Setup thread to continually update meta-data
-            Timer metadataUpdate(UpdateInterval, [publisher](Timer* timer, void*)
+            const TimerPtr metadataUpdate = NewSharedPtr<Timer>(UpdateInterval, [publisher](const TimerPtr& timer, void*)
             {
                 publisher->DefineMetadata(++deviceCount);
 
@@ -73,11 +73,11 @@ int main(int argc, char* argv[])
             },
             true);
 
-            metadataUpdate.Start();
+            metadataUpdate->Start();
 
             getline(cin, line);
 
-            metadataUpdate.Stop();
+            metadataUpdate->Stop();
         }
         else
         {

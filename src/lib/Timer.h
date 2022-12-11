@@ -24,18 +24,20 @@
 #pragma once
 
 #include "CommonTypes.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp> 
 
 namespace sttp
 {
     class Timer;
-    typedef std::function<void(Timer* timer, void* userData)> TimerElapsedCallback;
-    typedef sttp::SharedPtr<Timer> TimerPtr;
+    typedef SharedPtr<Timer> TimerPtr;
 
-    class Timer final // NOLINT
+    // Defines call back function signature that is executed when timer delay expires.
+    // The `timer` parameter will be `nullptr` if timer is not instantiated as shared_ptr.
+    typedef std::function<void(const TimerPtr& timer, void* userData)> TimerElapsedCallback;
+
+    class Timer final : public EnableSharedThisPtr<Timer> // NOLINT
     {
     private:
+        TimerPtr m_this;
         ThreadPtr m_timerThread;
         int32_t m_interval;
         TimerElapsedCallback m_callback;
@@ -43,194 +45,45 @@ namespace sttp
         bool m_autoReset;
         std::atomic_bool m_running;
 
-        void TimerThread()
-        {
-            m_running = true;
-
-            do
-            {
-                try
-                {
-                    const int32_t interval = m_interval;
-                    
-                    if (interval > 0)
-                    {
-                        static constexpr int32_t MaxSleepDuration = 500;
-                        const int32_t waits = interval / MaxSleepDuration;
-                        const int32_t remainder = interval % MaxSleepDuration;
-
-                        for (int32_t i = 0; i < waits && m_running; i++)
-                            ThreadSleep(MaxSleepDuration);
-
-                        if (remainder > 0 && m_running)
-                            ThreadSleep(remainder);
-                    }
-                }
-                catch (boost::thread_interrupted&)
-                {
-                    m_running = false;
-                    return;
-                }
-
-                if (m_running && m_callback != nullptr)
-                    m_callback(this, m_userData);
-            }
-            while (m_autoReset && m_running);
-
-            m_running = false;
-        }
+        void TimerThread();
 
     public:
-        Timer() : Timer(1000, nullptr, false)
-        {
-        }
+        Timer();
 
-        explicit Timer(const int32_t interval, TimerElapsedCallback callback, const bool autoReset = false) :
-            m_timerThread(nullptr),
-            m_interval(interval),
-            m_callback(std::move(callback)),
-            m_userData(nullptr),
-            m_autoReset(autoReset),
-            m_running(false)
-        {
-        }
+        explicit Timer(int32_t interval, TimerElapsedCallback callback, bool autoReset = false);
 
-        ~Timer() noexcept
-        {
-            try
-            {
-                Stop();
-            }
-            catch (...)
-            {
-                // ReSharper disable once CppRedundantControlFlowJump
-                return;
-            }
-        }
+        ~Timer() noexcept;
 
-        bool IsRunning() const
-        {
-            return m_running;
-        }
+        bool IsRunning() const;
 
-        int32_t GetInterval() const
-        {
-            return m_interval;
-        }
+        int32_t GetInterval() const;
 
-        void SetInterval(const int32_t value)
-        {
-            if (value == m_interval)
-                return;
-            
-            const bool restart = m_running;
-            Stop();
+        void SetInterval(int32_t value);
 
-            m_interval = value;
+        TimerElapsedCallback GetCallback() const;
 
-            if (restart)
-                Start();
-        }
+        void SetCallback(TimerElapsedCallback value);
 
-        TimerElapsedCallback GetCallback() const
-        {
-            return m_callback;
-        }
+        const void* GetUserData() const;
 
-        void SetCallback(TimerElapsedCallback value)
-        {
-            m_callback = std::move(value);
-        }
+        void SetUserData(void* value);
 
-        const void* GetUserData() const
-        {
-            return m_userData;
-        }
+        bool GetAutoReset() const;
 
-        void SetUserData(void* value)
-        {
-            m_userData = value;
-        }
+        void SetAutoReset(bool value);
 
-        bool GetAutoReset() const
-        {
-            return m_autoReset;
-        }
+        void Start();
 
-        void SetAutoReset(const bool value)
-        {
-            m_autoReset = value;
-        }
+        void Stop();
 
-        void Start()
-        {
-            if (m_callback == nullptr)
-                throw std::invalid_argument("Cannot start timer, no callback function has been defined.");
+        void Wait() const;
 
-            if (m_running)
-                Stop();
+        static void EmptyCallback(const TimerPtr&, void*);
 
-            m_timerThread = NewSharedPtr<sttp::Thread>([this] { TimerThread(); });
-        }
+        static TimerPtr WaitTimer(int32_t interval, bool autoStart = true);
 
-        void Stop()
-        {
-            if (!m_running)
-                return;
-
-            m_running = false;
-
-            if (m_timerThread != nullptr)
-            {
-                const ThreadPtr timerThread = m_timerThread;
-
-                if (timerThread != nullptr)
-                {
-                    timerThread->interrupt();
-
-                    if (boost::this_thread::get_id() != timerThread->get_id())
-                        timerThread->join();
-                }
-            }
-
-            m_timerThread.reset();
-        }
-
-        void Wait() const
-        {
-            try
-            {
-                if (m_running && m_timerThread != nullptr)
-                {
-                    const ThreadPtr timerThread = m_timerThread;
-
-                    if (timerThread != nullptr)
-                        timerThread->join();
-                }                
-            }
-            catch (...)
-            {
-                // ReSharper disable once CppRedundantControlFlowJump
-                return;
-            }
-        }
-
-        static void EmptyCallback(Timer*, void*)
-        {            
-        }
-
-        static TimerPtr WaitTimer(const int32_t interval, const bool autoStart = true)
-        {
-            TimerPtr waitTimer = NewSharedPtr<Timer>(interval, EmptyCallback);
-
-            if (autoStart)
-                waitTimer->Start();
-
-            return waitTimer;
-        }
+        const static TimerPtr NullPtr;
     };
-
-    typedef sttp::SharedPtr<Timer> TimerPtr;
 }
 
 // Setup standard hash code for TimerPtr

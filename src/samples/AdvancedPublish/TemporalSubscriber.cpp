@@ -45,7 +45,7 @@ TemporalSubscriber::TemporalSubscriber(SubscriberConnectionPtr connection) :
     if (m_lastRow < 0)
         throw runtime_error("No history available - run with \"GenHistory\" argument.");
 
-    m_processTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*) { SendTemporalData(); }, true);
+    m_processTimer = NewSharedPtr<Timer>(33, [this](const TimerPtr&, void*) { SendTemporalData(); }, true);
     SetProcessingInterval(m_connection->GetProcessingInterval());
     m_processTimer->Start();
 }

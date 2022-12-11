@@ -159,14 +159,15 @@ namespace sttp::transport
         void StopConnection();
         void HandleConnectionError();
 
-        static void PingTimerElapsed(Timer*, void* userData);
+        static void PingTimerElapsed(const TimerPtr&, void* userData);
 
         // Reverse connection
         SubscriberConnector m_connector;
         std::atomic_bool m_disconnecting;
         Mutex m_connectActionMutex;
-        Thread m_disconnectThread;
         Thread m_connectionTerminationThread;
+        Mutex m_disconnectThreadMutex;
+        Thread m_disconnectThread;
 
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
@@ -174,6 +175,7 @@ namespace sttp::transport
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
 
+        void WaitOnDisconnectThread();
         void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting);
         void Disconnect(bool joinThread, bool autoReconnecting);
         bool IsDisconnecting() const { return m_disconnecting || m_stopped; }

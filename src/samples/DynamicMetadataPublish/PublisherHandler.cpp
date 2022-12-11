@@ -31,7 +31,7 @@ Mutex PublisherHandler::s_coutLock{};
 
 PublisherHandler::PublisherHandler(string name) :
     m_name(std::move(name)),
-    m_publishTimer(nullptr),
+    m_publishTimer(Timer::NullPtr),
     m_metadataVersion(0)
 {
 }
@@ -206,7 +206,7 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
 
     // Setup data publication timer - for this publishing sample we send
     // data type reasonable random values every 33 milliseconds
-    m_publishTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*)
+    m_publishTimer = NewSharedPtr<Timer>(33, [this](const TimerPtr&, void*)
     {
         ReaderLock readLock(m_measurementUpdateLock);
 

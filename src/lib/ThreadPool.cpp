@@ -103,7 +103,7 @@ void ThreadPool::Queue(const uint32_t delay, void* state, const std::function<vo
     if (m_disposing)
         return;
 
-    const TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](const Timer* timer, void*)
+    const TimerPtr waitTimer = NewSharedPtr<Timer>(delay, [&,this,action,state](const TimerPtr& timer, void*)
     {        
         if (m_disposing)
             return;
@@ -117,12 +117,12 @@ void ThreadPool::Queue(const uint32_t delay, void* state, const std::function<vo
         if (m_disposing)
             return;
 
-        TimerPtr targetTimer = nullptr;
+        TimerPtr targetTimer = Timer::NullPtr;
         
         // Find this timer in reference set
         for (const auto& currentTimer : m_waitTimers)
         {
-            if (currentTimer.get() == timer)
+            if (currentTimer == timer)
             {
                 targetTimer = currentTimer;
                 break;

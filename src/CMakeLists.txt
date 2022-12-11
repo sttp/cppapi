@@ -251,6 +251,7 @@ set (STTP_SOURCE_FILES
 	"lib/ManualResetEvent.cpp"
     "lib/pugixml.cpp"
     "lib/ThreadPool.cpp"
+	"lib/Timer.cpp"
     "lib/data/DataColumn.cpp"
     "lib/data/DataRow.cpp"
     "lib/data/DataSet.cpp"

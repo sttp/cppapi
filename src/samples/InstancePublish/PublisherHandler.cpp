@@ -32,7 +32,7 @@ Mutex PublisherHandler::s_coutLock {};
 PublisherHandler::PublisherHandler(string name) : 
     m_name(std::move(name)),
     m_processCount(0L),
-    m_publishTimer(nullptr),
+    m_publishTimer(Timer::NullPtr),
     m_metadataVersion(0)
 {
 }
@@ -170,7 +170,7 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
         return false;
 
     static float64_t randMax = static_cast<float64_t>(RAND_MAX);
-    static const uint64_t interval = 1000;
+    static constexpr uint64_t interval = 1000;
 
     const int32_t maxConnections = GetMaximumAllowedConnections();
     StatusMessage("\nListening on port: " + ToString(GetPort()) + ", max connections = " + (maxConnections == -1 ? "unlimited" : ToString(maxConnections)) + "...\n");
@@ -180,7 +180,7 @@ bool PublisherHandler::Start(uint16_t port, bool ipV6)
 
     // Setup data publication timer - for this publishing sample we send
     // data type reasonable random values every 33 milliseconds
-    m_publishTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*)
+    m_publishTimer = NewSharedPtr<Timer>(33, [this](const TimerPtr&, void*)
     {
         // If metadata can change, the following integer should not be static:
         static uint32_t count = ConvertUInt32(m_measurementMetadata.size());

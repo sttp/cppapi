@@ -53,6 +53,8 @@ const datetime_t DateTime::MaxValue(max_date_time);
 
 const datetime_t DateTime::MinValue(min_date_time);
 
+const ThreadPtr ThreadNullPtr = nullptr;
+
 const string Empty::String {};
 
 const datetime_t Empty::DateTime {};

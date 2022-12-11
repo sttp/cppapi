@@ -496,6 +496,7 @@
     <ClCompile Include="transport\SubscriptionInfo.cpp">
       <Filter>transport</Filter>
     </ClCompile>
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data\DataColumn.h">

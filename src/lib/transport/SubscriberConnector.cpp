@@ -47,7 +47,7 @@ void DataClient::SetSubscriptionInfo(const SubscriptionInfo& info)
 
 SubscriberConnector::SubscriberConnector() :
     m_port(0),
-    m_timer(nullptr),
+    m_timer(Timer::NullPtr),
     m_maxRetries(-1),
     m_retryInterval(2000),
     m_maxRetryInterval(120000),

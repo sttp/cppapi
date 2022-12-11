@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-// ReSharper disable CppClangTidyClangDiagnosticShadowUncapturedLocal
 #include "../filterexpressions/FilterExpressionParser.h"
 #include "SubscriberConnection.h"
 #include "DataPublisher.h"
@@ -42,6 +41,8 @@ static constexpr uint32_t MaxPacketSize = 32768U;
 static constexpr float64_t DefaultLagTime = 10.0;
 static constexpr float64_t DefaultLeadTime = 5.0;
 static constexpr float64_t DefaultPublishInterval = 1.0;
+
+const SubscriberConnectionPtr SubscriberConnection::NullPtr = nullptr;
 
 SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& commandChannelService) : //NOLINT
     m_parent(std::move(parent)),
@@ -85,12 +86,12 @@ SubscriberConnection::SubscriberConnection(DataPublisherPtr parent, IOContext& c
     m_pendingSignalIndexCache(SignalIndexCache::NullPtr),
     m_currentCacheIndex(0),
     m_nextCacheIndex(0),
-    m_baseTimeRotationTimer(nullptr),
+    m_baseTimeRotationTimer(Timer::NullPtr),
     m_timeIndex(0),
     m_baseTimeOffsets{ 0LL, 0LL },
     m_latestTimestamp(0LL),
     m_lastPublishTime(Empty::DateTime),
-    m_throttledPublicationTimer(nullptr),
+    m_throttledPublicationTimer(Timer::NullPtr),
     m_tsscResetRequested(false),
     m_tsscSequenceNumber(0),
     m_disconnecting(false)
@@ -502,12 +503,22 @@ void SubscriberConnection::ConnectionTerminatedDispatcher()
     Disconnect(false, true);
 }
 
+void SubscriberConnection::WaitOnDisconnectThread()
+{
+    ScopeLock lock(m_disconnectThreadMutex);
+    m_disconnectThread.join();
+}
+
 void SubscriberConnection::Connect(const string& hostname, const uint16_t port, const bool autoReconnecting)
 {
     if (m_connectionAccepted)
         throw PublisherException("Publisher is already connected; disconnect first");
 
-    // Let any pending connect or disconnect operation complete before new connect - prevents destruction disconnect before connection is completed
+    // Make sure any pending disconnect has completed to make sure socket is closed
+    WaitOnDisconnectThread();
+
+    // Let any pending connect or disconnect operation complete before new connect
+    // this prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
     const DnsResolver::query dnsQuery(hostname, to_string(port));
@@ -548,7 +559,7 @@ void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReco
             m_connector.Cancel();
         
         if (joinThread && !m_stopped)
-            m_disconnectThread.join();
+            WaitOnDisconnectThread();
 
         return;
     }
@@ -556,48 +567,52 @@ void SubscriberConnection::Disconnect(const bool joinThread, const bool autoReco
     // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
     m_disconnecting = true;
 
-    m_disconnectThread = Thread([this, autoReconnecting]
     {
-        try
+        ScopeLock lock(m_disconnectThreadMutex);
+
+        m_disconnectThread = Thread([this, autoReconnecting]
         {
-            // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
-            if (!autoReconnecting)
+            try
             {
-                m_connector.Cancel();
-                m_connectionTerminationThread.join();
-                m_connectActionMutex.lock();
+                // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+                if (!autoReconnecting)
+                {
+                    m_connector.Cancel();
+                    m_connectionTerminationThread.join();
+                    m_connectActionMutex.lock();
+                }
             }
-        }
-        catch (SystemError& ex)
-        {
-            m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + string(ex.what()));
-        }
-        catch (...)
-        {
-            m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + boost::current_exception_diagnostic_information(true));
-        }
+            catch (SystemError& ex)
+            {
+                m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + string(ex.what()));
+            }
+            catch (...)
+            {
+                m_parent->DispatchErrorMessage("Exception while disconnecting data publisher reverse connection: " + boost::current_exception_diagnostic_information(true));
+            }
 
-        StopConnection();
+            StopConnection();
 
-        // Disconnect complete
-        m_disconnecting = false;
+            // Disconnect complete
+            m_disconnecting = false;
 
-        if (autoReconnecting)
-        {
-            // Handling auto-connect callback separately from connection terminated callback
-            // since they serve two different use cases and current implementation does not
-            // support multiple callback registrations
-            if (m_parent->m_autoReconnectCallback != nullptr && !m_parent->m_disposing)
-                m_parent->m_autoReconnectCallback(m_parent.get());
-        }
-        else
-        {
-            m_connectActionMutex.unlock();
-        }
-    });
+            if (autoReconnecting)
+            {
+                // Handling auto-connect callback separately from connection terminated callback
+                // since they serve two different use cases and current implementation does not
+                // support multiple callback registrations
+                if (m_parent->m_autoReconnectCallback != nullptr && !m_parent->m_disposing)
+                    m_parent->m_autoReconnectCallback(m_parent.get());
+            }
+            else
+            {
+                m_connectActionMutex.unlock();
+            }
+        });
+    }
 
     if (joinThread)
-        m_disconnectThread.join();
+        WaitOnDisconnectThread();
 }
 
 void SubscriberConnection::StopConnection()
@@ -959,7 +974,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             m_baseTimeOffsets[1] = 0LL;
             m_latestTimestamp = 0LL;
 
-            m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](const Timer* timer, void*)
+            m_baseTimeRotationTimer = NewSharedPtr<Timer>(m_useMillisecondResolution ? 60000 : 420000, [this](const TimerPtr& timer, void*)
             {
                 const int64_t realTime = m_useLocalClockAsRealTime ? ToTicks(UtcNow()) : m_latestTimestamp;
 
@@ -1011,7 +1026,7 @@ void SubscriberConnection::HandleSubscribe(uint8_t* data, uint32_t length)
             if (publishInterval <= 0)
                 publishInterval = static_cast<int32_t>((m_lagTime == DefaultLagTime || m_lagTime <= 0.0 ? DefaultPublishInterval : m_lagTime) * 1000); // NOLINT(clang-diagnostic-float-equal) //-V550
 
-            m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [this](Timer*, void*)
+            m_throttledPublicationTimer = NewSharedPtr<Timer>(publishInterval, [this](const TimerPtr&, void*)
             {
                 if (m_latestMeasurements.empty())
                     return;
@@ -2206,7 +2221,7 @@ vector<uint8_t> SubscriberConnection::EncodeString(const string& value) const
     return result;
 }
 
-void SubscriberConnection::PingTimerElapsed(Timer*, void* userData)
+void SubscriberConnection::PingTimerElapsed(const TimerPtr&, void* userData)
 {
     SubscriberConnection* connection = static_cast<SubscriberConnection*>(userData);
 

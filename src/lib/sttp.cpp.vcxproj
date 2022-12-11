@@ -380,6 +380,7 @@
     <ClCompile Include="data\DataTable.cpp" />
     <ClInclude Include="transport\ActiveMeasurementsSchema.h" />
     <ClInclude Include="transport\CompactMeasurement.h" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="transport\ActiveMeasurementsSchema.cpp" />
     <ClCompile Include="transport\CompactMeasurement.cpp" />
     <ClInclude Include="transport\Constants.h" />

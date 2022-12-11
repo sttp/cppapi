@@ -301,6 +301,8 @@ namespace sttp
     typedef boost::iostreams::gzip_compressor GZipCompressor;
 
     typedef SharedPtr<Thread> ThreadPtr;
+    static const ThreadPtr ThreadNullPtr;
+    
     #define ThreadSleep(ms) boost::this_thread::sleep(boost::posix_time::milliseconds(ms))
 
     #if BOOST_LEGACY

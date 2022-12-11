@@ -23,6 +23,7 @@
 
 #include "PublisherInstance.h"
 #include "../Convert.h"
+#include <iostream>
 
 using namespace std;
 using namespace pugi;

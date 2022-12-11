@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-// ReSharper disable CppClangTidyPerformanceNoAutomaticMove
 #include "../filterexpressions/FilterExpressionParser.h"
 #include "DataPublisher.h"
 #include "MetadataSchema.h"
@@ -33,6 +32,8 @@ using namespace sttp;
 using namespace sttp::data;
 using namespace sttp::filterexpressions;
 using namespace sttp::transport;
+
+const DataPublisherPtr DataPublisher::NullPtr = nullptr;
 
 struct UserCommandData
 {
@@ -1005,13 +1006,19 @@ void DataPublisher::Stop()
     ShutDown(false);
 }
 
+void DataPublisher::WaitOnShutDownThread()
+{
+    ScopeLock lock(m_shutDownThreadMutex);
+    m_shutdownThread.join();
+}
+
 void DataPublisher::ShutDown(const bool joinThread)
 {
     // Check if shutdown thread is running or publisher has already stopped
     if (IsShuttingDown())
     {
         if (joinThread && !m_stopped)
-            m_shutdownThread.join();
+            WaitOnShutDownThread();
 
         return;
     }
@@ -1020,72 +1027,76 @@ void DataPublisher::ShutDown(const bool joinThread)
     m_shuttingDown = true;
     m_started = false;
 
-    m_shutdownThread = Thread([this]
     {
-        try
+        ScopeLock lock(m_shutDownThreadMutex);
+
+        m_shutdownThread = Thread([this]
         {
-            // Let any pending start operation complete before continuing stop - prevents destruction stop before start is completed
-            ScopeLock lock(m_connectActionMutex);
-
-            // Stop accepting new connections
-            m_clientAcceptor.close();
-
-            // Clear routing tables to cease any queued publication
-            m_routingTables.Clear();
-
-            // Shutdown client connections - execute on a separate thread to more safely handle callbacks
-            Thread shutdownClientsThread([this]
+            try
             {
-                WriterLock writeLock(m_subscriberConnectionsLock);
+                // Let any pending start operation complete before continuing stop - prevents destruction stop before start is completed
+                ScopeLock calock(m_connectActionMutex);
 
-                for (const auto& connection : m_subscriberConnections)
+                // Stop accepting new connections
+                m_clientAcceptor.close();
+
+                // Clear routing tables to cease any queued publication
+                m_routingTables.Clear();
+
+                // Shutdown client connections - execute on a separate thread to more safely handle callbacks
+                Thread shutdownClientsThread([this]
                 {
-                    connection->Stop();
+                    WriterLock writeLock(m_subscriberConnectionsLock);
 
-                    if (m_clientDisconnectedCallback != nullptr)
-                        m_clientDisconnectedCallback(this, connection);
-                }
+                    for (const auto& connection : m_subscriberConnections)
+                    {
+                        connection->Stop();
 
-                m_subscriberConnections.clear();
+                        if (m_clientDisconnectedCallback != nullptr)
+                            m_clientDisconnectedCallback(this, connection);
+                    }
 
-                // Reset reverse connection state, this allows same DataPublisher instance
-                // to be reused in listening connection mode if desired
-                m_reverseConnection = false;
-            });
+                    m_subscriberConnections.clear();
 
-            // Release queues and close sockets so
-            // that threads can shut down gracefully
-            m_callbackQueue.Release();
+                    // Reset reverse connection state, this allows same DataPublisher instance
+                    // to be reused in listening connection mode if desired
+                    m_reverseConnection = false;
+                });
 
-            // Join with all threads to guarantee their completion
-            // before returning control to the caller
-            shutdownClientsThread.join();
-            m_callbackThread.join();
-            m_commandChannelAcceptThread.join();
+                // Release queues and close sockets so
+                // that threads can shut down gracefully
+                m_callbackQueue.Release();
 
-            // Empty queues and reset them so they can be used
-            // again later if the user decides to restart
-            m_callbackQueue.Clear();
-            m_callbackQueue.Reset();
+                // Join with all threads to guarantee their completion
+                // before returning control to the caller
+                shutdownClientsThread.join();
+                m_callbackThread.join();
+                m_commandChannelAcceptThread.join();
 
-            m_commandChannelService.stop();
-        }
-        catch (SystemError& ex)
-        {
-            cerr << "Exception while stopping data publisher: " << ex.what();
-        }
-        catch (...)
-        {
-            cerr << "Exception while stopping data publisher: " << boost::current_exception_diagnostic_information(true);
-        }
+                // Empty queues and reset them so they can be used
+                // again later if the user decides to restart
+                m_callbackQueue.Clear();
+                m_callbackQueue.Reset();
 
-        // Shutdown complete
-        m_stopped = true;
-        m_shuttingDown = false;
-    });
+                m_commandChannelService.stop();
+            }
+            catch (SystemError& ex)
+            {
+                cerr << "Exception while stopping data publisher: " << ex.what();
+            }
+            catch (...)
+            {
+                cerr << "Exception while stopping data publisher: " << boost::current_exception_diagnostic_information(true);
+            }
+
+            // Shutdown complete
+            m_stopped = true;
+            m_shuttingDown = false;
+        });
+    }
 
     if (joinThread)
-        m_shutdownThread.join();
+        WaitOnShutDownThread();
 }
 
 bool DataPublisher::IsStarted() const

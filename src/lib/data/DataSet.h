@@ -91,5 +91,6 @@ namespace sttp::data
 
         static const std::string XmlSchemaNamespace;
         static const std::string ExtXmlSchemaDataNamespace;
+        static const DataSetPtr NullPtr;
     };
 }

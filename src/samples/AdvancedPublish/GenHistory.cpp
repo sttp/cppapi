@@ -31,7 +31,7 @@ using namespace sttp::data;
 using namespace sttp::transport;
 
 GenHistory::GenHistory(const uint16_t port) :
-    m_history(nullptr),
+    m_history(DataSet::NullPtr),
     m_port(port)
 {
     m_subscriber = NewSharedPtr<DataSubscriber>();

@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-// ReSharper disable CppClangTidyPerformanceNoAutomaticMove
-// ReSharper disable CppClangTidyClangDiagnosticShadowUncapturedLocal
-// ReSharper disable CppClangTidyClangDiagnosticMisleadingIndentation
 #include "DataSubscriber.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
@@ -40,6 +37,8 @@ using namespace boost::asio::ip;
 using namespace sttp;
 using namespace sttp::transport;
 using namespace sttp::transport::tssc;
+
+const DataSubscriberPtr DataSubscriber::NullPtr = nullptr;
 
 DataSubscriber::DataSubscriber() :
     m_subscriberID(Empty::Guid),
@@ -757,7 +756,7 @@ SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signa
 
 SignalIndexCachePtr DataSubscriber::ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr)
 {
-    const SignalIndexCachePtr signalIndexCacheRef = signalIndexCachePtr->GetReference();
+    SignalIndexCachePtr signalIndexCacheRef = signalIndexCachePtr->GetReference();
     
     // Remove used reference to signal index cache pointer
     m_signalIndexCacheDispatchRefs.erase(signalIndexCacheRef);
@@ -1054,6 +1053,21 @@ void DataSubscriber::SetSubscriptionInfo(const SubscriptionInfo& info)
     m_subscriptionInfo = info;
 }
 
+// Dispatcher for connection terminated. This is called from its own separate thread
+// in order to cleanly shut down the subscriber in case the connection was terminated
+// by the peer. Additionally, this allows the user to automatically reconnect in their
+// callback function without having to spawn their own separate thread.
+void DataSubscriber::ConnectionTerminatedDispatcher()
+{
+    Disconnect(false, true);
+}
+
+void DataSubscriber::WaitOnDisconnectThread()
+{
+    ScopeLock lock(m_disconnectThreadMutex);
+    m_disconnectThread.join();
+}
+
 // Synchronously connects to publisher.
 // public:
 void DataSubscriber::Connect(const string& hostname, const uint16_t port)
@@ -1073,7 +1087,11 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     //if (IsStarted())
     //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
 
-    // Let any pending connect or disconnect operation complete before new connect - prevents destruction disconnect before connection is completed
+    // Make sure any pending disconnect has completed to make sure socket is closed
+    WaitOnDisconnectThread();
+
+    // Let any pending connect or disconnect operation complete before new connect
+    // this prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
     const DnsResolver::query dnsQuery(hostname, to_string(port));
@@ -1135,9 +1153,9 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     {
         if (!autoReconnecting && m_disconnecting && !m_disconnected)
             m_connector.Cancel();
-        
+
         if (joinThread && !m_disconnected)
-            m_disconnectThread.join();
+            WaitOnDisconnectThread();
 
         return;
     }
@@ -1150,80 +1168,75 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     m_defineOpModesCompleted.Reset();
     m_subscribed = false;
 
-    m_disconnectThread = Thread([this, autoReconnecting]
     {
-        try
+        ScopeLock lock(m_disconnectThreadMutex);
+
+        m_disconnectThread = Thread([this, autoReconnecting]
         {
-            // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
-            if (!autoReconnecting)
+            try
             {
-                m_connector.Cancel();
-                m_connectionTerminationThread.join();
-                m_connectActionMutex.lock();
+                // Let any pending connect operation complete before disconnect - prevents destruction disconnect before connection is completed
+                if (!autoReconnecting)
+                {
+                    m_connector.Cancel();
+                    m_connectionTerminationThread.join();
+                    m_connectActionMutex.lock();
+                }
+
+                ErrorCode error;
+
+                // Release queues and close sockets so that threads can shut down gracefully
+                m_callbackQueue.Release();
+                m_commandChannelSocket.close(error);
+                m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
+                m_dataChannelSocket.close(error);
+
+                // Join with all threads to guarantee their completion before returning control to the caller
+                m_callbackThread.join();
+                m_commandChannelResponseThread.join();
+                m_dataChannelResponseThread.join();
+
+                // Empty queues and reset them so they can be used again later if the user decides to reconnect
+                m_callbackQueue.Clear();
+                m_callbackQueue.Reset();
+
+                // Notify consumers of disconnect
+                if (m_connectionTerminatedCallback != nullptr)
+                    m_connectionTerminatedCallback(this);
+
+                if (!autoReconnecting)
+                    m_commandChannelService.stop();
+            }
+            catch (SystemError& ex)
+            {
+                DispatchErrorMessage("Exception while disconnecting data subscriber: " + string(ex.what()));
+            }
+            catch (...)
+            {
+                DispatchErrorMessage("Exception while disconnecting data subscriber: " + boost::current_exception_diagnostic_information(true));
             }
 
-            ErrorCode error;
+            // Disconnect complete
+            m_disconnected = true;
+            m_disconnecting = false;
 
-            // Release queues and close sockets so that threads can shut down gracefully
-            m_callbackQueue.Release();
-            m_commandChannelSocket.close(error);
-            m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
-            m_dataChannelSocket.close(error);
-
-            // Join with all threads to guarantee their completion before returning control to the caller
-            m_callbackThread.join();
-            m_commandChannelResponseThread.join();
-            m_dataChannelResponseThread.join();
-
-            // Empty queues and reset them so they can be used again later if the user decides to reconnect
-            m_callbackQueue.Clear();
-            m_callbackQueue.Reset();
-
-            // Notify consumers of disconnect
-            if (m_connectionTerminatedCallback != nullptr)
-                m_connectionTerminatedCallback(this);
-
-            if (!autoReconnecting)
-                m_commandChannelService.stop();
-        }
-        catch (SystemError& ex)
-        {
-            DispatchErrorMessage("Exception while disconnecting data subscriber: " + string(ex.what()));
-        }
-        catch (...)
-        {
-            DispatchErrorMessage("Exception while disconnecting data subscriber: " + boost::current_exception_diagnostic_information(true));
-        }
-
-        // Disconnect complete
-        m_disconnected = true;
-        m_disconnecting = false;
-
-        if (autoReconnecting)
-        {
-            // Handling auto-connect callback separately from connection terminated callback
-            // since they serve two different use cases and current implementation does not
-            // support multiple callback registrations
-            if (m_autoReconnectCallback != nullptr && !m_disposing)
-                m_autoReconnectCallback(this);
-        }
-        else
-        {
-            m_connectActionMutex.unlock();
-        }
-    });
+            if (autoReconnecting)
+            {
+                // Handling auto-connect callback separately from connection terminated callback
+                // since they serve two different use cases and current implementation does not
+                // support multiple callback registrations
+                if (m_autoReconnectCallback != nullptr && !m_disposing)
+                    m_autoReconnectCallback(this);
+            }
+            else
+            {
+                m_connectActionMutex.unlock();
+            }
+        });
+    }
 
     if (joinThread)
-        m_disconnectThread.join();
-}
-
-// Dispatcher for connection terminated. This is called from its own separate thread
-// in order to cleanly shut down the subscriber in case the connection was terminated
-// by the peer. Additionally, this allows the user to automatically reconnect in their
-// callback function without having to spawn their own separate thread.
-void DataSubscriber::ConnectionTerminatedDispatcher()
-{
-    Disconnect(false, true);
+        WaitOnDisconnectThread();
 }
 
 void DataSubscriber::HandleSocketError()

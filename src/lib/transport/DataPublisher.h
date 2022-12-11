@@ -84,6 +84,7 @@ namespace sttp::transport
         std::atomic_bool m_shuttingDown;
         std::atomic_bool m_stopped;
         Mutex m_connectActionMutex;
+        Mutex m_shutDownThreadMutex;
         Thread m_shutdownThread;
         ThreadPool m_threadPool;
         void* m_userData;
@@ -144,6 +145,7 @@ namespace sttp::transport
         static void UserCommandDispatcher(DataPublisher* source, const std::vector<uint8_t>& buffer);
         static int32_t GetColumnIndex(const data::DataTablePtr& table, const std::string& columnName);
 
+        void WaitOnShutDownThread();
         void ShutDown(bool joinThread);
         bool IsShuttingDown() const { return m_shuttingDown || m_stopped; }
 
