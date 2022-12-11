@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 #include "Timer.h"
+#include "ManualResetEvent.h"
 
 using namespace std;
 using namespace sttp;
@@ -40,15 +41,8 @@ void Timer::TimerThread()
 
             if (interval > 0)
             {
-                static constexpr int32_t MaxSleepDuration = 500;
-                const int32_t waits = interval / MaxSleepDuration;
-                const int32_t remainder = interval % MaxSleepDuration;
-
-                for (int32_t i = 0; i < waits && m_running; i++)
-                    ThreadSleep(MaxSleepDuration);
-
-                if (remainder > 0 && m_running)
-                    ThreadSleep(remainder);
+                ManualResetEvent handle;
+                handle.Wait(interval);
             }
         }
         catch (boost::thread_interrupted&)
