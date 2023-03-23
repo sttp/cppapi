@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <map>
 #include <unordered_map>
+#include <string>
 
 // Reduce boost code analysis warnings
 #pragma warning(push)
@@ -196,6 +197,8 @@ namespace sttp
 
         // Flag (63rd bit) that indicates if leap second is positive or negative; 0 for add, 1 for delete.
         static constexpr int64_t LeapSecondDirection = 1LL << 62;
+
+        static constexpr int64_t ValueMask = ~LeapSecondFlag & ~LeapSecondDirection;
     };
 
     inline int32_t ConvertInt32(const size_t value)

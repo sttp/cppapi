@@ -162,8 +162,10 @@ string PreparseTimestamp(const string& timestamp, TimeSpan& utcOffset)
     return updatedTimestamp;
 }
 
-void sttp::ToUnixTime(const int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
+void sttp::ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 {
+    ticks = ticks & Ticks::ValueMask;
+
     // Unix dates are measured as the number of seconds since 1/1/1970
     unixSOC = (ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond;
 
@@ -178,10 +180,13 @@ datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
     return from_time_t(unixSOC) + Milliseconds(milliseconds);
 }
 
-datetime_t sttp::FromTicks(const int64_t ticks)
+datetime_t sttp::FromTicks(int64_t ticks)
 {
+    ticks = ticks & Ticks::ValueMask;
+
     const datetime_t time = from_time_t((ticks - Ticks::UnixBaseOffset) / Ticks::PerSecond);
     const int64_t pticks = ticks % Ticks::PerSecond * DateTimeTicksPerSecond / Ticks::PerSecond;
+
     return time + TimeSpan(0, 0, 0, pticks % DateTimeTicksPerSecond);
 }
 
