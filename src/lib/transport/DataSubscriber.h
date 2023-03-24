@@ -48,6 +48,7 @@ namespace sttp::transport
         typedef std::function<void(DataSubscriber*, const SignalIndexCachePtr&)> SubscriptionUpdatedCallback;
         typedef std::function<void(DataSubscriber*, const std::vector<MeasurementPtr>&)> NewMeasurementsCallback;
         typedef std::function<void(DataSubscriber*)> ConfigurationChangedCallback;
+        typedef std::function<void(DataSubscriber*)> ConnectionEstablishedCallback;
         typedef std::function<void(DataSubscriber*)> ConnectionTerminatedCallback;
 
     private:
@@ -71,15 +72,19 @@ namespace sttp::transport
         bool m_compressSignalIndexCache;
         uint8_t m_version;
         std::atomic_bool m_connected;
+        std::atomic_bool m_listening;
         ManualResetEvent m_defineOpModesCompleted;
         std::atomic_bool m_validated;
         std::atomic_bool m_subscribed;
-        std::atomic_bool m_disconnecting;
-        std::atomic_bool m_disconnected;
+        std::string m_connectionID;
+
         Mutex m_connectActionMutex;
         Thread m_connectionTerminationThread;
         Mutex m_disconnectThreadMutex;
         Thread m_disconnectThread;
+        std::atomic_bool m_disconnecting;
+        std::atomic_bool m_disconnected;
+
         void* m_userData;
 
         // Statistics counters
@@ -98,6 +103,7 @@ namespace sttp::transport
         int32_t m_cacheIndex;
         int32_t m_timeIndex;
         int64_t m_baseTimeOffsets[2];
+        datetime_t m_lastMissingCacheWarning;
         bool m_tsscResetRequested;
         datetime_t m_tsscLastOOSReport;
         Mutex m_tsscLastOOSReportMutex;
@@ -114,6 +120,8 @@ namespace sttp::transport
         Thread m_commandChannelResponseThread;
         IOContext m_commandChannelService;
         TcpSocket m_commandChannelSocket;
+        Thread m_commandChannelAcceptThread;
+        TcpAcceptor m_clientAcceptor;
         std::vector<uint8_t> m_readBuffer;
         std::vector<uint8_t> m_writeBuffer;
 
@@ -131,6 +139,7 @@ namespace sttp::transport
         NewMeasurementsCallback m_newMeasurementsCallback;
         MessageCallback m_processingCompleteCallback;
         ConfigurationChangedCallback m_configurationChangedCallback;
+        ConnectionEstablishedCallback m_connectionEstablishedCallback;
         ConnectionTerminatedCallback m_connectionTerminatedCallback;
         ClientConnectionTerminatedCallback m_autoReconnectCallback;
 
@@ -143,6 +152,8 @@ namespace sttp::transport
         void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
         void ReadPacket(const ErrorCode& error, size_t bytesTransferred);
         void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
+        void StartAccept();
+        void AcceptConnection(TcpSocket& commandChannelSocket, const ErrorCode& error);
 
         // Server response handlers
         void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
@@ -177,16 +188,19 @@ namespace sttp::transport
         static void ProcessingCompleteDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
         static void ConfigurationChangedDispatcher(DataSubscriber* source, const std::vector<uint8_t>& buffer);
 
+        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
+        void Disconnect(bool joinThread, bool autoReconnecting, bool includeListener);
+        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
+
+        void SetupConnection();
+        void EstablishConnection(const TcpEndPoint& endPoint, bool listening);
+
         // The connection terminated callback is a special case that
         // must be called on its own separate thread so that it can
         // safely close all sockets and stop all subscriber threads
         // (including the callback thread) before executing the callback.
         void ConnectionTerminatedDispatcher();
-
         void WaitOnDisconnectThread();
-        void Connect(const std::string& hostname, uint16_t port, bool autoReconnecting) override;
-        void Disconnect(bool joinThread, bool autoReconnecting);
-        bool IsDisconnecting() const { return m_disconnecting || m_disconnected; }
         void HandleSocketError();
 
     public:
@@ -208,6 +222,7 @@ namespace sttp::transport
         //   void HandleNewMeasurements(DataSubscriber* source, const vector<MeasurementPtr>& newMeasurements)
         //   void HandleProcessingComplete(DataSubscriber* source, const string& message)
         //   void HandleConfigurationChanged(DataSubscriber* source)
+        //   void HandleConnectionEstablished(DataSubscriber* source)
         //   void HandleConnectionTerminated(DataSubscriber* source)
         //   void HandleAutoReconnect(DataClient* source)
         //
@@ -221,6 +236,7 @@ namespace sttp::transport
         void RegisterNewMeasurementsCallback(const NewMeasurementsCallback& newMeasurementsCallback);
         void RegisterProcessingCompleteCallback(const MessageCallback& processingCompleteCallback);
         void RegisterConfigurationChangedCallback(const ConfigurationChangedCallback& configurationChangedCallback);
+        void RegisterConnectionEstablishedCallback(const ConnectionEstablishedCallback& connectionEstablishedCallback);
         void RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback);
         void RegisterAutoReconnectCallback(const ClientConnectionTerminatedCallback& autoReconnectCallback) override;
 
@@ -256,6 +272,11 @@ namespace sttp::transport
 
         // Synchronously connects to publisher.
         void Connect(const std::string& hostname, uint16_t port);
+
+        // Establish a reverse listening connection for subscriber using specified connection info
+        void Listen(const sttp::TcpEndPoint& endpoint);
+        void Listen(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        void Listen(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
 
         // Disconnects from the publisher.
         //
@@ -297,6 +318,10 @@ namespace sttp::transport
         // Determines if a DataSubscriber is currently connected to a DataPublisher.
         bool IsConnected() override;
 
+        // Determines if a DataSubscriber is currently listening for a DataPublisher
+        // connection, i.e., DataSubscriber is in reverse connection mode.
+        bool IsListening() const;
+
         // Waits for publisher response to define operational modes request.
         bool WaitForOperationalModesResponse(int32_t timeout = 5000);
 
@@ -306,12 +331,11 @@ namespace sttp::transport
         // Determines if a DataSubscriber connection has been validated as an STTP connection.
         bool IsValidated() const;
 
-        // Determines if a DataSubscriber is currently listening for a DataPublisher
-        // connection, i.e., DataSubscriber is in reverse connection mode.
-        bool IsReverseConnection() const;
-
         // Determines if a DataSubscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;
+
+        // Gets the connection identification for the current connection.
+        std::string GetConnectionID() const;
 
         // Version info functions
         void GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const;

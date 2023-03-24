@@ -32,6 +32,7 @@ using namespace std;
 using namespace pugi;
 using namespace sttp;
 using namespace sttp::transport;
+using namespace boost::asio::ip;
 
 SubscriberInstance::SubscriberInstance() :
     m_hostname("localhost"),
@@ -190,9 +191,8 @@ bool SubscriberInstance::Connect()
     if (IsConnected())
         throw SubscriberException("Subscriber is already connected; disconnect first");
 
-    // TODO: Implement for reverse connection mode
-    //if (IsStarted())
-    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
+    if (IsListening())
+        throw SubscriberException("Cannot start connection, subscriber is already established with a listening mode reverse connection");
 
     SubscriberConnector& connector = m_subscriber->GetSubscriberConnector();
     connector.ResetConnection();
@@ -262,11 +262,53 @@ void SubscriberInstance::ConnectAsync()
     if (IsConnected())
         throw SubscriberException("Subscriber is already connected; disconnect first");
 
-    // TODO: Implement for reverse connection mode
-    //if (IsStarted())
-    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
+    if (IsListening())
+        throw SubscriberException("Cannot start connection, subscriber is already established with a listening mode reverse connection");
 
     m_connectThread = Thread([this]{ Connect(); });
+}
+
+bool SubscriberInstance::Listen(const sttp::TcpEndPoint& endPoint)
+{
+    if (IsListening())
+        throw SubscriberException("Subscriber is already listening; disconnect first");
+
+    if (IsConnected())
+        throw SubscriberException("Cannot start a listening mode reverse connection, subscriber is already connected");
+
+    string errorMessage{};
+
+    try
+    {
+        m_subscriber->Listen(endPoint);
+    }
+    catch (SubscriberException& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (SystemError& ex)
+    {
+        errorMessage = ex.what();
+    }
+    catch (...)
+    {
+        errorMessage = boost::current_exception_diagnostic_information(true);
+    }
+
+    if (!errorMessage.empty())
+        ErrorMessage("Failed to listen on port " + ToString(endPoint.port()) + ": " + errorMessage);
+
+    return m_subscriber->IsListening();
+}
+
+bool SubscriberInstance::ListenStart(const uint16_t port, const bool ipV6)
+{
+    return Listen(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
+}
+
+bool SubscriberInstance::Listen(const std::string& networkInterfaceIP, const uint16_t port)
+{
+    return Listen(TcpEndPoint(make_address(networkInterfaceIP), port));
 }
 
 void SubscriberInstance::Disconnect() const
@@ -373,6 +415,11 @@ bool SubscriberInstance::IsConnected() const
     return m_subscriber->IsConnected();
 }
 
+bool SubscriberInstance::IsListening() const
+{
+    return m_subscriber->IsListening();
+}
+
 std::string SubscriberInstance::OperationalModesStatus() const
 {
     return m_subscriber->OperationalModesStatus();
@@ -383,14 +430,14 @@ bool SubscriberInstance::IsValidated() const
     return m_subscriber->IsValidated();
 }
 
-bool SubscriberInstance::IsReverseConnection() const
-{
-    return m_subscriber->IsReverseConnection();
-}
-
 bool SubscriberInstance::IsSubscribed() const
 {
     return m_subscriber->IsSubscribed();
+}
+
+string SubscriberInstance::GetConnectionID() const
+{
+    return m_subscriber->GetConnectionID();
 }
 
 void SubscriberInstance::IterateDeviceMetadata(const DeviceMetadataIteratorHandlerFunction& iteratorHandler, void* userData)
@@ -1353,6 +1400,16 @@ void SubscriberInstance::HandleProcessingComplete(const DataSubscriber* source, 
 
     instance->StatusMessage(message);
     instance->HistoricalReadComplete();
+}
+
+void SubscriberInstance::HandleConnectionEstablished(const DataSubscriber* source)
+{
+    SubscriberInstance* instance = static_cast<SubscriberInstance*>(source->GetUserData());
+
+    if (instance == nullptr)
+        return;
+
+    instance->ConnectionEstablished();
 }
 
 void SubscriberInstance::HandleConnectionTerminated(const DataSubscriber* source)

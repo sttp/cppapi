@@ -173,7 +173,7 @@ SubscriberConnection* DataPublisher::AddDispatchReference(SubscriberConnectionPt
 
 SubscriberConnectionPtr DataPublisher::ReleaseDispatchReference(SubscriberConnection* connectionPtr)
 {
-    const SubscriberConnectionPtr connectionRef = connectionPtr->GetReference();
+    SubscriberConnectionPtr connectionRef = connectionPtr->GetReference();
     ScopeLock lock(m_subscriberConnectionDispatchRefsLock);
     
     // Decrement reference count to subscriber connection pointer
@@ -921,7 +921,7 @@ SubscriberConnectionPtr DataPublisher::GetSingleConnection()
     if (!m_subscriberConnections.empty())
         return *m_subscriberConnections.begin();
 
-    const SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
+    SubscriberConnectionPtr connection = NewSharedPtr<SubscriberConnection, DataPublisherPtr, IOContext&>(shared_from_this(), m_commandChannelService);
 
     m_subscriberConnections.insert(connection);
 

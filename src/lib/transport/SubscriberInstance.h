@@ -73,6 +73,7 @@ namespace sttp::transport
         static void HandleNewMeasurements(const DataSubscriber* source, const std::vector<MeasurementPtr>& measurements);
         static void HandleProcessingComplete(const DataSubscriber* source, const std::string& message);
         static void HandleConfigurationChanged(const DataSubscriber* source);
+        static void HandleConnectionEstablished(const DataSubscriber* source);
         static void HandleConnectionTerminated(const DataSubscriber* source);
 
 #ifdef SWIG
@@ -196,7 +197,14 @@ namespace sttp::transport
         // Throws SubscriberException for implementation logic errors
         virtual void ConnectAsync();
 
-        // Disconnects from the STTP publisher
+        // Establish a reverse listening connection for subscriber using specified connection info
+        // Returns true if subscriber was successfully started
+        // Throws SubscriberException for implementation logic errors
+        virtual bool Listen(const sttp::TcpEndPoint& endPoint);
+        virtual bool ListenStart(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        virtual bool Listen(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
+
+        // Disconnects from the STTP publisher, normal or reverse connection mode
         virtual void Disconnect() const;
 
         // Historical subscription functions
@@ -250,18 +258,21 @@ namespace sttp::transport
         // Determines if a subscriber is currently connected to a publisher.
         bool IsConnected() const;
 
+        // Determines if a subscriber is currently listening for a publisher
+        // connection, i.e., subscriber is in reverse connection mode.
+        bool IsListening() const;
+
         // Gets user readable status message for current response to define operational modes command request.
         std::string OperationalModesStatus() const;
 
         // Determines if a subscriber connection has been validated as an STTP connection.
         bool IsValidated() const;
 
-        // Determines if a subscriber is currently listening for a publisher
-        // connection, i.e., subscriber is in reverse connection mode.
-        bool IsReverseConnection() const;
-
         // Determines if a subscriber is currently subscribed to a data stream.
         bool IsSubscribed() const;
+
+        // Gets the connection identification for the current connection.
+        std::string GetConnectionID() const;
 
         // Metadata iteration functions - note that full lock will be maintained on source collections
         // for the entire call, so keep work time minimized or clone collection before work

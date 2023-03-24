@@ -38,6 +38,7 @@ using namespace sttp;
 using namespace sttp::transport;
 using namespace sttp::transport::tssc;
 
+constexpr float32_t MissingCacheWarningInterval = 20.0;
 const DataSubscriberPtr DataSubscriber::NullPtr = nullptr;
 
 DataSubscriber::DataSubscriber() :
@@ -47,6 +48,7 @@ DataSubscriber::DataSubscriber() :
     m_compressSignalIndexCache(true),
     m_version(2),
     m_connected(false),
+    m_listening(false),
     m_validated(false),
     m_subscribed(false),
     m_disconnecting(false),
@@ -62,9 +64,11 @@ DataSubscriber::DataSubscriber() :
     m_cacheIndex(0),
     m_timeIndex(0),
     m_baseTimeOffsets{ 0, 0 },
+    m_lastMissingCacheWarning(DateTime::MinValue),
     m_tsscResetRequested(false),
     m_tsscLastOOSReport(DateTime::MinValue),
     m_commandChannelSocket(m_commandChannelService),
+    m_clientAcceptor(m_commandChannelService),
     m_readBuffer(Common::MaxPacketSize),
     m_writeBuffer(Common::MaxPacketSize),
     m_dataChannelSocket(m_dataChannelService)
@@ -78,7 +82,10 @@ DataSubscriber::~DataSubscriber() noexcept
     {
         m_disposing = true;
         m_connector.Cancel();
-        Disconnect(true, false);
+        Disconnect(true, false, true);
+
+        // Allow a moment for connection terminated event to complete
+        ThreadSleep(10);
     }
     catch (...)
     {
@@ -115,7 +122,7 @@ void DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void DataSubscriber::RunCommandChannelResponseThread()
 {
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0 && error, T1 && bytesTransferred)
     {
         ReadPayloadHeader(error, bytesTransferred);
     });
@@ -137,12 +144,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t byte
 
     if (error)
     {
-        stringstream errorMessageStream;
-
-        errorMessageStream << "Error reading data from command channel: ";
-        errorMessageStream << SystemError(error).what();
-
-        DispatchErrorMessage(errorMessageStream.str());
+        DispatchErrorMessage("Error reading data from command channel: " + string(SystemError(error).what()));
         return;
     }
 
@@ -155,38 +157,29 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t byte
     {
         if (m_version > 2)
         {
-			// We need to check for a valid initial payload header size before attempting to resize
-			// the payload buffer, especially when subscriber may be in listening mode. The very first
-			// response received from the publisher should be the succeeded or failed response command
-			// for the DefineOperationalModes command sent by the subscriber. The packet payload size
-			// for this response, succeed or fail, will be a short message. Longer message sizes would
-			// be considered suspect data, likely from a non-STTP based client connection. In context
-			// of this initial response message, anything larger than 8KB of payload is considered
-			// suspect and will be evaluated as a non-STTP type response.
-			constexpr uint32_t MaxInitialPacketSize = Common::ResponseHeaderSize + 8192;
+            // We need to check for a valid initial payload header size before attempting to resize
+            // the payload buffer, especially when subscriber may be in listening mode. The very first
+            // response received from the publisher should be the succeeded or failed response command
+            // for the DefineOperationalModes command sent by the subscriber. The packet payload size
+            // for this response, succeed or fail, will be a short message. Longer message sizes would
+            // be considered suspect data, likely from a non-STTP based client connection. In context
+            // of this initial response message, anything larger than 8KB of payload is considered
+            // suspect and will be evaluated as a non-STTP type response.
+            constexpr uint32_t MaxInitialPacketSize = Common::ResponseHeaderSize + 8192;
 
-			if (packetSize > MaxInitialPacketSize)
+            if (packetSize > MaxInitialPacketSize)
             {
-                stringstream errorMessageStream;
-
-                errorMessageStream << "Possible invalid protocol detected from \"";
-                errorMessageStream << m_connector.GetHostname(); // TODO: For listening mode, change to resolved connection ID
-                errorMessageStream << "\": encountered request for ";
-                errorMessageStream << packetSize;
-                errorMessageStream << " byte initial packet size -- connection likely from non-STTP client, disconnecting.";
-
-			    DispatchErrorMessage(errorMessageStream.str());
-
-			    auto _ = Thread([this] { Disconnect(false, false); });
-				return;
-			}
-		}
+                DispatchErrorMessage("Possible invalid protocol detected from \"" + m_connectionID + "\": encountered request for " + ToString(packetSize) + " byte initial packet size -- connection likely from non-STTP client, disconnecting.");
+                auto _ = Thread([this] { Disconnect(false, false, false); });
+                return;
+            }
+        }
         else
         {
-			// Older versions of STTP did not provide a response to define operational modes - in this
-			// case common first response was for metadata refresh, which may be larger than 8KB
-			m_validated = true;
-		}
+            // Older versions of STTP did not provide a response to define operational modes - in this
+            // case common first response was for metadata refresh, which may be larger than 8KB
+            m_validated = true;
+        }
     }
 
     if (packetSize > ConvertUInt32(m_readBuffer.size()))
@@ -195,7 +188,7 @@ void DataSubscriber::ReadPayloadHeader(const ErrorCode& error, const size_t byte
     // Read packet (payload body)
     // This read method is guaranteed not to return until the
     // requested size has been read or an error has occurred.
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, packetSize), [this]<typename T0, typename T1>(T0 && error, T1 && bytesTransferred) // NOLINT
     {
         ReadPacket(error, bytesTransferred);
     });
@@ -215,12 +208,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransf
 
     if (error)
     {
-        stringstream errorMessageStream;
-
-        errorMessageStream << "Error reading data from command channel: ";
-        errorMessageStream << SystemError(error).what();
-
-        DispatchErrorMessage(errorMessageStream.str());
+        DispatchErrorMessage("Error reading data from command channel: " + string(SystemError(error).what()));
         return;
     }
 
@@ -231,7 +219,7 @@ void DataSubscriber::ReadPacket(const ErrorCode& error, const size_t bytesTransf
     ProcessServerResponse(m_readBuffer.data(), 0, ConvertUInt32(bytesTransferred));
 
     // Read next payload header
-    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred) // NOLINT
+    async_read(m_commandChannelSocket, buffer(m_readBuffer, Common::PayloadHeaderSize), [this]<typename T0, typename T1>(T0 && error, T1 && bytesTransferred) // NOLINT
     {
         ReadPayloadHeader(error, bytesTransferred);
     });
@@ -256,9 +244,7 @@ void DataSubscriber::RunDataChannelResponseThread()
 
         if (error)
         {
-            errorMessageStream << "Error reading data from command channel: ";
-            errorMessageStream << SystemError(error).what();
-            DispatchErrorMessage(errorMessageStream.str());
+            DispatchErrorMessage("Error reading data from command channel: " + string(SystemError(error).what()));
             break;
         }
 
@@ -283,70 +269,56 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
     {
         if (responseCode != ServerResponse::NoOP && (commandCode != ServerCommand::DefineOperationalModes || responseCode != ServerResponse::Succeeded && responseCode != ServerResponse::Failed))
         {
-            stringstream errorMessageStream;
-
-            errorMessageStream << "Possible invalid protocol detected from \"";
-            errorMessageStream << m_connector.GetHostname(); // TODO: For listening mode, change to resolved connection ID
-            errorMessageStream << "\": encountered unexpected initial command / response code: ";
-            errorMessageStream << ServerCommand::ToString(commandCode);
-            errorMessageStream << " / ";
-            errorMessageStream << ServerResponse::ToString(responseCode);
-            errorMessageStream << " -- connection likely from non-STTP client, disconnecting.";
-
-            DispatchErrorMessage(errorMessageStream.str());
-
-            auto _ = Thread([this] { Disconnect(false, false); });
-			return;
+            DispatchErrorMessage("Possible invalid protocol detected from \"" + m_connectionID + "\": encountered unexpected initial command / response code: " + ServerCommand::ToString(commandCode) + " / " + ServerResponse::ToString(responseCode) + " -- connection likely from non-STTP client, disconnecting.");
+            auto _ = Thread([this] { Disconnect(false, false, false); });
+            return;
         }
     }
 
     switch (responseCode)
     {
-        case ServerResponse::Succeeded:
-            HandleSucceeded(commandCode, packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::Succeeded:
+        HandleSucceeded(commandCode, packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::Failed:
-            HandleFailed(commandCode, packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::Failed:
+        HandleFailed(commandCode, packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::DataPacket:
-            HandleDataPacket(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::DataPacket:
+        HandleDataPacket(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::DataStartTime:
-            HandleDataStartTime(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::DataStartTime:
+        HandleDataStartTime(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::ProcessingComplete:
-            HandleProcessingComplete(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::ProcessingComplete:
+        HandleProcessingComplete(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::UpdateSignalIndexCache:
-            HandleUpdateSignalIndexCache(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::UpdateSignalIndexCache:
+        HandleUpdateSignalIndexCache(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::UpdateBaseTimes:
-            HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::UpdateBaseTimes:
+        HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::ConfigurationChanged:
-            HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::ConfigurationChanged:
+        HandleConfigurationChanged(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::BufferBlock:
-            HandleBufferBlock(packetBodyStart, 0, packetBodyLength);
-            break;
+    case ServerResponse::BufferBlock:
+        HandleBufferBlock(packetBodyStart, 0, packetBodyLength);
+        break;
 
-        case ServerResponse::NoOP:
-            break;
+    case ServerResponse::NoOP:
+        break;
 
-        default:
-            stringstream errorMessageStream;
-            errorMessageStream << "Encountered unexpected server response code: ";
-            errorMessageStream << ServerResponse::ToString(responseCode);
-            DispatchErrorMessage(errorMessageStream.str());
-            break;
+    default:
+        DispatchErrorMessage("Encountered unexpected server response code: " + ServerResponse::ToString(responseCode) + " from \"" + m_connectionID + "\"");
+        break;
     }
 }
 
@@ -354,7 +326,6 @@ void DataSubscriber::ProcessServerResponse(uint8_t* buffer, const uint32_t offse
 void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, const uint32_t offset, const uint32_t length)
 {
     const uint32_t messageLength = ConvertUInt32(length / sizeof(char));
-    stringstream messageStream;
 
     const std::function sendResponse = [&]()
     {
@@ -362,6 +333,8 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
         {
             char* messageStart = reinterpret_cast<char*>(data + offset);
             const char* messageEnd = messageStart + messageLength;
+            stringstream messageStream;
+
             messageStream << "Received success code in response to server command " << ServerCommand::ToString(commandCode) << ": ";
 
             for (char* messageIter = messageStart; messageIter < messageEnd; ++messageIter)
@@ -373,35 +346,34 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
 
     switch (commandCode)
     {
-        case ServerCommand::DefineOperationalModes:
-            m_validated = true;
-            m_defineOpModesCompleted.Set();
-            sendResponse();
-            break;
-        case ServerCommand::MetadataRefresh:
-            // Metadata refresh message is not sent with a
-            // message, but rather the metadata itself.
-            HandleMetadataRefresh(data, offset, length);
-            break;
-        case ServerCommand::Subscribe:
-        case ServerCommand::Unsubscribe:
-            // Do not break on these messages because there is
-            // still an associated message to be processed.
-            m_subscribed = (commandCode == ServerCommand::Subscribe);
-            [[fallthrough]];
-        case ServerCommand::UpdateProcessingInterval:
-        case ServerCommand::RotateCipherKeys:
-            // Each of these responses come with a message that will
-            // be delivered to the user via the status message callback.
-            sendResponse();
-            break;
-        default:
-            // If we don't know what the message is, we can't interpret
-            // the data sent with the packet. Deliver an error message
-            // to the user via the error message callback.
-            messageStream << "Received success code in response to unknown server command " << ServerCommand::ToString(commandCode);
-            DispatchErrorMessage(messageStream.str());
-            break;
+    case ServerCommand::DefineOperationalModes:
+        m_validated = true;
+        m_defineOpModesCompleted.Set();
+        sendResponse();
+        break;
+    case ServerCommand::MetadataRefresh:
+        // Metadata refresh message is not sent with a
+        // message, but rather the metadata itself.
+        HandleMetadataRefresh(data, offset, length);
+        break;
+    case ServerCommand::Subscribe:
+    case ServerCommand::Unsubscribe:
+        // Do not break on these messages because there is
+        // still an associated message to be processed.
+        m_subscribed = (commandCode == ServerCommand::Subscribe);
+        [[fallthrough]];
+    case ServerCommand::UpdateProcessingInterval:
+    case ServerCommand::RotateCipherKeys:
+        // Each of these responses come with a message that will
+        // be delivered to the user via the status message callback.
+        sendResponse();
+        break;
+    default:
+        // If we don't know what the message is, we can't interpret
+        // the data sent with the packet. Deliver an error message
+        // to the user via the error message callback.
+        DispatchErrorMessage("Received success code in response to unknown server command " + ServerCommand::ToString(commandCode));
+        break;
     }
 }
 
@@ -421,7 +393,7 @@ void DataSubscriber::HandleFailed(const uint8_t commandCode, uint8_t* data, cons
     {
         m_validated = false;
         m_defineOpModesCompleted.Set();
-        auto _ = Thread([this] { Disconnect(false, false); });
+        auto _ = Thread([this] { Disconnect(false, false, false); });
     }
 
     if (commandCode == ServerCommand::Connect)
@@ -593,14 +565,8 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
     string errorMessage;
 
     if (data[offset] != 85)
-    {
-        stringstream errorMessageStream;
+        throw SubscriberException("TSSC version not recognized: " + ToHex(data[offset]));
 
-        errorMessageStream << "TSSC version not recognized: ";
-        errorMessageStream << ToHex(data[offset]);
-
-        throw SubscriberException(errorMessageStream.str());
-    }
     offset++;
 
     const uint16_t sequenceNumber = EndianConverter::ToBigEndian<uint16_t>(data, offset);
@@ -637,12 +603,7 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
 
             if (TimeSince(m_tsscLastOOSReport) > 2.0F)
             {
-                stringstream errorMessageStream;
-                errorMessageStream << "TSSC is out of sequence. Expecting: ";
-                errorMessageStream << decoder->GetSequenceNumber();
-                errorMessageStream << ", Received: ";
-                errorMessageStream << sequenceNumber;
-                DispatchErrorMessage(errorMessageStream.str());
+                DispatchErrorMessage("TSSC is out of sequence. Expecting: " + ToString(decoder->GetSequenceNumber()) + ", Received: " + ToString(sequenceNumber));
                 m_tsscLastOOSReport = UtcNow();
             }
 
@@ -657,7 +618,6 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
     {
         decoder->SetBuffer(data, offset, length);
 
-        MeasurementPtr measurement;
         Guid signalID;
         string measurementSource;
         uint64_t measurementID;
@@ -670,7 +630,7 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
         {
             if (signalIndexCache->GetMeasurementKey(id, signalID, measurementSource, measurementID))
             {
-                measurement = NewSharedPtr<Measurement>();
+                MeasurementPtr measurement = NewSharedPtr<Measurement>();
 
                 measurement->SignalID = signalID;
                 measurement->Source = measurementSource;
@@ -694,10 +654,7 @@ void DataSubscriber::ParseTSSCMeasurements(const SignalIndexCachePtr& signalInde
 
     if (errorMessage.length() > 0)
     {
-        stringstream errorMessageStream;
-        errorMessageStream << "Failed to parse TSSC measurements - disconnecting: ";
-        errorMessageStream << errorMessage;
-        DispatchErrorMessage(errorMessageStream.str());
+        DispatchErrorMessage("Failed to parse TSSC measurements - disconnecting: " + errorMessage);
         HandleSocketError();
         return;
     }
@@ -710,7 +667,18 @@ void DataSubscriber::ParseCompactMeasurements(const SignalIndexCachePtr& signalI
     const MessageCallback errorMessageCallback = m_errorMessageCallback;
 
     if (signalIndexCache == nullptr)
+    {
+        if (TimeSince(m_lastMissingCacheWarning) >= MissingCacheWarningInterval)
+        {
+            // Warning message for missing signal index cache
+            if (m_lastMissingCacheWarning > DateTime::MinValue)
+                DispatchStatusMessage("WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+
+            m_lastMissingCacheWarning = UtcNow();
+        }
+
         return;
+    }
 
     // Create measurement parser
     const CompactMeasurement parser(signalIndexCache, m_baseTimeOffsets, includeTime, useMillisecondResolution);
@@ -757,7 +725,7 @@ SignalIndexCache* DataSubscriber::AddDispatchReference(SignalIndexCachePtr signa
 SignalIndexCachePtr DataSubscriber::ReleaseDispatchReference(SignalIndexCache* signalIndexCachePtr)
 {
     SignalIndexCachePtr signalIndexCacheRef = signalIndexCachePtr->GetReference();
-    
+
     // Remove used reference to signal index cache pointer
     m_signalIndexCacheDispatchRefs.erase(signalIndexCacheRef);
 
@@ -815,9 +783,9 @@ void DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, const vecto
 {
     if (source == nullptr || buffer.empty())
         return;
-    
+
     const MessageCallback statusMessageCallback = source->m_statusMessageCallback;
-    
+
     if (statusMessageCallback != nullptr)
         statusMessageCallback(source, reinterpret_cast<const char*>(buffer.data()));
 }
@@ -957,6 +925,12 @@ void DataSubscriber::RegisterConfigurationChangedCallback(const ConfigurationCha
     m_configurationChangedCallback = configurationChangedCallback;
 }
 
+// Registers the connection established callback.
+void DataSubscriber::RegisterConnectionEstablishedCallback(const ConnectionEstablishedCallback& connectionEstablishedCallback)
+{
+    m_connectionEstablishedCallback = connectionEstablishedCallback;
+}
+
 // Registers the connection terminated callback.
 void DataSubscriber::RegisterConnectionTerminatedCallback(const ConnectionTerminatedCallback& connectionTerminatedCallback)
 {
@@ -1022,7 +996,6 @@ void DataSubscriber::SetVersion(const uint8_t version)
         throw invalid_argument("This STTP data subscriber implementation only supports version 1 to 3 of the protocol");
 
     m_version = version;
-
 }
 
 // Gets user defined data reference
@@ -1059,7 +1032,7 @@ void DataSubscriber::SetSubscriptionInfo(const SubscriptionInfo& info)
 // callback function without having to spawn their own separate thread.
 void DataSubscriber::ConnectionTerminatedDispatcher()
 {
-    Disconnect(false, true);
+    Disconnect(false, true, false);
 }
 
 void DataSubscriber::WaitOnDisconnectThread()
@@ -1081,11 +1054,10 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
 {
     // This function fails by exception, consumers should try/catch calls to Connect
     if (IsConnected())
-        throw SubscriberException("Subscriber is already connected; disconnect first");
+        throw SubscriberException("DataSubscriber is already connected; disconnect first");
 
-    // TODO: Implement for reverse connection mode
-    //if (IsStarted())
-    //    throw SubscriberException("Cannot start connection, subscriber is already established in listening connection mode");
+    if (IsListening())
+        throw SubscriberException("Cannot start connection, DataSubscriber is already established with a listening mode reverse connection");
 
     // Make sure any pending disconnect has completed to make sure socket is closed
     WaitOnDisconnectThread();
@@ -1094,16 +1066,12 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     // this prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
-    const DnsResolver::query dnsQuery(hostname, to_string(port));
+    const DnsResolver::query dnsQuery(hostname, ToString(port));
     ErrorCode error;
 
-    m_disconnected = false;
-    m_validated = m_version < 3;
-    m_defineOpModesCompleted.Reset();
-    m_totalCommandChannelBytesReceived = 0UL;
-    m_totalDataChannelBytesReceived = 0UL;
-    m_totalMeasurementsReceived = 0UL;    
-    
+    // Initialize connection state
+    SetupConnection();
+
     if (!autoReconnecting)
         m_connector.ResetConnection();
 
@@ -1125,11 +1093,115 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     m_commandChannelService.restart();
 #endif
 
-    m_callbackThread = Thread([this]{ RunCallbackThread(); });
-    m_commandChannelResponseThread = Thread([this]{ RunCommandChannelResponseThread(); });
-    m_connected = true;
+    EstablishConnection(hostEndpoint, false);
+}
 
-    SendOperationalModes();
+void DataSubscriber::Listen(const sttp::TcpEndPoint& endpoint)
+{
+    // This function fails by exception, consumers should try/catch calls to Start
+    if (IsListening())
+        throw SubscriberException("DataSubscriber is already listening; disconnect first");
+
+    if (IsConnected())
+        throw SubscriberException("Cannot start a listening mode reverse connection, DataSubscriber is already connected");
+
+    // Make sure any pending disconnect has completed to make sure socket is closed
+    WaitOnDisconnectThread();
+
+#if BOOST_LEGACY
+    m_commandChannelService.reset();
+#else
+    m_commandChannelService.restart();
+#endif
+
+    // TODO: Add TLS implementation options
+    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false); //-V601
+
+    // Run command channel accept thread
+    m_commandChannelAcceptThread = Thread([this]
+        {
+            StartAccept();
+            m_commandChannelService.run();
+        });
+
+    m_listening = true;
+}
+
+void DataSubscriber::Listen(const uint16_t port, const bool ipV6)
+{
+    Listen(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
+}
+
+void DataSubscriber::Listen(const std::string& networkInterfaceIP, const uint16_t port)
+{
+    Listen(TcpEndPoint(make_address(networkInterfaceIP), port));
+}
+
+void DataSubscriber::StartAccept()
+{
+    TcpSocket commandChannelSocket(m_commandChannelService);
+
+    m_clientAcceptor.async_accept(commandChannelSocket, [this, &commandChannelSocket]<typename T0>(T0 && error)
+    {
+        AcceptConnection(commandChannelSocket, error);
+    });
+}
+
+void DataSubscriber::AcceptConnection(TcpSocket& commandChannelSocket, const ErrorCode& error)
+{
+    if (!IsListening())
+        return;
+
+    if (error)
+    {
+        DispatchErrorMessage("Error while attempting to accept DataPublisher connection for reverse connection: " + string(SystemError(error).what()));
+    }
+    else
+    {
+        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+        const TcpEndPoint endPoint = commandChannelSocket.remote_endpoint();
+
+        // Will only accept one active connection at a time, this may be indicative
+        // of a rouge connection attempt - consumer should log warning
+        if (IsConnected())
+        {
+            string address = "<unknown>";
+            string errorMessage = "closed.";
+
+            try
+            {
+                address = ResolveDNSName(m_commandChannelService, endPoint);
+                commandChannelSocket.close();
+            }
+            catch (SystemError& ex)
+            {
+                errorMessage = "close error: " + string(ex.what());
+            }
+            catch (...)
+            {
+                errorMessage = "close error: " + boost::current_exception_diagnostic_information(true);
+            }
+
+            DispatchErrorMessage("WARNING: Duplicate connection attempt detected from: \"" + address + "\". Existing data publisher connection already established, data subscriber will only accept one connection at a time - connection " + errorMessage);
+        }
+        else
+        {
+            // Let any pending connect or disconnect operation complete before new connect,
+            // this prevents destruction disconnect before connection is completed
+            ScopeLock lock(m_connectActionMutex);
+
+            // Initialize connection state
+            SetupConnection();
+
+            // Hold on to primary socket
+            m_commandChannelSocket = std::move(commandChannelSocket);
+
+            // Create new command channel
+            EstablishConnection(endPoint, true);
+        }
+    }
+
+    StartAccept();
 }
 
 // Disconnects from the publisher.
@@ -1141,17 +1213,18 @@ void DataSubscriber::Disconnect()
 
     // Disconnect method executes shutdown on a separate thread without stopping to prevent
     // issues where user may call disconnect method from a dispatched event thread. Also,
-    // user requests to disconnect are not an auto-reconnect attempt
-    Disconnect(false, false);
+    // user requests to disconnect are not an auto-reconnect attempt and should initiate
+    // shutdown of listening socket as well.
+    Disconnect(false, false, true);
 }
 
 // private:
-void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecting)
+void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecting, const bool includeListener)
 {
     // Check if disconnect thread is running or subscriber has already disconnected
     if (IsDisconnecting())
     {
-        if (!autoReconnecting && m_disconnecting && !m_disconnected)
+        if (!autoReconnecting && !m_listening && !m_disconnected)
             m_connector.Cancel();
 
         if (joinThread && !m_disconnected)
@@ -1159,11 +1232,15 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
 
         return;
     }
-    
+
     // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
     m_disconnecting = true;
     m_connected = false;
     m_validated = false;
+
+    if (includeListener)
+        m_listening = false;
+
     m_defineOpModesCompleted.Set();
     m_defineOpModesCompleted.Reset();
     m_subscribed = false;
@@ -1171,7 +1248,7 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     {
         ScopeLock lock(m_disconnectThreadMutex);
 
-        m_disconnectThread = Thread([this, autoReconnecting]
+        m_disconnectThread = Thread([this, autoReconnecting, includeListener]
         {
             try
             {
@@ -1186,12 +1263,18 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
                 ErrorCode error;
 
                 // Release queues and close sockets so that threads can shut down gracefully
+                if (includeListener)
+                    m_clientAcceptor.close(error);
+
                 m_callbackQueue.Release();
                 m_commandChannelSocket.close(error);
                 m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
                 m_dataChannelSocket.close(error);
 
                 // Join with all threads to guarantee their completion before returning control to the caller
+                if (includeListener)
+                    m_commandChannelAcceptThread.join();
+
                 m_callbackThread.join();
                 m_commandChannelResponseThread.join();
                 m_dataChannelResponseThread.join();
@@ -1239,10 +1322,46 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         WaitOnDisconnectThread();
 }
 
+void DataSubscriber::SetupConnection()
+{
+    m_validated = m_version < 3;
+    m_defineOpModesCompleted.Reset();
+
+    m_disconnected = false;
+    m_subscribed = false;
+
+    m_totalCommandChannelBytesReceived = 0UL;
+    m_totalDataChannelBytesReceived = 0UL;
+    m_totalMeasurementsReceived = 0UL;
+
+    // TODO: Clear UDP key and initialization vectors
+    // TODO: Clear buffer block expected sequence number
+    // TODO: Reinitialize measurement metadata registry
+}
+
+void DataSubscriber::EstablishConnection(const TcpEndPoint& endPoint, const bool listening)
+{
+    m_connectionID = ResolveDNSName(m_commandChannelService, endPoint);
+
+    if (listening)
+        DispatchStatusMessage("Processing connection attempt from \"" + m_connectionID + "\" ...");
+
+    m_callbackThread = Thread([this] { RunCallbackThread(); });
+    m_commandChannelResponseThread = Thread([this] { RunCommandChannelResponseThread(); });
+    m_connected = true;
+    m_lastMissingCacheWarning = DateTime::MinValue;
+
+    SendOperationalModes();
+
+    // Notify consumers of connect
+    if (m_connectionEstablishedCallback != nullptr)
+        m_connectionEstablishedCallback(this);
+}
+
 void DataSubscriber::HandleSocketError()
 {
     // Connection closed by peer; terminate connection
-    m_connectionTerminationThread = Thread([this]{ ConnectionTerminatedDispatcher(); });
+    m_connectionTerminationThread = Thread([this] { ConnectionTerminatedDispatcher(); });
 }
 
 void DataSubscriber::Subscribe(const SubscriptionInfo& info)
@@ -1275,7 +1394,7 @@ void DataSubscriber::Subscribe()
     connectionStream << "processingInterval=" << m_subscriptionInfo.ProcessingInterval << ";";
     connectionStream << "useMillisecondResolution=" << m_subscriptionInfo.UseMillisecondResolution << ";";
     connectionStream << "requestNaNValueFilter=" << m_subscriptionInfo.RequestNaNValueFilter << ";";
-    connectionStream << "assemblyInfo={source=" << m_assemblySource << "; version="<< m_assemblyVersion <<"; updatedOn=" << m_assemblyUpdatedOn << "};";
+    connectionStream << "assemblyInfo={source=" << m_assemblySource << "; version=" << m_assemblyVersion << "; updatedOn=" << m_assemblyUpdatedOn << "};";
 
     if (!m_subscriptionInfo.FilterExpression.empty())
         connectionStream << "filterExpression={" << m_subscriptionInfo.FilterExpression << "};";
@@ -1290,7 +1409,7 @@ void DataSubscriber::Subscribe()
         // Attempt to bind to local UDP port
         m_dataChannelSocket.open(ipVersion);
         m_dataChannelSocket.bind(udp::endpoint(ipVersion, m_subscriptionInfo.DataChannelLocalPort));
-        m_dataChannelResponseThread = Thread([this]{ RunDataChannelResponseThread(); });
+        m_dataChannelResponseThread = Thread([this] { RunDataChannelResponseThread(); });
 
         if (!m_dataChannelSocket.is_open())
             throw SubscriberException("Failed to bind to local port");
@@ -1421,7 +1540,7 @@ void DataSubscriber::SendServerCommand(const uint8_t commandCode, const uint8_t*
             m_writeBuffer[5 + i] = data[offset + i];
     }
 
-    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), [this]<typename T0, typename T1>(T0&& error, T1&& bytesTransferred)
+    async_write(m_commandChannelSocket, buffer(m_writeBuffer, commandBufferSize), [this]<typename T0, typename T1>(T0 && error, T1 && bytesTransferred)
     {
         WriteHandler(error, bytesTransferred);
     });
@@ -1439,14 +1558,7 @@ void DataSubscriber::WriteHandler(const ErrorCode& error, const size_t bytesTran
     }
 
     if (error)
-    {
-        stringstream errorMessageStream;
-
-        errorMessageStream << "Error reading data from command channel: ";
-        errorMessageStream << SystemError(error).what();
-
-        DispatchErrorMessage(errorMessageStream.str());
-    }
+        DispatchErrorMessage("Error reading data from command channel: " + string(SystemError(error).what()));
 }
 
 // Convenience method to send the currently defined
@@ -1466,7 +1578,7 @@ void DataSubscriber::SendOperationalModes()
     if (m_compressPayloadData && !m_subscriptionInfo.UdpDataChannel)
     {
         operationalModes |= OperationalModes::CompressPayloadData;
-        
+
         if (m_version < 10)
             operationalModes |= CompressionModes::TSSC;
     }
@@ -1508,6 +1620,12 @@ bool DataSubscriber::IsConnected()
     return m_connected;
 }
 
+// Indicates whether the subscriber is started in listening mode.
+bool DataSubscriber::IsListening() const
+{
+    return m_listening;
+}
+
 bool DataSubscriber::WaitForOperationalModesResponse(const int32_t timeout)
 {
     return m_defineOpModesCompleted.Wait(timeout);
@@ -1530,15 +1648,15 @@ bool DataSubscriber::IsValidated() const
     return m_validated;
 }
 
-bool DataSubscriber::IsReverseConnection() const
-{
-    return false; // TODO: Enable response when listening mode is implemented
-}
-
 // Indicates whether the subscriber is subscribed.
 bool DataSubscriber::IsSubscribed() const
 {
     return m_subscribed;
+}
+
+std::string DataSubscriber::GetConnectionID() const
+{
+    return m_connectionID;
 }
 
 void DataSubscriber::GetAssemblyInfo(string& source, string& version, string& updatedOn) const
