@@ -47,7 +47,6 @@ void DataClient::SetSubscriptionInfo(const SubscriptionInfo& info)
 
 SubscriberConnector::SubscriberConnector() :
     m_port(0),
-    m_timer(Timer::NullPtr),
     m_maxRetries(-1),
     m_retryInterval(2000),
     m_maxRetryInterval(120000),
@@ -127,8 +126,8 @@ void SubscriberConnector::AutoReconnect(DataClient* client)
             connector.m_clientErrorMessageCallback(client, errorMessageStream.str());
         }
 
-        connector.m_timer = Timer::WaitTimer(retryInterval);
-        connector.m_timer->Wait();
+        connector.m_waitHandle.Reset();
+        connector.m_waitHandle.Wait(retryInterval);
 
         if (connector.m_cancel || client->m_disposing)
             return;
@@ -279,8 +278,8 @@ int SubscriberConnector::Connect(DataClient& client, bool autoReconnecting)
 
             if (retryInterval > 0)
             {
-                m_timer = Timer::WaitTimer(retryInterval);
-                m_timer->Wait();
+                m_waitHandle.Reset();
+                m_waitHandle.Wait(retryInterval);
 
                 if (m_cancel)
                     return ConnectCanceled;
@@ -297,8 +296,7 @@ void SubscriberConnector::Cancel()
     m_cancel = true;
 
     // Cancel any waiting timer operations by setting immediate timer expiration
-    if (m_timer != nullptr)
-        m_timer->Stop();
+    m_waitHandle.Set();
 
     m_autoReconnectThread.join();
 }

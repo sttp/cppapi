@@ -177,36 +177,3 @@ void Timer::Stop()
 
     m_timerThread.reset();
 }
-
-void Timer::Wait() const
-{
-    try
-    {
-        if (m_running && m_timerThread != nullptr)
-        {
-            const ThreadPtr timerThread = m_timerThread;
-
-            if (timerThread != nullptr)
-                timerThread->join();
-        }                
-    }
-    catch (...)
-    {
-        // ReSharper disable once CppRedundantControlFlowJump
-        return;
-    }
-}
-
-void Timer::EmptyCallback(const TimerPtr&, void*)
-{            
-}
-
-TimerPtr Timer::WaitTimer(const int32_t interval, const bool autoStart)
-{
-    TimerPtr waitTimer = NewSharedPtr<Timer>(interval, EmptyCallback);
-
-    if (autoStart)
-        waitTimer->Start();
-
-    return waitTimer;
-}

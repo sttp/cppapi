@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "../Timer.h"
+#include "../ManualResetEvent.h"
 #include "SubscriptionInfo.h"
 
 namespace sttp::transport
@@ -73,7 +73,7 @@ namespace sttp::transport
 
         std::string m_hostname;
         uint16_t m_port;
-        TimerPtr m_timer;
+        ManualResetEvent m_waitHandle;
 
         int32_t m_maxRetries;
         int32_t m_retryInterval;
