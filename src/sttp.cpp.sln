@@ -86,6 +86,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReversePublish", "samples\R
 		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReverseSubscribe", "samples\ReverseSubscribe\ReverseSubscribe.vcxproj", "{08919E93-D481-493A-9FEA-96A1D66752F7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{759721EF-40AE-4763-B225-6CD2710219F8} = {759721EF-40AE-4763-B225-6CD2710219F8}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -198,6 +203,14 @@ Global
 		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x64.Build.0 = Release|x64
 		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x86.ActiveCfg = Release|Win32
 		{A2162AF5-C7ED-40DB-96C4-2BD12C402023}.Release|x86.Build.0 = Release|Win32
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Debug|x64.ActiveCfg = Debug|x64
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Debug|x64.Build.0 = Debug|x64
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Debug|x86.ActiveCfg = Debug|Win32
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Debug|x86.Build.0 = Debug|Win32
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Release|x64.ActiveCfg = Release|x64
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Release|x64.Build.0 = Release|x64
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Release|x86.ActiveCfg = Release|Win32
+		{08919E93-D481-493A-9FEA-96A1D66752F7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -218,6 +231,7 @@ Global
 		{BF9568F3-D767-4C01-9F88-DB97594D5D6C} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{0E771B2E-798A-48D0-B304-6D87F5488F6A} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{A2162AF5-C7ED-40DB-96C4-2BD12C402023} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
+		{08919E93-D481-493A-9FEA-96A1D66752F7} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}
