@@ -300,7 +300,7 @@ vector<MeasurementMetadataPtr> PublisherInstance::FilterMetadata(const string& f
     return m_publisher->FilterMetadata(filterExpression);
 }
 
-bool PublisherInstance::Start(const TcpEndPoint& endpoint)
+bool PublisherInstance::Start(const TcpEndPoint& endPoint)
 {
     if (IsStarted())
         throw PublisherException("Publisher is already started; stop first");
@@ -312,7 +312,7 @@ bool PublisherInstance::Start(const TcpEndPoint& endpoint)
 
     try
     {
-        m_publisher->Start(endpoint);
+        m_publisher->Start(endPoint);
     }
     catch (PublisherException& ex)
     {
@@ -328,7 +328,7 @@ bool PublisherInstance::Start(const TcpEndPoint& endpoint)
     }
 
     if (!errorMessage.empty())
-        ErrorMessage("Failed to listen on port " + ToString(endpoint.port()) + ": " + errorMessage);
+        ErrorMessage("Failed to listen on port " + ToString(endPoint.port()) + ": " + errorMessage);
 
     return m_publisher->IsStarted();
 }

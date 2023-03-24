@@ -92,7 +92,7 @@ namespace sttp::transport
         // Starts publisher using specified connection info in listening connection mode
         // Returns true if publisher was successfully started
         // Throws PublisherException for implementation logic errors
-        virtual bool Start(const sttp::TcpEndPoint& endpoint);
+        virtual bool Start(const sttp::TcpEndPoint& endPoint);
         virtual bool Start(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         virtual bool Start(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
         
