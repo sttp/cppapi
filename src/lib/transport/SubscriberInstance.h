@@ -56,6 +56,8 @@ namespace sttp::transport
         Mutex m_configurationUpdateLock;
         void* m_userData;
 
+        void HandleConnect();
+        void SetupSubscriptionInfo();
         void SendMetadataRefreshCommand();        
 
         static void ConstructConfigurationFrames(const sttp::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, sttp::StringMap<ConfigurationFramePtr>& configurationFrames);
@@ -201,7 +203,7 @@ namespace sttp::transport
         // Returns true if subscriber was successfully started
         // Throws SubscriberException for implementation logic errors
         virtual bool Listen(const sttp::TcpEndPoint& endPoint);
-        virtual bool ListenStart(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
+        virtual bool Listen(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         virtual bool Listen(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
 
         // Disconnects from the STTP publisher, normal or reverse connection mode

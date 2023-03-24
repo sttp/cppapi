@@ -41,6 +41,30 @@ using namespace sttp::transport::tssc;
 constexpr float32_t MissingCacheWarningInterval = 20.0;
 const DataSubscriberPtr DataSubscriber::NullPtr = nullptr;
 
+class ReverseConnection;
+typedef SharedPtr<ReverseConnection> ReverseConnectionPtr;
+
+class ReverseConnection : public boost::enable_shared_from_this<ReverseConnection>
+{
+private:
+    TcpSocket m_socket;
+
+public:
+    explicit ReverseConnection(IOContext& service) :
+        m_socket(service)
+    {
+    }
+
+    TcpSocket& GetSocket()
+    {
+        return m_socket;
+    }
+
+    static ReverseConnectionPtr New(IOContext& service) {
+        return NewSharedPtr<ReverseConnection, IOContext&>(service);
+    }
+};
+
 DataSubscriber::DataSubscriber() :
     m_subscriberID(Empty::Guid),
     m_compressPayloadData(true),
@@ -127,7 +151,8 @@ void DataSubscriber::RunCommandChannelResponseThread()
         ReadPayloadHeader(error, bytesTransferred);
     });
 
-    m_commandChannelService.run();
+    if (!m_listening)
+        m_commandChannelService.run();
 }
 
 // Callback for async read of the payload header.
@@ -1096,7 +1121,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     EstablishConnection(hostEndpoint, false);
 }
 
-void DataSubscriber::Listen(const sttp::TcpEndPoint& endpoint)
+void DataSubscriber::Listen(const sttp::TcpEndPoint& endPoint)
 {
     // This function fails by exception, consumers should try/catch calls to Start
     if (IsListening())
@@ -1115,14 +1140,14 @@ void DataSubscriber::Listen(const sttp::TcpEndPoint& endpoint)
 #endif
 
     // TODO: Add TLS implementation options
-    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endpoint, false); //-V601
+    m_clientAcceptor = TcpAcceptor(m_commandChannelService, endPoint, false); //-V601
 
     // Run command channel accept thread
     m_commandChannelAcceptThread = Thread([this]
-        {
-            StartAccept();
-            m_commandChannelService.run();
-        });
+    {
+        StartAccept();
+        m_commandChannelService.run();
+    });
 
     m_listening = true;
 }
@@ -1139,49 +1164,53 @@ void DataSubscriber::Listen(const std::string& networkInterfaceIP, const uint16_
 
 void DataSubscriber::StartAccept()
 {
-    TcpSocket commandChannelSocket(m_commandChannelService);
+    ReverseConnectionPtr reverseConnection = ReverseConnection::New(m_commandChannelService);
 
-    m_clientAcceptor.async_accept(commandChannelSocket, [this, &commandChannelSocket]<typename T0>(T0 && error)
+    m_clientAcceptor.async_accept(reverseConnection->GetSocket(), [this, reverseConnection]<typename T0>(T0 && error)
     {
-        AcceptConnection(commandChannelSocket, error);
+        AcceptConnection(&reverseConnection->GetSocket(), error);
     });
 }
 
-void DataSubscriber::AcceptConnection(TcpSocket& commandChannelSocket, const ErrorCode& error)
+void DataSubscriber::AcceptConnection(TcpSocket* commandChannelSocket, const ErrorCode& error)
 {
     if (!IsListening())
         return;
 
+    // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
+    const TcpEndPoint endPoint = commandChannelSocket->remote_endpoint();
+    string address = "<unknown>";
+    string errorMessage = "closed.";
+
+    auto closeSocket = [&]
+    {
+        try
+        {
+            address = ResolveDNSName(m_commandChannelService, endPoint);
+            commandChannelSocket->close();
+        }
+        catch (SystemError& ex)
+        {
+            errorMessage = "close error: " + string(ex.what());
+        }
+        catch (...)
+        {
+            errorMessage = "close error: " + boost::current_exception_diagnostic_information(true);
+        }
+    };
+
     if (error)
     {
-        DispatchErrorMessage("Error while attempting to accept DataPublisher connection for reverse connection: " + string(SystemError(error).what()));
+        closeSocket();
+        DispatchErrorMessage("Error while attempting to accept DataPublisher connection for reverse connection: " + string(SystemError(error).what()) + " - connection " + errorMessage);
     }
     else
     {
-        // TODO: For secured connections, validate certificate and IP information here to assign subscriberID
-        const TcpEndPoint endPoint = commandChannelSocket.remote_endpoint();
-
         // Will only accept one active connection at a time, this may be indicative
         // of a rouge connection attempt - consumer should log warning
         if (IsConnected())
         {
-            string address = "<unknown>";
-            string errorMessage = "closed.";
-
-            try
-            {
-                address = ResolveDNSName(m_commandChannelService, endPoint);
-                commandChannelSocket.close();
-            }
-            catch (SystemError& ex)
-            {
-                errorMessage = "close error: " + string(ex.what());
-            }
-            catch (...)
-            {
-                errorMessage = "close error: " + boost::current_exception_diagnostic_information(true);
-            }
-
+            closeSocket();
             DispatchErrorMessage("WARNING: Duplicate connection attempt detected from: \"" + address + "\". Existing data publisher connection already established, data subscriber will only accept one connection at a time - connection " + errorMessage);
         }
         else
@@ -1194,7 +1223,7 @@ void DataSubscriber::AcceptConnection(TcpSocket& commandChannelSocket, const Err
             SetupConnection();
 
             // Hold on to primary socket
-            m_commandChannelSocket = std::move(commandChannelSocket);
+            m_commandChannelSocket = std::move(*commandChannelSocket);
 
             // Create new command channel
             EstablishConnection(endPoint, true);

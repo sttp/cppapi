@@ -64,6 +64,7 @@ SubscriberInstance::SubscriberInstance() :
     m_subscriber->RegisterSubscriptionUpdatedCallback(&HandleSubscriptionUpdated);
     m_subscriber->RegisterNewMeasurementsCallback(&HandleNewMeasurements);
     m_subscriber->RegisterConfigurationChangedCallback(&HandleConfigurationChanged);
+    m_subscriber->RegisterConnectionEstablishedCallback(&HandleConnectionEstablished);
     m_subscriber->RegisterConnectionTerminatedCallback(&HandleConnectionTerminated);
 }
 
@@ -186,6 +187,35 @@ void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
     m_metadataFilters = metadataFilters;
 }
 
+void SubscriberInstance::HandleConnect()
+{
+    // If automatically parsing metadata, request metadata upon successful connection,
+    // after metadata is received the SubscriberInstance will then initiate subscribe;
+    // otherwise, subscribe is initiated immediately (when auto subscribe requested)
+    if (m_autoParseMetadata)
+        SendMetadataRefreshCommand();
+    else
+        m_subscriber->Subscribe();
+}
+
+void SubscriberInstance::SetupSubscriptionInfo()
+{
+    m_subscriptionInfo = CreateSubscriptionInfo();
+
+    if (!m_startTime.empty() && !m_stopTime.empty())
+    {
+        m_subscriber->RegisterProcessingCompleteCallback(&HandleProcessingComplete);
+        m_subscriptionInfo.StartTime = m_startTime;
+        m_subscriptionInfo.StopTime = m_stopTime;
+    }
+
+    if (m_udpPort > 0)
+    {
+        m_subscriptionInfo.UdpDataChannel = true;
+        m_subscriptionInfo.DataChannelLocalPort = m_udpPort;
+    }
+}
+
 bool SubscriberInstance::Connect()
 {
     if (IsConnected())
@@ -206,20 +236,7 @@ bool SubscriberInstance::Connect()
     if (m_port == 0)
         throw SubscriberException("No port specified for connection: call Initialize before Connect");
 
-    m_subscriptionInfo = CreateSubscriptionInfo();
-
-    if (!m_startTime.empty() && !m_stopTime.empty())
-    {
-        m_subscriber->RegisterProcessingCompleteCallback(&HandleProcessingComplete);
-        m_subscriptionInfo.StartTime = m_startTime;
-        m_subscriptionInfo.StopTime = m_stopTime;
-    }
-
-    if (m_udpPort > 0)
-    {
-        m_subscriptionInfo.UdpDataChannel = true;
-        m_subscriptionInfo.DataChannelLocalPort = m_udpPort;
-    }
+    SetupSubscriptionInfo();
 
     // Connect and subscribe to publisher
     const int result = connector.Connect(*m_subscriber, m_subscriptionInfo);
@@ -239,14 +256,7 @@ bool SubscriberInstance::Connect()
         }
 
         ConnectionEstablished();
-
-        // If automatically parsing metadata, request metadata upon successful connection,
-        // after metadata is handled the SubscriberInstance will then initiate subscribe;
-        // otherwise, initiate subscribe immediately
-        if (m_autoParseMetadata)
-            SendMetadataRefreshCommand();
-        else
-            m_subscriber->Subscribe();
+        HandleConnect();
 
         return true;
     }
@@ -280,6 +290,12 @@ bool SubscriberInstance::Listen(const sttp::TcpEndPoint& endPoint)
 
     try
     {
+        m_hostname = endPoint.address().to_string();
+        m_port = endPoint.port();;
+
+        SetupSubscriptionInfo();
+        m_subscriber->SetSubscriptionInfo(m_subscriptionInfo);
+
         m_subscriber->Listen(endPoint);
     }
     catch (SubscriberException& ex)
@@ -301,7 +317,7 @@ bool SubscriberInstance::Listen(const sttp::TcpEndPoint& endPoint)
     return m_subscriber->IsListening();
 }
 
-bool SubscriberInstance::ListenStart(const uint16_t port, const bool ipV6)
+bool SubscriberInstance::Listen(const uint16_t port, const bool ipV6)
 {
     return Listen(TcpEndPoint(ipV6 ? tcp::v6() : tcp::v4(), port));
 }
@@ -1260,10 +1276,12 @@ void SubscriberInstance::HistoricalReadComplete()
 
 void SubscriberInstance::ConnectionEstablished()
 {
+    StatusMessage("Connection from \"" + GetConnectionID() + "\" established.");
 }
 
 void SubscriberInstance::ConnectionTerminated()
 {
+    StatusMessage("Connection from \"" + GetConnectionID() + "\" terminated.");
 }
 
 void SubscriberInstance::GetAssemblyInfo(std::string& source, std::string& version, std::string& updatedOn) const
@@ -1291,14 +1309,7 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
     if (source->IsConnected())
     {
         instance->ConnectionEstablished();
-
-        // If automatically parsing metadata, request metadata upon successful connection,
-        // after metadata is handled the SubscriberInstance will then initiate subscribe;
-        // otherwise, initiate subscribe immediately
-        if (instance->m_autoParseMetadata)
-            instance->SendMetadataRefreshCommand();
-        else
-            source->Subscribe();
+        instance->HandleConnect();
     }
     else
     {
@@ -1410,6 +1421,7 @@ void SubscriberInstance::HandleConnectionEstablished(const DataSubscriber* sourc
         return;
 
     instance->ConnectionEstablished();
+    instance->HandleConnect();
 }
 
 void SubscriberInstance::HandleConnectionTerminated(const DataSubscriber* source)

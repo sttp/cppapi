@@ -153,7 +153,7 @@ namespace sttp::transport
         void ReadPacket(const ErrorCode& error, size_t bytesTransferred);
         void WriteHandler(const ErrorCode& error, size_t bytesTransferred);
         void StartAccept();
-        void AcceptConnection(TcpSocket& commandChannelSocket, const ErrorCode& error);
+        void AcceptConnection(TcpSocket* commandChannelSocket, const ErrorCode& error);
 
         // Server response handlers
         void ProcessServerResponse(uint8_t* buffer, uint32_t offset, uint32_t length);
@@ -274,7 +274,7 @@ namespace sttp::transport
         void Connect(const std::string& hostname, uint16_t port);
 
         // Establish a reverse listening connection for subscriber using specified connection info
-        void Listen(const sttp::TcpEndPoint& endpoint);
+        void Listen(const sttp::TcpEndPoint& endPoint);
         void Listen(uint16_t port, bool ipV6 = false);                       // Bind to default NIC
         void Listen(const std::string& networkInterfaceIP, uint16_t port);   // Bind to specified NIC IP, format determines IP version
 
