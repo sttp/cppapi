@@ -453,38 +453,7 @@ void SubscriberConnection::StartConnection(const bool connectionAccepted)
     // Attempt to lookup remote connection identification for logging purposes
     const auto remoteEndPoint = m_commandChannelSocket.remote_endpoint();
     m_ipAddress = remoteEndPoint.address();
-
-    if (remoteEndPoint.protocol() == tcp::v6())
-        m_connectionID = "[" + m_ipAddress.to_string() + "]:" + ToString(remoteEndPoint.port());
-    else
-        m_connectionID = m_ipAddress.to_string() + ":" + ToString(remoteEndPoint.port());
-
-    try
-    {
-        DnsResolver resolver(m_commandChannelService);
-        const DnsResolver::query dnsQuery(m_ipAddress.to_string(), ToString(remoteEndPoint.port()));
-        DnsResolver::iterator iterator = resolver.resolve(dnsQuery);
-        const DnsResolver::iterator end;
-
-        while (iterator != end)
-        {
-            const auto& endPoint = *iterator++;
-
-            if (!endPoint.host_name().empty())
-            {
-                m_hostName = endPoint.host_name();
-                m_connectionID = m_hostName + " (" + m_connectionID + ")";
-                break;
-            }
-        }
-    }
-    catch (...)
-    {   //-V565
-        // DNS lookup failure is not catastrophic
-    }
-
-    if (m_hostName.empty())
-        m_hostName = m_ipAddress.to_string();
+    m_connectionID = ResolveDNSName(m_commandChannelService, remoteEndPoint, m_hostName);
 
     m_stopped = false;
 
