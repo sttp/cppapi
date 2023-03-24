@@ -40,6 +40,7 @@ using namespace std::chrono;
 using namespace boost::uuids;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
+using namespace boost::asio::ip;
 using namespace sttp;
 
 const datetime_t DateTimeEpoch(date(1400, 1, 1), TimeSpan(0, 0, 0));
@@ -863,4 +864,53 @@ StringMap<string> sttp::ParseKeyValuePairs(const string& value, const char param
     }
 
     return keyValuePairs;
+}
+
+std::string sttp::ResolveDNSName(IOContext& service, const TcpEndPoint& source)
+{
+    string hostName;
+    return ResolveDNSName(service, source, hostName);
+}
+
+string sttp::ResolveDNSName(IOContext& service, const TcpEndPoint& source, string& hostName)
+{
+    const IPAddress address = source.address();
+    const string port = ToString(source.port());
+    string connectionID;
+
+    if (source.protocol() == tcp::v6())
+        connectionID = "[" + address.to_string() + "]:" + port;
+    else
+        connectionID = address.to_string() + ":" + port;
+
+    hostName.clear();
+
+    try
+    {
+        DnsResolver resolver(service);
+        const DnsResolver::query dnsQuery(address.to_string(), port);
+        DnsResolver::iterator iterator = resolver.resolve(dnsQuery);
+        const DnsResolver::iterator end;
+
+        while (iterator != end)
+        {
+            const auto& endPoint = *iterator++;
+
+            if (!endPoint.host_name().empty())
+            {
+                hostName = endPoint.host_name();
+                connectionID = hostName + " (" + connectionID + ")";  // NOLINT
+                break;
+            }
+        }
+    }
+    catch (...)
+    {   //-V565
+        // DNS lookup failure is not catastrophic
+    }
+
+    if (hostName.empty())
+        hostName = address.to_string();
+
+    return connectionID;
 }

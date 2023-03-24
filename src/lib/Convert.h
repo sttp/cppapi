@@ -163,4 +163,12 @@ namespace sttp
 
     // Parses a string of key/value pairs into a case-insensitive string dictionary
     StringMap<std::string> ParseKeyValuePairs(const std::string& value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}');
+
+    // Returns a DNS resolved host name and port for the specified end point
+    std::string ResolveDNSName(IOContext& service, const TcpEndPoint& source);
+
+    // Returns a DNS resolved host name and port for the specified end point.
+    // Out parameter hostName is set to the DNS host name, if resolvable,
+    // otherwise will be set to the IP address of the end point.
+    std::string ResolveDNSName(IOContext& service, const TcpEndPoint& source, std::string& hostName);
 }
