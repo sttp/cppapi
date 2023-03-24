@@ -58,16 +58,12 @@ bool ManualResetEvent::Wait(const int32_t timeout)
 {
     UniqueLock lock(m_mutex);
 
+    auto isSignaled = [this] { return m_signaled.load(); };
+
     if (timeout > -1)
-    {
-        if (!m_signaled)
-            m_handle.wait_for(lock, milliseconds(timeout));
-    }
+        m_handle.wait_until(lock, steady_clock::now() + milliseconds(timeout), isSignaled);
     else
-    {
-        while (!m_signaled)
-            m_handle.wait(lock);
-    }
+        m_handle.wait(lock, isSignaled);
 
     return m_signaled;
 }
