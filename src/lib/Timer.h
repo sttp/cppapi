@@ -76,12 +76,6 @@ namespace sttp
 
         void Stop();
 
-        void Wait() const;
-
-        static void EmptyCallback(const TimerPtr&, void*);
-
-        static TimerPtr WaitTimer(int32_t interval, bool autoStart = true);
-
         const static TimerPtr NullPtr;
     };
 }
