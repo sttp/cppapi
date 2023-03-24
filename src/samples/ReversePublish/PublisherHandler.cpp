@@ -177,7 +177,7 @@ void PublisherHandler::StartDataPublication()
 
     // Setup data publication timer - for this publishing sample we send
     // data type reasonable random values every 33 milliseconds
-    m_publishTimer = NewSharedPtr<Timer>(33, [this](Timer*, void*)
+    m_publishTimer = NewSharedPtr<Timer>(33, [this](const TimerPtr&, void*)
     {
         // If metadata can change, the following integer should not be static:
         static uint32_t count = ConvertUInt32(m_measurementMetadata.size());

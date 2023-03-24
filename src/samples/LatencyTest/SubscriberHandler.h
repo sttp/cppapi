@@ -42,8 +42,6 @@ protected:
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
     void SubscriptionUpdated(const sttp::transport::SignalIndexCachePtr& signalIndexCache) override;
-    void ConnectionEstablished() override;
-    void ConnectionTerminated() override;
 
 public:
     explicit SubscriberHandler(std::string name);

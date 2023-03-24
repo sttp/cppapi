@@ -203,12 +203,3 @@ void SubscriberHandler::HistoricalReadComplete()
     StatusMessage("Historical data read complete.");
 }
 
-void SubscriberHandler::ConnectionEstablished()
-{
-    StatusMessage("Connection established.");
-}
-
-void SubscriberHandler::ConnectionTerminated()
-{
-    StatusMessage("Connection terminated.");
-}

@@ -112,7 +112,7 @@ void SubscriberHandler::SubscriptionUpdated(const SignalIndexCachePtr& signalInd
 
 void SubscriberHandler::ConnectionEstablished()
 {
-    StatusMessage("Connection established.");
+    SubscriberInstance::ConnectionEstablished();
 
     stringstream fileNameBuf;
     fileNameBuf << m_name << "-cpp.csv";
@@ -128,6 +128,8 @@ void SubscriberHandler::ConnectionEstablished()
 
 void SubscriberHandler::ConnectionTerminated()
 {
+    SubscriberInstance::ConnectionTerminated();
+
     StatusMessage("Connection terminated.");
     fclose(m_export);
 }

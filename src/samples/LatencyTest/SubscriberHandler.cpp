@@ -108,13 +108,3 @@ void SubscriberHandler::SubscriptionUpdated(const SignalIndexCachePtr& signalInd
 {
     StatusMessage("Publisher provided " + ToString(signalIndexCache->Count()) + " measurements in response to subscription.");
 }
-
-void SubscriberHandler::ConnectionEstablished()
-{
-    StatusMessage("Connection established.");
-}
-
-void SubscriberHandler::ConnectionTerminated()
-{
-    StatusMessage("Connection terminated.");
-}

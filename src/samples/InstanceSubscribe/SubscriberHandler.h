@@ -47,8 +47,6 @@ protected:
     void ParsedMetadata() override;
     void ConfigurationChanged() override;
     void HistoricalReadComplete() override;
-    void ConnectionEstablished() override;
-    void ConnectionTerminated() override;
 
 public:
     SubscriberHandler(std::string name);

@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     // Stop publisher - this stops publication
     Publisher->Stop();
 
-    // Delete publisher instances - this closes sockets
+    // Delete publisher instance - this closes sockets
     delete Publisher;
 
     cout << "Publisher stopped." << endl;
