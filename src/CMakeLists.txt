@@ -507,6 +507,10 @@ target_link_libraries (LatencyTest sttp)
 add_executable (ReversePublish EXCLUDE_FROM_ALL samples/ReversePublish/ReversePublish.cpp samples/ReversePublish/PublisherHandler.cpp)
 target_link_libraries (ReversePublish sttp)
 
+# ReverseSubscribe sample
+add_executable (ReverseSubscribe EXCLUDE_FROM_ALL samples/ReverseSubscribe/ReverseSubscribe.cpp samples/ReverseSubscribe/SubscriberHandler.cpp)
+target_link_libraries (ReverseSubscribe sttp)
+
 # SimplePublish sample
 add_executable (SimplePublish EXCLUDE_FROM_ALL samples/SimplePublish/SimplePublish.cpp)
 target_link_libraries (SimplePublish sttp)
@@ -527,6 +531,7 @@ add_custom_target (samples DEPENDS
     InteropTest
     LatencyTest
     ReversePublish
+    ReverseSubscribe
     SimpleSubscribe
     SimplePublish
 )
