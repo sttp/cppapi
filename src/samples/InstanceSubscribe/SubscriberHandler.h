@@ -30,13 +30,12 @@ class SubscriberHandler : public sttp::transport::SubscriberInstance
 {
 private:
     std::string m_name;
-    uint64_t m_processCount;
+    sttp::datetime_t m_lastMessage;
 
     static sttp::Mutex s_coutLock;
 
 protected:
     sttp::transport::SubscriptionInfo CreateSubscriptionInfo() override;
-    void SetupSubscriberConnector(sttp::transport::SubscriberConnector& connector) override;
     void StatusMessage(const std::string& message) override;
     void ErrorMessage(const std::string& message) override;
     void DataStartTime(time_t unixSOC, uint16_t milliseconds) override;
@@ -49,7 +48,7 @@ protected:
     void HistoricalReadComplete() override;
 
 public:
-    SubscriberHandler(std::string name);
+    explicit SubscriberHandler(std::string name);
 };
 
 typedef sttp::SharedPtr<SubscriberHandler> SubscriberHandlerPtr;

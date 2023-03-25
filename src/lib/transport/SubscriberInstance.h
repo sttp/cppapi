@@ -58,7 +58,7 @@ namespace sttp::transport
 
         void HandleConnect();
         void SetupSubscriptionInfo();
-        void SendMetadataRefreshCommand();        
+        void SendMetadataRefreshCommand();
 
         static void ConstructConfigurationFrames(const sttp::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, sttp::StringMap<ConfigurationFramePtr>& configurationFrames);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);

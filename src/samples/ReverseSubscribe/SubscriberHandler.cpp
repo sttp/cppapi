@@ -38,7 +38,11 @@ SubscriptionInfo SubscriberHandler::CreateSubscriptionInfo()
 {
     SubscriptionInfo info = SubscriberInstance::CreateSubscriptionInfo();
 
-    // TODO: Modify subscription info properties as desired...
+    // TODO: Modify any custom subscription info properties as desired...
+
+    // Note -- most common subscription info properties are set in the base class
+    // as common get/set properties - this overload would only be needed if you
+    // need to set a custom property not already defined in the base class
 
     // See SubscriptionInfo class in DataSubscriber.h for all properties
     //info.Throttled = false;
