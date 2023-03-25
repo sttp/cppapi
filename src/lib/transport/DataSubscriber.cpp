@@ -1262,6 +1262,8 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         return;
     }
 
+    bool useConnectActionMutex = !autoReconnecting || m_listening;
+
     // Notify running threads that the subscriber is disconnecting, i.e., disconnect thread is active
     m_disconnecting = true;
     m_connected = false;
@@ -1277,7 +1279,7 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
     {
         ScopeLock lock(m_disconnectThreadMutex);
 
-        m_disconnectThread = Thread([this, autoReconnecting, includeListener]
+        m_disconnectThread = Thread([this, autoReconnecting, includeListener, useConnectActionMutex]
         {
             try
             {
@@ -1286,8 +1288,10 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
                 {
                     m_connector.Cancel();
                     m_connectionTerminationThread.join();
-                    m_connectActionMutex.lock();
                 }
+
+                if (useConnectActionMutex)
+                    m_connectActionMutex.lock();
 
                 ErrorCode error;
 
@@ -1340,10 +1344,9 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
                 if (m_autoReconnectCallback != nullptr && !m_disposing)
                     m_autoReconnectCallback(this);
             }
-            else
-            {
+
+            if (useConnectActionMutex)
                 m_connectActionMutex.unlock();
-            }
         });
     }
 
