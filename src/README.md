@@ -178,6 +178,7 @@ make InstanceSubscribe
 make InteropTest
 make LatencyTest
 make ReversePublish
+make ReverseSubscribe
 make SimpleSubscribe
 make SimplePublish
 ```
