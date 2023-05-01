@@ -541,7 +541,12 @@ void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetada
                 TryGetValue(*phasors, measurement->PhasorSourceIndex, phasorType, 'I');
 
             row->SetStringValue(signalAcronym, GetSignalTypeAcronym(measurement->Reference.Kind, phasorType));
-            row->SetInt32Value(phasorSourceIndex, measurement->PhasorSourceIndex);
+
+            if (measurement->PhasorSourceIndex)
+                row->SetInt32Value(phasorSourceIndex, measurement->PhasorSourceIndex);
+            else
+                row->SetInt32Value(phasorSourceIndex, nullptr);
+
             row->SetStringValue(description, measurement->Description);
             row->SetBooleanValue(internal, true);
             row->SetBooleanValue(enabled, true);
