@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Convert.h - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -32,6 +32,9 @@ namespace sttp
 
     // Convert Unix second of century and milliseconds to DateTime
     datetime_t FromUnixTime(time_t unixSOC, uint16_t milliseconds);
+
+    // Convert Unix second of century and microseconds to DateTime
+    datetime_t FromUnixTimeMicro(time_t unixSOC, uint16_t microseconds);
 
     // Converts a timestamp, in Ticks, to DateTime
     datetime_t FromTicks(int64_t ticks);
