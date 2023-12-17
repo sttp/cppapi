@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Convert.cpp - Gbtc
 //
-//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -179,6 +179,11 @@ void sttp::ToUnixTime(int64_t ticks, time_t& unixSOC, uint16_t& milliseconds)
 datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
 {
     return from_time_t(unixSOC) + Milliseconds(milliseconds);
+}
+
+datetime_t sttp:: FromUnixTimeMicro(const time_t unixSOC, const uint32_t microseconds)
+{
+    return from_time_t(unixSOC) + Microseconds(microseconds);
 }
 
 datetime_t sttp::FromTicks(int64_t ticks)
