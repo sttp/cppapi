@@ -241,7 +241,7 @@ bool sttp::TimestampIsReasonable(const int64_t value, const float64_t lagTime, c
 
 bool sttp::TimestampIsReasonable(const datetime_t& value, const float64_t lagTime, const float64_t leadTime, const bool utc)
 {
-    return TimestampIsReasonable(ToTicks(value), lagTime, leadTime);
+    return TimestampIsReasonable(ToTicks(value), lagTime, leadTime, utc);
 }
 
 int64_t sttp::RoundToSubsecondDistribution(const int64_t ticks, const int32_t samplesPerSecond)
