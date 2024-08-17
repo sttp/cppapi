@@ -181,7 +181,7 @@ datetime_t sttp::FromUnixTime(const time_t unixSOC, const uint16_t milliseconds)
     return from_time_t(unixSOC) + Milliseconds(milliseconds);
 }
 
-datetime_t sttp:: FromUnixTimeMicro(const time_t unixSOC, const uint32_t microseconds)
+datetime_t sttp::FromUnixTimeMicro(const time_t unixSOC, const uint32_t microseconds)
 {
     return from_time_t(unixSOC) + Microseconds(microseconds);
 }
