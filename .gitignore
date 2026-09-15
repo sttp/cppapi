@@ -332,3 +332,4 @@ ASALocalRun/
 
 build/
 !build/tools/EmbedFile.exe
+/.github/upgrades
