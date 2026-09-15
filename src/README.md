@@ -4,7 +4,7 @@ Code includes STTP functionality for both "subscribers" and "publishers".
 
 Build instructions follow:
 
-* [Windows](#compiling-in-visual-studio) (using [Visual Studio 2022](https://visualstudio.microsoft.com/vs/community/))
+* [Windows](#compiling-in-visual-studio) (using [Visual Studio 2026](https://visualstudio.microsoft.com/vs/community/))
 * [Unix Variants](#compiling-in-linux) (using [CMake](https://cmake.org/))
 
 ## Compiling in Visual Studio
@@ -34,12 +34,12 @@ Boost library files:
 If you have an existing Boost installation you can simply create a symbolic
 link to the folder, e.g.:
 ```cmd
-mklink /D C:\projects\sttp\boost C:\boost_1_80_0
+mklink /D C:\projects\sttp\boost C:\boost_1_92_0
 ```
 
 Alternately you can adjust the additional include directories to your own
 Boost installation location for each of the build configurations. The code
-has been tested with v1.66, v1.71, v1.74, v1.75 and v1.80 of Boost.
+has been tested with v1.66, v1.71, v1.74, v1.75, v1.80 and 1.92 of Boost.
 
 Note that you will need to compile Boost in order to execute the sample
 applications found in:
@@ -55,7 +55,7 @@ After unzipping the zlib source code and running the Boost `bootstrap.bat` scrip
 run  the `.\b2` build application with the following zlib parameters, adjusting
 the paths to the directory where the zlib source code was unzipped:
 ```cmd
-b2 -s ZLIB_SOURCE="C:\zlib-1.2.13" -s ZLIB_INCLUDE="C:\zlib-1.2.13"
+b2 -s ZLIB_SOURCE="C:\zlib-1.3.2" -s ZLIB_INCLUDE="C:\zlib-1.3.2"
 ```
 
 ## Compiling in Linux
