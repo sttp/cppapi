@@ -241,6 +241,8 @@ set (STTP_HEADER_FILES
     "lib/utf8/checked.h"
     "lib/utf8/core.h"
     "lib/utf8/cpp11.h"
+    "lib/utf8/cpp17.h"
+    "lib/utf8/cpp20.h"
     "lib/utf8/unchecked.h"
 )
 

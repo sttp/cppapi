@@ -417,6 +417,8 @@
     <ClInclude Include="utf8\checked.h" />
     <ClInclude Include="utf8\core.h" />
     <ClInclude Include="utf8\cpp11.h" />
+    <ClInclude Include="utf8\cpp17.h" />
+    <ClInclude Include="utf8\cpp20.h" />
     <ClInclude Include="utf8\unchecked.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>

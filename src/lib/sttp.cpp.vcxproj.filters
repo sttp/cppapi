@@ -593,6 +593,12 @@
     <ClInclude Include="utf8\cpp11.h">
       <Filter>utf8</Filter>
     </ClInclude>
+    <ClInclude Include="utf8\cpp17.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8\cpp20.h">
+      <Filter>utf8</Filter>
+    </ClInclude>
     <ClInclude Include="utf8\unchecked.h">
       <Filter>utf8</Filter>
     </ClInclude>

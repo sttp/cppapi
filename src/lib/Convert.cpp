@@ -363,7 +363,13 @@ wstring sttp::ToUTF16(const string& value)
     //return converter.from_bytes(value);
 
     wstring wide;
-    utf8::utf8to32(value.begin(), value.end(), std::back_inserter(wide));
+    
+    // Windows wchar_t stores UTF-16 code units; 32-bit wchar_t stores UTF-32.
+    if constexpr (sizeof(wchar_t) == 2)
+        utf8::utf8to16(value.begin(), value.end(), std::back_inserter(wide));
+    else
+        utf8::utf8to32(value.begin(), value.end(), std::back_inserter(wide));
+    
     return wide;
 }
 
@@ -374,7 +380,12 @@ string sttp::ToUTF8(const wstring& value)
     //return converter.to_bytes(value);
 
     string narrow;
-    utf8::utf32to8(value.begin(), value.end(), std::back_inserter(narrow));
+
+    if constexpr (sizeof(wchar_t) == 2)
+        utf8::utf16to8(value.begin(), value.end(), std::back_inserter(narrow));
+    else
+        utf8::utf32to8(value.begin(), value.end(), std::back_inserter(narrow));
+    
     return narrow;
 }
 
