@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 #include "DataSubscriber.h"
+#include "StartupTrace.h"
 #include "Constants.h"
 #include "CompactMeasurement.h"
 #include "../Convert.h"
@@ -386,6 +387,8 @@ void DataSubscriber::HandleSucceeded(const uint8_t commandCode, uint8_t* data, c
         // Do not break on these messages because there is
         // still an associated message to be processed.
         m_subscribed = (commandCode == ServerCommand::Subscribe);
+        if (m_subscribed)
+            diagnostics::StartupEvent(this, "subscribe acknowledged");
         [[fallthrough]];
     case ServerCommand::UpdateProcessingInterval:
     case ServerCommand::RotateCipherKeys:
@@ -435,7 +438,9 @@ void DataSubscriber::HandleFailed(const uint8_t commandCode, uint8_t* data, cons
 // Handles metadata refresh messages from the server.
 void DataSubscriber::HandleMetadataRefresh(const uint8_t* data, const uint32_t offset, const uint32_t length)
 {
+    diagnostics::StartupEvent(this, "metadata response received (bytes)", 0.0, length);
     Dispatch(&MetadataDispatcher, data, offset, length);
+    diagnostics::StartupEvent(this, "metadata response queued");
 }
 
 // Handles data start time reported by the server at the beginning of a subscription.
@@ -456,6 +461,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t 
     if (data == nullptr)
         return;
 
+    diagnostics::StartupPhase startup(this, "signal cache processing scope");
     vector<uint8_t> uncompressedBuffer;
     int32_t cacheIndex = 0;
 
@@ -486,8 +492,10 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t 
         WriteBytes(uncompressedBuffer, data, offset, length);
     }
 
+    startup.Mark("signal cache decompress/copy complete (bytes)", uncompressedBuffer.size());
     SignalIndexCachePtr signalIndexCache = NewSharedPtr<SignalIndexCache>();
     signalIndexCache->Decode(uncompressedBuffer, m_subscriberID);
+    startup.Mark("signal cache decode complete");
 
     m_signalIndexCacheMutex.lock();
     m_signalIndexCache[cacheIndex].swap(signalIndexCache);
@@ -548,6 +556,9 @@ void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, const uint
 
         // Read measurement count and gather statistics
         const uint32_t count = EndianConverter::ToBigEndian<uint32_t>(data, offset);
+        const bool firstPacket = m_totalMeasurementsReceived == 0 && count > 0;
+        if (firstPacket)
+            diagnostics::StartupEvent(this, "first nonempty data packet received", 0.0, count);
         m_totalMeasurementsReceived += count;
         offset += 4; //-V112
 
@@ -569,6 +580,8 @@ void DataSubscriber::HandleDataPacket(uint8_t* data, uint32_t offset, const uint
         else
             ParseCompactMeasurements(signalIndexCache, data, offset, length, includeTime, info.UseMillisecondResolution, frameLevelTimestamp, measurements);
 
+        if (firstPacket)
+            diagnostics::StartupEvent(this, "first packet decoded; invoking measurement callback", 0.0, measurements.size());
         newMeasurementsCallback(this, measurements);
     }
 }
@@ -1414,6 +1427,7 @@ void DataSubscriber::Subscribe(const SubscriptionInfo& info)
 // Subscribe to publisher in order to start receiving data.
 void DataSubscriber::Subscribe()
 {
+    diagnostics::StartupPhase startup(this, "subscribe send scope");
     stringstream connectionStream;
     vector<uint8_t> buffer;
     uint32_t bigEndianConnectionStringSize;
@@ -1488,7 +1502,9 @@ void DataSubscriber::Subscribe()
     for (size_t i = 0; i < connectionStringSize; ++i)
         buffer[5 + i] = connectionStringPtr[i];
 
+    startup.Mark("subscribe command built (bytes)", bufferSize);
     SendServerCommand(ServerCommand::Subscribe, buffer.data(), 0, bufferSize);
+    startup.Mark("subscribe send returned");
 
     // Reset TSSC decompresser on successful (re)subscription
     m_tsscLastOOSReportMutex.lock();
