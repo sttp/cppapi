@@ -61,9 +61,9 @@ namespace sttp::transport
         void SendMetadataRefreshCommand();
 
         static void ConstructConfigurationFrames(const sttp::StringMap<DeviceMetadataPtr>& devices, const std::unordered_map<Guid, MeasurementMetadataPtr>& measurements, sttp::StringMap<ConfigurationFramePtr>& configurationFrames);
-        static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, uint16_t index, MeasurementMetadataPtr& measurementMetadata);
+        static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, int32_t index, MeasurementMetadataPtr& measurementMetadata);
         static bool TryFindMeasurement(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind, MeasurementMetadataPtr& measurementMetadata);
-        static uint16_t GetSignalKindCount(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
+        static int32_t GetSignalKindCount(const std::vector<MeasurementMetadataPtr>& measurements, SignalKind kind);
 
         // Internal subscription event handlers
         static void HandleResubscribe(DataSubscriber* source);

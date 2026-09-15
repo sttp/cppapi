@@ -166,7 +166,7 @@ namespace sttp::transport
         std::string Acronym;
 
         // For phasors, digitals and analogs - this is the ordered index, uses 1-based indexing
-        uint16_t Index {};
+        int32_t Index {};
 
         // Signal classification (e.g., phase angle, but not specific type of voltage or current)
         SignalKind Kind { SignalKind::Unknown };
@@ -184,7 +184,7 @@ namespace sttp::transport
         Guid SignalID { Empty::Guid };	// Unique UUID of this individual measurement (lookup key!)
         std::string PointTag;           // Well formatted tag name for historians, e.g., OSI-PI, etc.
         SignalReference Reference;      // Parsed signal reference structure
-        uint16_t PhasorSourceIndex {};  // Measurement phasor index, if measurement represents a "Phasor"
+        int32_t PhasorSourceIndex {};  // Measurement phasor index, if measurement represents a "Phasor"
         std::string Description;        // Detailed measurement description (free-form)
         datetime_t UpdatedOn;           // Time of last meta-data update
     };
@@ -197,7 +197,7 @@ namespace sttp::transport
         std::string Label;              // Channel name for "phasor" (covers two measurements)
         std::string Type;               // Phasor type, i.e., "V" for voltage or "I" for current
         std::string Phase;              // Phasor phase, one of, "+", "-", "0", "A", "B" or "C"
-        uint16_t SourceIndex {};        // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
+        int32_t SourceIndex {};        // Phasor ordered index, uses 1-based indexing (key to MeasurementMetadata.PhasorSourceIndex)
         datetime_t UpdatedOn;           // Time of last meta-data update
     };
 

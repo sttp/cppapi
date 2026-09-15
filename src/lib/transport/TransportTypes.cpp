@@ -152,7 +152,7 @@ SignalReference::SignalReference(const string& signal) : SignalID(Guid())
             Kind = ParseSignalKind(signalType.substr(0, 2));
 
             if (Kind != SignalKind::Unknown)
-                TryParseUInt16(signalType.substr(2), Index);
+                TryParseInt32(signalType.substr(2), Index);
         }
         else
         {

@@ -408,7 +408,7 @@ int32_t DataPublisher::GetColumnIndex(const sttp::data::DataTablePtr& table, con
 
 void DataPublisher::DefineMetadata(const vector<DeviceMetadataPtr>& deviceMetadata, const vector<MeasurementMetadataPtr>& measurementMetadata, const vector<PhasorMetadataPtr>& phasorMetadata, const int32_t versionNumber)
 {
-    typedef unordered_map<uint16_t, char> PhasorTypeMap;
+    typedef unordered_map<int32_t, char> PhasorTypeMap;
     typedef SharedPtr<PhasorTypeMap> PhasorTypeMapPtr;
     const PhasorTypeMapPtr nullPhasorTypeMap = nullptr;
 
@@ -843,7 +843,7 @@ vector<MeasurementMetadataPtr> DataPublisher::FilterMetadata(const string& filte
         metadata->SignalID = row->ValueAsGuid(signalID).GetValueOrDefault();
         metadata->PointTag = row->ValueAsString(pointTag).GetValueOrDefault();
         metadata->Reference = SignalReference(row->ValueAsString(signalReference).GetValueOrDefault());
-        metadata->PhasorSourceIndex = static_cast<uint16_t>(row->ValueAsInt32(phasorSourceIndex).GetValueOrDefault());
+        metadata->PhasorSourceIndex = row->ValueAsInt32(phasorSourceIndex).GetValueOrDefault();
         metadata->Description = row->ValueAsString(description).GetValueOrDefault();
         metadata->UpdatedOn = row->ValueAsDateTime(updatedOn).GetValueOrDefault();
 

@@ -904,7 +904,9 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         TryParseGuid(device.child_value("SignalID"), measurementMetadata->SignalID);
         measurementMetadata->PointTag = device.child_value("PointTag");
         measurementMetadata->Reference = SignalReference(string(device.child_value("SignalReference")));
-        TryParseUInt16(Coalesce(device.child_value("PhasorSourceIndex"), "0"), measurementMetadata->PhasorSourceIndex);
+        TryParseInt32(Coalesce(device.child_value("PhasorSourceIndex"), "0"), measurementMetadata->PhasorSourceIndex);
+        if (measurementMetadata->PhasorSourceIndex < 0)
+            measurementMetadata->PhasorSourceIndex = 0;
         measurementMetadata->Description = device.child_value("Description");
         TryParseTimestamp(device.child_value("UpdatedOn"), measurementMetadata->UpdatedOn);
 
@@ -922,7 +924,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     }
 
     // Query PhasorDetail records from metadata
-    uint16_t phasorCount = 0;
+    size_t phasorCount = 0;
 
     for (xml_node device = rootNode.child("PhasorDetail"); device; device = device.next_sibling("PhasorDetail"))
     {
@@ -932,7 +934,9 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         phasorMetadata->Label = device.child_value("Label");
         phasorMetadata->Type = device.child_value("Type");
         phasorMetadata->Phase = device.child_value("Phase");
-        TryParseUInt16(Coalesce(device.child_value("SourceIndex"), "0"), phasorMetadata->SourceIndex);
+        TryParseInt32(Coalesce(device.child_value("SourceIndex"), "0"), phasorMetadata->SourceIndex);
+        if (phasorMetadata->SourceIndex < 0)
+            phasorMetadata->SourceIndex = 0;
         TryParseTimestamp(device.child_value("UpdatedOn"), phasorMetadata->UpdatedOn);
 
         // Create a new phasor reference
@@ -1045,9 +1049,9 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
 
         // Build indexes once per device. Preserve the first matching record, as the
         // previous linear searches did, and retain every missing-index placeholder.
-        const uint16_t phasorCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Angle);
-        const uint16_t analogCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Analog);
-        const uint16_t digitalCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Digital);
+        const int32_t phasorCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Angle);
+        const int32_t analogCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Analog);
+        const int32_t digitalCount = GetSignalKindCount(deviceMetadata->Measurements, SignalKind::Digital);
         vector<MeasurementMetadataPtr> analogsByIndex(static_cast<size_t>(analogCount) + 1);
         vector<MeasurementMetadataPtr> digitalsByIndex(static_cast<size_t>(digitalCount) + 1);
         vector<PhasorReferencePtr> phasorsByIndex(static_cast<size_t>(phasorCount) + 1);
@@ -1055,6 +1059,8 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
         for (const auto& candidate : deviceMetadata->Measurements)
         {
             const auto& reference = candidate->Reference;
+            if (reference.Index < 0)
+                continue;
             if (reference.Kind == SignalKind::Analog && !analogsByIndex[reference.Index])
                 analogsByIndex[reference.Index] = candidate;
             else if (reference.Kind == SignalKind::Digital && !digitalsByIndex[reference.Index])
@@ -1063,8 +1069,8 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
 
         for (const auto& phasor : phasors)
         {
-            const uint16_t index = phasor->Phasor->SourceIndex;
-            if (index <= phasorCount && !phasorsByIndex[index])
+            const int32_t index = phasor->Phasor->SourceIndex;
+            if (index >= 0 && index <= phasorCount && !phasorsByIndex[index])
                 phasorsByIndex[index] = phasor;
         }
         // Add single measurement definitions
@@ -1112,7 +1118,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
 
         // Add phasor definitions
 
-        for (uint32_t i = 1; i <= phasorCount; i++)
+        for (int64_t i = 1; i <= phasorCount; i++)
         {
             const PhasorReferencePtr& phasorReference = phasorsByIndex[i];
 
@@ -1138,7 +1144,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 phasorReference->Phasor->Label = "UNDEFINED";
                 phasorReference->Phasor->Type = "?";
                 phasorReference->Phasor->Phase = "+";
-                phasorReference->Phasor->SourceIndex = static_cast<uint16_t>(i);
+                phasorReference->Phasor->SourceIndex = static_cast<int32_t>(i);
                 phasorReference->Phasor->UpdatedOn = datetime_t();
                 
                 phasorReference->Angle = nullptr;
@@ -1150,7 +1156,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
 
         // Add analog definitions
 
-        for (uint32_t i = 1; i <= analogCount; i++)
+        for (int64_t i = 1; i <= analogCount; i++)
         {
             measurement = analogsByIndex[i];
 
@@ -1172,7 +1178,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 measurement->PointTag = "UNDEFINED";
                 measurement->Reference.SignalID = Empty::Guid;
                 measurement->Reference.Acronym = measurement->DeviceAcronym;
-                measurement->Reference.Index = static_cast<uint16_t>(i);
+                measurement->Reference.Index = static_cast<int32_t>(i);
                 measurement->Reference.Kind = SignalKind::Analog;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
@@ -1185,7 +1191,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
 
         // Add digital definitions
 
-        for (uint32_t i = 1; i <= digitalCount; i++)
+        for (int64_t i = 1; i <= digitalCount; i++)
         {
             measurement = digitalsByIndex[i];
 
@@ -1207,7 +1213,7 @@ void SubscriberInstance::ConstructConfigurationFrames(const StringMap<DeviceMeta
                 measurement->PointTag = "UNDEFINED";
                 measurement->Reference.SignalID = Empty::Guid;
                 measurement->Reference.Acronym = measurement->DeviceAcronym;
-                measurement->Reference.Index = static_cast<uint16_t>(i);
+                measurement->Reference.Index = static_cast<int32_t>(i);
                 measurement->Reference.Kind = SignalKind::Digital;
                 measurement->PhasorSourceIndex = 0U;
                 measurement->Description = "";
@@ -1226,7 +1232,7 @@ bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>
     return TryFindMeasurement(measurements, kind, 0U, measurementMetadata);
 }
 
-bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind, const uint16_t index, MeasurementMetadataPtr& measurementMetadata)
+bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind, const int32_t index, MeasurementMetadataPtr& measurementMetadata)
 {
     for (auto const& measurement : measurements)
     {
@@ -1242,9 +1248,9 @@ bool SubscriberInstance::TryFindMeasurement(const vector<MeasurementMetadataPtr>
     return false;
 }
 
-uint16_t SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind)
+int32_t SubscriberInstance::GetSignalKindCount(const vector<MeasurementMetadataPtr>& measurements, const SignalKind kind)
 {
-    uint16_t count = 0U;
+    int32_t count = 0;
 
     // Find largest signal reference index - this will be count
     for (auto const& measurement : measurements)

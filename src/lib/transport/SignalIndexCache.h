@@ -39,7 +39,7 @@ namespace sttp::transport
 
     class DataSubscriber;
 
-    // Maps 16-bit runtime IDs to 128-bit globally unique IDs.
+    // Maps 32-bit runtime IDs to 128-bit globally unique IDs.
     // Additionally provides reverse lookup and an extra mapping
     // to human-readable measurement keys.
     class SignalIndexCache final : public sttp::EnableSharedThisPtr<SignalIndexCache> // NOLINT
@@ -65,7 +65,7 @@ namespace sttp::transport
         // Determines whether an element with the given runtime ID exists in the signal index cache.
         bool Contains(int32_t signalIndex) const;
 
-        // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
+        // Gets the globally unique signal ID associated with the given 32-bit runtime ID.
         sttp::Guid GetSignalID(int32_t signalIndex) const;
 
         // Gets the full list of signal IDs as an unordered set
@@ -75,18 +75,18 @@ namespace sttp::transport
         bool GetSignalIDs(std::vector<sttp::Guid>& signalIDs) const;
 
         // Gets the first half of the human-readable measurement
-        // key associated with the given 16-bit runtime ID.
+        // key associated with the given 32-bit runtime ID.
         const std::string& GetSource(int32_t signalIndex) const;
 
         // Gets the second half of the human-readable measurement
-        // key associated with the given 16-bit runtime ID.
+        // key associated with the given 32-bit runtime ID.
         uint64_t GetID(int32_t signalIndex) const;
 
         // Gets the globally unique signal ID as well as the human-readable
-        // measurement key associated with the given 16-bit runtime ID.
+        // measurement key associated with the given 32-bit runtime ID.
         bool GetMeasurementKey(int32_t signalIndex, sttp::Guid& signalID, std::string& source, uint64_t& id) const;
 
-        // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
+        // Gets the 32-bit runtime ID associated with the given globally unique signal ID.
         int32_t GetSignalIndex(const sttp::Guid& signalID) const;
 
         // Gets the mapped signal count

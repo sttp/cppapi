@@ -24,6 +24,13 @@
 #include "../../lib/transport/SubscriberInstance.h"
 #include "../../lib/Convert.h"
 #include <boost/iostreams/device/back_inserter.hpp>
+#include "../../lib/EndianConverter.h"
+#include "../../lib/transport/CompactMeasurement.h"
+#include "../../lib/transport/DataPublisher.h"
+#include "../../lib/transport/tssc/TSSCEncoder.h"
+#include "../../lib/transport/tssc/TSSCDecoder.h"
+#include <limits>
+#include <cstring>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -240,6 +247,124 @@ static void DuplicateRegression(const std::string& kind)
 	std::cout << "REGRESSION," << kind << ",duplicate,PASS\n";
 }
 
+static void WideIndexRegression()
+{
+	for (const int32_t index : {65535, 65536, 100000, std::numeric_limits<int32_t>::max()})
+	{
+		const std::string text = "D0-AV" + std::to_string(index);
+		const SignalReference reference(text);
+		Require(reference.Index == index, "32-bit signal-reference parsing failed");
+		std::ostringstream formatted;
+		formatted << reference;
+		Require(formatted.str() == text, "32-bit signal-reference formatting failed");
+	}
+	Require(SignalReference("D0-AV2147483648").Index == 0, "Overflowed reference did not retain default index");
+
+	// Build a genuine signal-index-cache wire payload containing over 65535 entries.
+	std::vector<uint8_t> wire;
+	const Guid subscriberID = GuidValue(123456789);
+	WriteBytes(wire, uint32_t(0));
+	WriteBytes(wire, subscriberID);
+	constexpr uint32_t entries = 70001;
+	EndianConverter::WriteBigEndianBytes(wire, entries);
+	for (uint32_t i = 0; i < entries; ++i)
+	{
+		const int32_t index = i == entries - 1 ? std::numeric_limits<int32_t>::max() : static_cast<int32_t>(65535 + i);
+		EndianConverter::WriteBigEndianBytes(wire, index);
+		WriteBytes(wire, GuidValue(uint64_t(index) + 1));
+		EndianConverter::WriteBigEndianBytes(wire, uint32_t(4));
+		for (const char c : std::string("TEST")) wire.push_back(static_cast<uint8_t>(c));
+		EndianConverter::WriteBigEndianBytes(wire, uint64_t(index));
+	}
+	EndianConverter::WriteBigEndianBytes(wire, uint32_t(0));
+	const uint32_t length = EndianConverter::Default.ConvertBigEndian(static_cast<uint32_t>(wire.size()));
+	std::memcpy(wire.data(), &length, sizeof(length));
+	const auto cache = NewSharedPtr<SignalIndexCache>();
+	Guid decodedSubscriber;
+	cache->Decode(wire, decodedSubscriber);
+	Require(decodedSubscriber == subscriberID && cache->Count() == entries, "Large wire cache count/identity mismatch");
+	CompactMeasurement codec(cache, nullptr, false);
+	for (const int32_t index : {65535, 65536, 100000, std::numeric_limits<int32_t>::max()})
+	{
+		const auto id = GuidValue(uint64_t(index) + 1);
+		Require(cache->GetSignalID(index) == id && cache->GetSignalIndex(id) == index, "Wide cache lookup failed");
+		Measurement input;
+		input.SignalID = id;
+		input.Value = 12.5;
+		input.Multiplier = 1.0;
+		std::vector<uint8_t> bytes;
+		codec.SerializeMeasurement(input, bytes, index);
+		uint32_t offset = 0;
+		MeasurementPtr output;
+		Require(codec.TryParseMeasurement(bytes.data(), offset, static_cast<uint32_t>(bytes.size()), output), "Wide compact measurement decode failed");
+		Require(offset == bytes.size() && output->SignalID == id && output->Value == input.Value && output->ID == uint64_t(index), "Wide compact measurement mismatch");
+	}
+	std::cout << "REGRESSION,int32,70001-entry-wire-cache-and-compact-roundtrip,PASS\n";
+}
+static void PublisherIndexRegression()
+{
+	const auto device = NewSharedPtr<DeviceMetadata>();
+	device->Acronym = "D0";
+	device->Name = "Wide index regression";
+	device->UniqueID = GuidValue(987654);
+	device->FramesPerSecond = 30;
+	device->UpdatedOn = UtcNow();
+	std::vector<MeasurementMetadataPtr> measurements;
+	std::vector<PhasorMetadataPtr> phasors;
+	for (const int32_t index : {34464, 100000})
+	{
+		const auto phasor = NewSharedPtr<PhasorMetadata>();
+		phasor->DeviceAcronym = "D0";
+		phasor->Label = "Test";
+		phasor->SourceIndex = index;
+		phasor->Type = index == 100000 ? "V" : "I";
+		phasor->Phase = "+";
+		phasor->UpdatedOn = UtcNow();
+		phasors.push_back(phasor);
+		const auto measurement = NewSharedPtr<MeasurementMetadata>();
+		measurement->DeviceAcronym = "D0";
+		measurement->ID = "TEST:" + std::to_string(index);
+		measurement->PointTag = "TEST_" + std::to_string(index);
+		measurement->SignalID = GuidValue(index);
+		measurement->Reference = SignalReference("D0-PA" + std::to_string(index));
+		measurement->PhasorSourceIndex = index;
+		measurement->UpdatedOn = UtcNow();
+		measurements.push_back(measurement);
+	}
+	DataPublisher publisher;
+	publisher.DefineMetadata({device}, measurements, phasors);
+	const auto voltage = publisher.FilterMetadata("FILTER MeasurementDetail WHERE SignalAcronym = 'VPHA'");
+	const auto current = publisher.FilterMetadata("FILTER MeasurementDetail WHERE SignalAcronym = 'IPHA'");
+	Require(voltage.size() == 1 && current.size() == 1, "Publisher phasor index collision");
+	Require(voltage[0]->PhasorSourceIndex == 100000 && voltage[0]->Reference.Index == 100000, "Publisher truncated 32-bit metadata index");
+	Require(current[0]->PhasorSourceIndex == 34464, "Publisher confused indexes differing by 65536");
+	std::cout << "REGRESSION,int32,publisher-index-roundtrip-and-collision,PASS\n";
+}
+
+static void TSSCIndexRegression()
+{
+	using namespace sttp::transport::tssc;
+	std::vector<uint8_t> bytes(4096);
+	TSSCEncoder encoder;
+	encoder.SetBuffer(bytes.data(), 0, static_cast<uint32_t>(bytes.size()));
+	const std::vector<int32_t> indexes{65535, 65536, 100000, 0, 100000};
+	for (const auto index : indexes)
+		Require(encoder.TryAddMeasurement(index, 123456789, 0, 12.5f), "TSSC encode failed");
+	const auto length = encoder.FinishBlock();
+	TSSCDecoder decoder;
+	decoder.SetBuffer(bytes.data(), 0, length);
+	for (const auto expected : indexes)
+	{
+		int32_t index;
+		int64_t timestamp;
+		uint32_t quality;
+		float32_t value;
+		Require(decoder.TryGetMeasurement(index, timestamp, quality, value), "TSSC decode failed");
+		Require(index == expected && timestamp == 123456789 && quality == 0 && value == 12.5f, "TSSC wide index mismatch");
+	}
+	std::cout << "REGRESSION,int32,TSSC-wide-index-roundtrip,PASS\n";
+}
+
 int main()
 {
 	try
@@ -249,9 +374,16 @@ int main()
 			Run({ kind, 3, 10, 1, false });
 			Run({ kind, 2, 3, 7, true });
 			Run({ kind, 1, 1, 65535, false });
+			Run({ kind, 1, 1, 65536, false });
+			Run({ kind, 1, 1, 100000, true });
 			DuplicateRegression(kind);
 		}
 		
+		Run({ "analog", 1, 70000, 1, true });
+		WideIndexRegression();
+		PublisherIndexRegression();
+		TSSCIndexRegression();
+
 		std::cout << "All configuration-frame regressions passed.\n";
 		return 0;
 	}
