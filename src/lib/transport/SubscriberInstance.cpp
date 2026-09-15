@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 #include "SubscriberInstance.h"
+#include "StartupTrace.h"
 #include "Constants.h"
 #include "../Convert.h"
 #include "../EndianConverter.h"
@@ -189,6 +190,7 @@ void SubscriberInstance::SetMetadataFilters(const std::string& metadataFilters)
 
 void SubscriberInstance::HandleConnect()
 {
+    diagnostics::StartupEvent(m_subscriber.get(), "connection ready", 0.0, m_autoParseMetadata ? 1 : 0);
     // If automatically parsing metadata, request metadata upon successful connection,
     // after metadata is received the SubscriberInstance will then initiate subscribe;
     // otherwise, subscribe is initiated immediately (when auto subscribe requested)
@@ -831,6 +833,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         return;
     }
 
+    diagnostics::StartupPhase startup(m_subscriber.get(), "metadata processing scope");
     vector<uint8_t> uncompressedBuffer;
 
     // Step 1: Decompress meta-data if needed
@@ -852,6 +855,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
             uncompressedBuffer.push_back(byte);
     }
 
+    startup.Mark("metadata decompress/copy complete (bytes)", uncompressedBuffer.size());
+
     // Step 2: Load string into an XML parser
     xml_document document;
 
@@ -864,6 +869,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         ErrorMessage(errorMessageStream.str());
         return;
     }
+
+    startup.Mark("XML parse complete");
 
     // Find root node
     xml_node rootNode = document.document_element();
@@ -891,6 +898,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
 
         devices.insert_or_assign(deviceMetadata->Acronym, deviceMetadata);
     }
+
+    startup.Mark("device objects complete", devices.size());
 
     // Query MeasurementDetail records from metadata
     unordered_map<Guid, MeasurementMetadataPtr> measurements;
@@ -922,6 +931,8 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
             deviceMetaData->Measurements.push_back(measurementMetadata);
         }
     }
+
+    startup.Mark("measurement objects complete", measurements.size());
 
     // Query PhasorDetail records from metadata
     size_t phasorCount = 0;
@@ -996,9 +1007,42 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         phasorCount++;
     }
 
+    startup.Mark("phasor objects and measurement matching complete");
+
+    // Diagnose per-device scaling and sparse indexes without recording metadata content.
+    if (diagnostics::StartupTraceEnabled())
+    {
+        size_t maxDeviceMeasurements = 0;
+        int32_t maxAnalogIndex = 0, maxDigitalIndex = 0, maxPhasorIndex = 0;
+        size_t maxDevicePhasors = 0;
+
+        for (const auto& entry : devices)
+        {
+            const auto& device = entry.second;
+            if (device->Measurements.size() > maxDeviceMeasurements)
+                maxDeviceMeasurements = device->Measurements.size();
+            if (device->Phasors.size() > maxDevicePhasors)
+                maxDevicePhasors = device->Phasors.size();
+
+            const int32_t analogIndex = GetSignalKindCount(device->Measurements, SignalKind::Analog);
+            const int32_t digitalIndex = GetSignalKindCount(device->Measurements, SignalKind::Digital);
+            const int32_t phasorIndex = GetSignalKindCount(device->Measurements, SignalKind::Angle);
+            if (analogIndex > maxAnalogIndex) maxAnalogIndex = analogIndex;
+            if (digitalIndex > maxDigitalIndex) maxDigitalIndex = digitalIndex;
+            if (phasorIndex > maxPhasorIndex) maxPhasorIndex = phasorIndex;
+        }
+
+        diagnostics::StartupEvent(m_subscriber.get(), "maximum measurements on one device", 0.0, maxDeviceMeasurements);
+        diagnostics::StartupEvent(m_subscriber.get(), "maximum phasors on one device", 0.0, maxDevicePhasors);
+        diagnostics::StartupEvent(m_subscriber.get(), "maximum analog reference index", 0.0, maxAnalogIndex);
+        diagnostics::StartupEvent(m_subscriber.get(), "maximum digital reference index", 0.0, maxDigitalIndex);
+        diagnostics::StartupEvent(m_subscriber.get(), "maximum phasor reference index", 0.0, maxPhasorIndex);
+        startup.Mark("diagnostic-only metadata shape scan complete");
+    }
     // Construct a "configuration frame" for each of the devices
     StringMap<ConfigurationFramePtr> configurationFrames;
     ConstructConfigurationFrames(devices, measurements, configurationFrames);
+    startup.Mark("configuration frames complete", configurationFrames.size());
 
     m_configurationUpdateLock.lock();
 
@@ -1009,15 +1053,18 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     m_configurationUpdateLock.unlock();
 
     stringstream message;
+    startup.Mark("metadata maps installed");
     message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from STTP meta data...";
     StatusMessage(message.str());
 
     // Notify derived class that meta-data has been parsed and is now available
     ParsedMetadata();
+    startup.Mark("ParsedMetadata callback complete");
 }
 
 void SubscriberInstance::SendMetadataRefreshCommand()
 {
+    diagnostics::StartupEvent(m_subscriber.get(), "metadata request sending");
     if (m_metadataFilters.empty())
     {
         m_subscriber->SendServerCommand(ServerCommand::MetadataRefresh);
@@ -1384,8 +1431,10 @@ void SubscriberInstance::HandleMetadata(DataSubscriber* source, const vector<uin
     if (instance == nullptr)
         return;
 
+    diagnostics::StartupPhase startup(source, "metadata callback scope (includes local cleanup)");
     // Call virtual method to handle metadata payload
     instance->ReceivedMetadata(payload);
+    startup.Mark("ReceivedMetadata returned; ready to subscribe", payload.size());
 
     // When auto-parsing metadata, start subscription after successful user meta-data handling
     if (instance->m_autoParseMetadata)
