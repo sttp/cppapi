@@ -868,7 +868,7 @@ void DataPublisher::Start(const TcpEndPoint& endpoint)
 
     m_stopped = false;
 
-#if BOOST_LEGACY
+#if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     m_commandChannelService.reset();
 #else
     m_commandChannelService.restart();

@@ -54,6 +54,7 @@
 #pragma diag_suppress 1440
 #endif
 
+#include <boost/version.hpp>
 #include <boost/any.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/exception/exception.hpp>
@@ -95,8 +96,6 @@
 #define _64BIT 0
 #endif
 #endif
-
-#define BOOST_LEGACY (BOOST_VERSION < 106600)
 
 namespace sttp
 {
@@ -285,7 +284,7 @@ namespace sttp
     typedef boost::unique_lock<Mutex> UniqueLock;
     typedef boost::unique_lock<SharedMutex> WriterLock;
     typedef boost::shared_lock<SharedMutex> ReaderLock;
-    #if BOOST_LEGACY
+    #if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     typedef boost::asio::io_service IOContext;
     typedef boost::asio::io_service::strand Strand;
     #else
@@ -308,7 +307,7 @@ namespace sttp
     
     #define ThreadSleep(ms) boost::this_thread::sleep(boost::posix_time::milliseconds(ms))
 
-    #if BOOST_LEGACY
+    #if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     #define bind_executor(ex, ...) ex.wrap(__VA_ARGS__)
     #define post(ex, ...) ex.post(__VA_ARGS__)
     #endif
@@ -504,6 +503,8 @@ namespace sttp
     float32_t TimeSince(const datetime_t& value);
 }
 
+// Boost 1.86 and later define std::hash<uuid> in uuid.hpp.
+#if BOOST_VERSION < 108600
 // Setup standard hash code for Guid
 template<>
 struct std::hash<sttp::Guid>
@@ -513,3 +514,4 @@ struct std::hash<sttp::Guid>
         return boost::hash<sttp::Guid>()(uuid);
     }
 };
+#endif

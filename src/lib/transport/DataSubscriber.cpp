@@ -1091,7 +1091,9 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
     // this prevents destruction disconnect before connection is completed
     ScopeLock lock(m_connectActionMutex);
     DnsResolver resolver(m_commandChannelService);
+#if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     const DnsResolver::query dnsQuery(hostname, ToString(port));
+#endif
     ErrorCode error;
 
     // Initialize connection state
@@ -1102,7 +1104,14 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
 
     m_connector.SetConnectionRefused(false);
 
-    const TcpEndPoint hostEndpoint = connect(m_commandChannelSocket, resolver.resolve(dnsQuery), error);
+#if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
+    const auto hostIterator = connect(m_commandChannelSocket, resolver.resolve(dnsQuery), error);
+    TcpEndPoint hostEndpoint;
+    if (!error)
+        hostEndpoint = hostIterator->endpoint();
+#else
+    const TcpEndPoint hostEndpoint = connect(m_commandChannelSocket, resolver.resolve(hostname, ToString(port)), error);
+#endif
 
     if (error)
         throw SystemError(error);
@@ -1112,7 +1121,7 @@ void DataSubscriber::Connect(const string& hostname, const uint16_t port, const 
 
     m_hostAddress = hostEndpoint.address();
 
-#if BOOST_LEGACY
+#if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     m_commandChannelService.reset();
 #else
     m_commandChannelService.restart();
@@ -1133,7 +1142,7 @@ void DataSubscriber::Listen(const sttp::TcpEndPoint& endPoint)
     // Make sure any pending disconnect has completed to make sure socket is closed
     WaitOnDisconnectThread();
 
-#if BOOST_LEGACY
+#if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
     m_commandChannelService.reset();
 #else
     m_commandChannelService.restart();

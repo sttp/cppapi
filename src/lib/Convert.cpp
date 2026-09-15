@@ -893,9 +893,15 @@ string sttp::ResolveDNSName(IOContext& service, const TcpEndPoint& source, strin
     try
     {
         DnsResolver resolver(service);
+    #if BOOST_VERSION < 106600 // Before Boost.Asio Networking TS APIs (Boost 1.66).
         const DnsResolver::query dnsQuery(address.to_string(), port);
         DnsResolver::iterator iterator = resolver.resolve(dnsQuery);
         const DnsResolver::iterator end;
+    #else
+        const auto results = resolver.resolve(address.to_string(), port);
+        auto iterator = results.begin();
+        const auto end = results.end();
+    #endif
 
         while (iterator != end)
         {
