@@ -182,7 +182,13 @@ void ProcessMeasurements(const DataSubscriber* source, const vector<MeasurementP
 
     if (!measurements.empty())
     {
-        cout << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
+        // Startup measurements can have an unset timestamp (zero). Boost dates only support years 1400-9999.
+        const int64_t timestamp = measurements[0]->Timestamp & Ticks::ValueMask;
+
+        if (timestamp >= Ticks::PTimeBaseOffset && timestamp <= Ticks::MaxValue)
+            cout << "Timestamp: " << ToString(measurements[0]->GetDateTime()) << endl;
+        else
+            cout << "Timestamp: unavailable (ticks: " << measurements[0]->Timestamp << ")" << endl;
         cout << "\tPoint\tValue" << endl;
 
         for (uint32_t i = 0; i < measurements.size(); ++i)
