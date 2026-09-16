@@ -428,8 +428,12 @@ foreach (headerFile ${STTP_HEADER_FILES})
     file (COPY ${headerFile} DESTINATION ${HEADER_OUTPUT_DIRECTORY}/${DIR})
 endforeach (headerFile)
 
+# Discover the Boost headers and version used by this build.
+find_package (Boost REQUIRED)
+
 # Define include directories
 include_directories(
+    ${Boost_INCLUDE_DIRS}
     "lib/filterexpressions/antlr4-runtime"
 )
 
@@ -451,7 +455,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 # Build STTP library
 add_library (sttp ${STTP_SOURCE_FILES})
-target_link_libraries (sttp pthread m z bz2 boost_system boost_thread boost_date_time boost_iostreams boost_chrono)
+target_link_libraries (sttp pthread m z bz2 boost_thread boost_date_time boost_iostreams boost_chrono)
+
+# Boost.System is header-only from 1.69; its compatibility library was removed in 1.89.
+# Use the major/minor variables, which are available in both old FindBoost and BoostConfig.
+if ("${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}" VERSION_LESS "1.69")
+    target_link_libraries (sttp boost_system)
+endif ()
 
 # Install headers and library
 install (DIRECTORY ${PROJECT_BINARY_DIR}/${HEADER_OUTPUT_DIRECTORY} DESTINATION include)
