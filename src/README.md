@@ -78,7 +78,7 @@ Earlier versions of the libraries listed may not work properly.
 
 * bzip2 Library, e.g.: `sudo apt install libbz2-dev`
 
-* Boost C++ Libraries v1.80.0 (http://www.boost.org/)
+* Boost C++ Libraries v1.92.0 (http://www.boost.org/)
     - Boost.Asio
     - Boost.Bind
     - Boost.Iostreams
@@ -87,7 +87,7 @@ Earlier versions of the libraries listed may not work properly.
     - Boost.Uuid
 
 Boost will need to be compiled:
-https://www.boost.org/doc/libs/1_80_0/more/getting_started/unix-variants.html
+https://www.boost.org/doc/libs/latest/more/getting_started/unix-variants.html
 
 For Ubuntu, here are some common steps:
 
@@ -101,16 +101,16 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave 
 sudo apt install zlib1g-dev
 sudo apt install libbz2-dev
 
-sudo mkdir /usr/local/boost_1_80_0
+sudo mkdir /usr/local/boost_1_92_0
 cd /usr/local/
-sudo wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2
-sudo tar -xvjf boost_1_80_0.tar.bz2
+sudo wget https://archives.boost.io/release/1.92.0/source/boost_1_92_0.tar.bz2
+sudo tar -xvjf boost_1_92_0.tar.bz2
 ```
 
 Start a new terminal session before building Boost:
 
 ```bash
-cd /usr/local/boost_1_80_0
+cd /usr/local/boost_1_92_0
 sudo ./bootstrap.sh
 sudo ./b2 install
 ```
@@ -136,7 +136,7 @@ source code you downloaded. Enter the build directory you created
 and type the following command:
 
 ```bash
-cmake path/to/source
+cmake -S path/to/source -B .
 ```
 
 Using the CMake GUI, you can modify configuration options, such as
@@ -171,6 +171,7 @@ Individual sample applications can be built as follows:
 make AdvancedPublish
 make AdvancedSubscribe
 make AverageFrequencyCalculator
+make ConfigurationFramesTest
 make DynamicMetadataPublish
 make FilterExpressionTests
 make InstancePublish
@@ -181,6 +182,7 @@ make ReversePublish
 make ReverseSubscribe
 make SimpleSubscribe
 make SimplePublish
+make SubscriberShutdownTest
 ```
 
 ### Installation
