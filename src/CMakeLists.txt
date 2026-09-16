@@ -495,6 +495,10 @@ target_link_libraries (AverageFrequencyCalculator sttp)
 add_executable (ConfigurationFramesTest EXCLUDE_FROM_ALL samples/ConfigurationFramesTest/ConfigurationFramesTest.cpp)
 target_link_libraries (ConfigurationFramesTest sttp)
 
+# SubscriberShutdownTest sample
+add_executable (SubscriberShutdownTest EXCLUDE_FROM_ALL samples/SubscriberShutdownTest/SubscriberShutdownTest.cpp)
+target_link_libraries (SubscriberShutdownTest sttp)
+
 # DynamicMetadataPublish sample
 add_executable (DynamicMetadataPublish EXCLUDE_FROM_ALL samples/DynamicMetadataPublish/DynamicMetadataPublish.cpp samples/DynamicMetadataPublish/PublisherHandler.cpp)
 target_link_libraries (DynamicMetadataPublish sttp)
@@ -541,6 +545,7 @@ add_custom_target (samples DEPENDS
     AdvancedSubscribe
     AverageFrequencyCalculator
     ConfigurationFramesTest
+    SubscriberShutdownTest
     DynamicMetadataPublish
     FilterExpressionTests
     InstancePublish

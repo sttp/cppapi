@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.10.12201.205 stable
+VisualStudioVersion = 18.10.12201.205
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sttp.cpp", "lib\sttp.cpp.vcxproj", "{759721EF-40AE-4763-B225-6CD2710219F8}"
 EndProject
@@ -92,6 +92,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReverseSubscribe", "samples
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConfigurationFramesTest", "samples\ConfigurationFramesTest\ConfigurationFramesTest.vcxproj", "{C2BA680E-FC97-4081-8908-34E276F10D57}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubscriberShutdownTest", "samples\SubscriberShutdownTest\SubscriberShutdownTest.vcxproj", "{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -221,6 +223,14 @@ Global
 		{C2BA680E-FC97-4081-8908-34E276F10D57}.Release|x64.Build.0 = Release|x64
 		{C2BA680E-FC97-4081-8908-34E276F10D57}.Release|x86.ActiveCfg = Release|Win32
 		{C2BA680E-FC97-4081-8908-34E276F10D57}.Release|x86.Build.0 = Release|Win32
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Debug|x64.ActiveCfg = Debug|x64
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Debug|x64.Build.0 = Debug|x64
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Debug|x86.ActiveCfg = Debug|Win32
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Debug|x86.Build.0 = Debug|Win32
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Release|x64.ActiveCfg = Release|x64
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Release|x64.Build.0 = Release|x64
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Release|x86.ActiveCfg = Release|Win32
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -241,6 +251,7 @@ Global
 		{A2162AF5-C7ED-40DB-96C4-2BD12C402023} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{08919E93-D481-493A-9FEA-96A1D66752F7} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{C2BA680E-FC97-4081-8908-34E276F10D57} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
+		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}

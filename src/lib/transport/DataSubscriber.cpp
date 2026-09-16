@@ -107,9 +107,6 @@ DataSubscriber::~DataSubscriber() noexcept
         m_disposing = true;
         m_connector.Cancel();
         Disconnect(true, false, true);
-
-        // Allow a moment for connection terminated event to complete
-        ThreadSleep(10);
     }
     catch (...)
     {
@@ -1265,7 +1262,9 @@ void DataSubscriber::Disconnect(const bool joinThread, const bool autoReconnecti
         if (!autoReconnecting && !m_listening && !m_disconnected)
             m_connector.Cancel();
 
-        if (joinThread && !m_disconnected)
+        // Completion flags may be set before the worker releases its final mutex.
+        // Destruction must join the actual thread, even when it reports disconnected.
+        if (joinThread)
             WaitOnDisconnectThread();
 
         return;

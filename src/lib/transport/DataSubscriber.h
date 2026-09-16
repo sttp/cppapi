@@ -52,6 +52,8 @@ namespace sttp::transport
         typedef std::function<void(DataSubscriber*)> ConnectionTerminatedCallback;
 
     private:
+        friend class SubscriberInstance;
+
         // Structure used to dispatch
         // callbacks on the callback thread.
         struct CallbackDispatcher

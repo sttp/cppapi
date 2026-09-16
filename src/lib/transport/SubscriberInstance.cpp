@@ -76,7 +76,7 @@ SubscriberInstance::~SubscriberInstance() noexcept
             m_subscriber->Disconnect();
     }
     catch (...)
-    {        
+    {
     }
 
     try
@@ -85,8 +85,20 @@ SubscriberInstance::~SubscriberInstance() noexcept
     }
     catch (...)
     {
-        // ReSharper disable once CppRedundantControlFlowJump
-        return;
+    }
+
+    try
+    {
+        // Finish shutdown before member destruction: pending callbacks can still
+        // access the metadata maps and m_configurationUpdateLock. m_subscriber
+        // is declared first and would otherwise be destroyed after those members.
+        // Repeat the disconnect after joining ConnectAsync in case it was still
+        // establishing the connection when the initial disconnect was requested.
+        if (m_subscriber != nullptr)
+            m_subscriber->Disconnect(true, false, true);
+    }
+    catch (...)
+    {
     }
 }
 
