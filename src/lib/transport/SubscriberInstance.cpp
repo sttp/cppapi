@@ -210,6 +210,25 @@ void SubscriberInstance::HandleConnect()
         m_subscriber->Subscribe();
 }
 
+bool SubscriberInstance::CompleteConnection()
+{
+    if (m_subscriber->GetVersion() > 2 && !m_subscriber->WaitForOperationalModesResponse(m_operationalModesResponseTimeout))
+    {
+        ErrorMessage("Timed out waiting for define operational modes response, cancelling automated connection steps...");
+        return false;
+    }
+
+    if (!m_subscriber->IsValidated())
+    {
+        ErrorMessage("Data publisher rejected connection, cancelling automated connection steps...");
+        return false;
+    }
+
+    ConnectionEstablished();
+    HandleConnect();
+    return true;
+}
+
 void SubscriberInstance::SetupSubscriptionInfo()
 {
     m_subscriptionInfo = CreateSubscriptionInfo();
@@ -255,22 +274,7 @@ bool SubscriberInstance::Connect()
 
     if (result == SubscriberConnector::ConnectSuccess)
     {
-        if (m_subscriber->GetVersion() > 2 && !m_subscriber->WaitForOperationalModesResponse(m_operationalModesResponseTimeout))
-        {
-            ErrorMessage("Timed out waiting for define operational modes response, cancelling automated connection steps...");
-            return false;
-        }
-
-        if (!m_subscriber->IsValidated())
-        {
-            ErrorMessage("Data publisher rejected connection, cancelling automated connection steps...");
-            return false;
-        }
-
-        ConnectionEstablished();
-        HandleConnect();
-
-        return true;
+        return CompleteConnection();
     }
 
     if (result == SubscriberConnector::ConnectFailed)
@@ -1344,8 +1348,7 @@ void SubscriberInstance::HandleResubscribe(DataSubscriber* source)
 
     if (source->IsConnected())
     {
-        instance->ConnectionEstablished();
-        instance->HandleConnect();
+        instance->CompleteConnection();
     }
     else
     {
@@ -1456,8 +1459,17 @@ void SubscriberInstance::HandleConnectionEstablished(const DataSubscriber* sourc
     if (instance == nullptr)
         return;
 
-    instance->ConnectionEstablished();
-    instance->HandleConnect();
+    // Outbound connections complete in Connect or HandleResubscribe after the
+    // connector returns. Only reverse connections start from this callback.
+    if (source->IsListening())
+    {
+        // The accept thread also services socket I/O for reverse connections.
+        // Wait on the callback thread so it can receive the handshake response.
+        instance->m_subscriber->Dispatch([instance](DataSubscriber*, const vector<uint8_t>&)
+        {
+            instance->CompleteConnection();
+        });
+    }
 }
 
 void SubscriberInstance::HandleConnectionTerminated(const DataSubscriber* source)

@@ -57,6 +57,7 @@ namespace sttp::transport
         void* m_userData;
 
         void HandleConnect();
+        bool CompleteConnection();
         void SetupSubscriptionInfo();
         void SendMetadataRefreshCommand();
 
