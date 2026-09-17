@@ -178,11 +178,13 @@ make InstancePublish
 make InstanceSubscribe
 make InteropTest
 make LatencyTest
+make PublisherCacheIndexTest
 make ReversePublish
 make ReverseSubscribe
 make SimpleSubscribe
 make SimplePublish
 make SubscriberShutdownTest
+make SubscriberStartupTest
 ```
 
 ### Installation
