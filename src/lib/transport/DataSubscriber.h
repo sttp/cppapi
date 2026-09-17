@@ -86,6 +86,7 @@ namespace sttp::transport
         Thread m_disconnectThread;
         std::atomic_bool m_disconnecting;
         std::atomic_bool m_disconnected;
+        std::atomic_bool m_dataChannelDisconnecting;
 
         void* m_userData;
 

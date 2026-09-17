@@ -1,5 +1,7 @@
 // Copyright (c) 2026, Grid Protection Alliance. Licensed under the MIT License.
 #include "../../lib/transport/SubscriberInstance.h"
+#include "../../lib/Convert.h"
+#include "../../lib/EndianConverter.h"
 #include <atomic>
 #include <chrono>
 #include <iostream>
@@ -12,14 +14,27 @@ using namespace std::chrono_literals;
 
 struct State
 {
-    std::atomic<int> connections{0}, metadata{0}, errors{0};
+    std::atomic<int> connections{0}, metadata{0}, errors{0}, early{0}, confirmed{0}, unexpected{0};
 };
+
+// Signals defined by the test signal index cache, runtime index is array position.
+const Guid Signals[] = {ParseGuid("6f2a0e6c-5a3b-4c1d-9e7f-000000000001"), ParseGuid("6f2a0e6c-5a3b-4c1d-9e7f-000000000002")};
 
 class TestSubscriber final : public SubscriberInstance
 {
     State& m_state;
     void ConnectionEstablished() override { ++m_state.connections; }
     void ReceivedMetadata(const std::vector<uint8_t>&) override { ++m_state.metadata; }
+    void ReceivedNewMeasurements(const std::vector<MeasurementPtr>& measurements) override
+    {
+        // Publisher sends value 1 before signal index cache confirmation and value 2 after.
+        for (const auto& measurement : measurements)
+        {
+            if (measurement->SignalID == Signals[1] && measurement->Value == 1.0) ++m_state.early;
+            else if (measurement->SignalID == Signals[0] && measurement->Value == 2.0) ++m_state.confirmed;
+            else ++m_state.unexpected;
+        }
+    }
     void StatusMessage(const std::string&) override {}
     void ErrorMessage(const std::string&) override { ++m_state.errors; }
 public:
@@ -80,6 +95,48 @@ void Respond(tcp::socket& socket, uint8_t command, bool accepted = true)
     boost::asio::write(socket, boost::asio::buffer(packet));
 }
 
+void Send(tcp::socket& socket, uint8_t response, const std::vector<uint8_t>& body)
+{
+    // Four-byte frame size, response code, subscribe command code, four-byte body size, body.
+    std::vector<uint8_t> packet;
+    EndianConverter::WriteBigEndianBytes(packet, uint32_t(body.size() + 6));
+    packet.push_back(response);
+    packet.push_back(0x02);
+    EndianConverter::WriteBigEndianBytes(packet, uint32_t(body.size()));
+    packet.insert(packet.end(), body.begin(), body.end());
+    boost::asio::write(socket, boost::asio::buffer(packet));
+}
+
+void SendSignalIndexCache(tcp::socket& socket, uint8_t cacheIndex)
+{
+    std::vector<uint8_t> body{cacheIndex};
+    EndianConverter::WriteBigEndianBytes(body, uint32_t(0)); // Binary length, unused by subscriber.
+    WriteBytes(body, Empty::Guid);                           // Subscriber ID.
+    EndianConverter::WriteBigEndianBytes(body, int32_t(2));  // Reference count.
+    for (int32_t index = 0; index < 2; ++index)
+    {
+        EndianConverter::WriteBigEndianBytes(body, index);
+        WriteBytes(body, Signals[index]);
+        EndianConverter::WriteBigEndianBytes(body, uint32_t(3));
+        body.insert(body.end(), {'P', 'P', 'A'});
+        EndianConverter::WriteBigEndianBytes(body, uint64_t(index + 1));
+    }
+    EndianConverter::WriteBigEndianBytes(body, uint32_t(0)); // Unauthorized signal count.
+    Send(socket, 0x83, body);
+}
+
+void SendMeasurement(tcp::socket& socket, int cacheIndex, int32_t runtimeIndex, float value)
+{
+    // Compact format data packet, flagged with cache index, holding one measurement with full timestamp.
+    std::vector<uint8_t> body{uint8_t(0x02 | (cacheIndex ? 0x10 : 0x00))};
+    EndianConverter::WriteBigEndianBytes(body, int32_t(1));
+    body.push_back(0);
+    EndianConverter::WriteBigEndianBytes(body, runtimeIndex);
+    EndianConverter::WriteBigEndianBytes(body, value);
+    EndianConverter::WriteBigEndianBytes(body, int64_t(638900000000000000LL));
+    Send(socket, 0x82, body);
+}
+
 void Run(bool reverse, bool parse, int version, const std::string& handshake, bool reconnect)
 {
     boost::asio::io_context service;
@@ -93,6 +150,7 @@ void Run(bool reverse, bool parse, int version, const std::string& handshake, bo
     subscriber->SetAutoParseMetadata(parse);
     subscriber->SetVersion(static_cast<uint8_t>(version));
     subscriber->SetOperationalModesResponseTimeout(500);
+    subscriber->SetSignalIndexCacheCompressed(false);
     if (reverse)
     {
         acceptor.close();
@@ -146,6 +204,16 @@ void Run(bool reverse, bool parse, int version, const std::string& handshake, bo
         Require(ReadCommand(socket, 200ms).empty(), "Duplicate metadata request or subscription");
         Require(state.connections == attempt, "Duplicate or missing connection event");
         Require(state.metadata == (parse ? attempt : 0), "Duplicate or missing metadata callback");
+        // A publisher starts publishing with its current cache index as soon as the subscription starts, i.e.,
+        // before confirmation of the new cache is processed. This early data uses the same signal mappings.
+        SendSignalIndexCache(socket, 0);
+        SendMeasurement(socket, 1, 1, 1.0F);
+        packet = ReadCommand(socket, 5s);
+        Require(!packet.empty() && packet[4] == 0x0A, "Signal index cache was not confirmed");
+        SendMeasurement(socket, 0, 0, 2.0F);
+        Wait([&] { return state.confirmed == attempt; });
+        Require(state.early == attempt, "Data published before signal index cache confirmation was dropped");
+        Require(state.unexpected == 0, "Measurement received with incorrect signal mapping");
         if (attempt == attempts) subscriber.reset();
         // Closing the publisher-side socket triggers real automatic reconnect on the next iteration.
     }

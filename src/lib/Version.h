@@ -28,7 +28,7 @@ constexpr auto STTP_TITLE = "STTP C++ Library";
 
 // Defines the STTP library API version used for data subscriber identification.
 // Note: This is not the STTP protocol version, but the version of the STTP library API.
-constexpr auto STTP_VERSION = "1.1.3";
+constexpr auto STTP_VERSION = "1.1.4";
 
 // Defines when the STTP library API was last updated used for data subscriber identification.
-constexpr auto STTP_UPDATEDON = "2026-09-15";
+constexpr auto STTP_UPDATEDON = "2026-09-17";

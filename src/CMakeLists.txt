@@ -499,6 +499,10 @@ target_link_libraries (ConfigurationFramesTest sttp)
 add_executable (SubscriberStartupTest EXCLUDE_FROM_ALL samples/SubscriberStartupTest/SubscriberStartupTest.cpp)
 target_link_libraries (SubscriberStartupTest sttp)
 
+# PublisherCacheIndexTest sample
+add_executable (PublisherCacheIndexTest EXCLUDE_FROM_ALL samples/PublisherCacheIndexTest/PublisherCacheIndexTest.cpp)
+target_link_libraries (PublisherCacheIndexTest sttp)
+
 # SubscriberShutdownTest sample
 add_executable (SubscriberShutdownTest EXCLUDE_FROM_ALL samples/SubscriberShutdownTest/SubscriberShutdownTest.cpp)
 target_link_libraries (SubscriberShutdownTest sttp)
@@ -549,6 +553,7 @@ add_custom_target (samples DEPENDS
     AdvancedSubscribe
     AverageFrequencyCalculator
     ConfigurationFramesTest
+    PublisherCacheIndexTest
     SubscriberShutdownTest
     SubscriberStartupTest
     DynamicMetadataPublish

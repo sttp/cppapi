@@ -190,13 +190,22 @@ void SignalIndexCache::RecalculateBinaryLength(const SubscriberConnection& conne
 void SignalIndexCache::Decode(const vector<uint8_t>& buffer, Guid& subscriberID)
 {
     const uint8_t* data = buffer.data();
-    stringstream sourceStream;
 
     // Skip 4-byte length and parse subscriber ID
     subscriberID = ParseGuid(data + 4);
 
     const uint32_t* referenceCountPtr = reinterpret_cast<const uint32_t*>(data + 20);
     const uint32_t referenceCount = EndianConverter::Default.ConvertBigEndian(*referenceCountPtr);
+
+    // Size collections once, caches can be large - each encoded reference is at least 32 bytes,
+    // so reservation is limited to what buffer could hold in case reference count is corrupt
+    const size_t reserveCount = min(static_cast<size_t>(referenceCount), buffer.size() / 32);
+
+    m_reference.reserve(reserveCount);
+    m_signalIDList.reserve(reserveCount);
+    m_sourceList.reserve(reserveCount);
+    m_idList.reserve(reserveCount);
+    m_signalIDCache.reserve(reserveCount);
 
     // Set up signalIndexPtr before entering the loop
     const int32_t* signalIndexPtr = reinterpret_cast<const int32_t*>(referenceCountPtr + 1);
@@ -215,22 +224,18 @@ void SignalIndexCache::Decode(const vector<uint8_t>& buffer, Guid& subscriberID)
         const uint64_t* idPtr = reinterpret_cast<const uint64_t*>(sourcePtr + sourceSize);
 
         // Build string from binary data -- NOTE: this presumes subscriber code is always UTF8
-        for (const char* sourceIter = sourcePtr; sourceIter < sourcePtr + sourceSize; ++sourceIter)
-            sourceStream << *sourceIter;
+        const string source(sourcePtr, sourceSize);
 
         // Set values for measurement key
         const int32_t signalIndex = EndianConverter::Default.ConvertBigEndian(*signalIndexPtr);
         const Guid signalID = ParseGuid(signalIDPtr);
-        const string source = sourceStream.str();
         const uint64_t id = EndianConverter::Default.ConvertBigEndian(*idPtr);
 
         // Add measurement key to the cache
         AddMeasurementKey(signalIndex, signalID, source, id);
 
-        // Advance signalIndexPtr to the next signal
-        // index and clear out the string stream
+        // Advance signalIndexPtr to the next signal index
         signalIndexPtr = reinterpret_cast<const int32_t*>(idPtr + 1);
-        sourceStream.str("");
     }
 
     // There is additional data here about unauthorized signal IDs

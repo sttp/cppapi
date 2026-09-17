@@ -70,8 +70,12 @@ size_t StringHash::operator()(const string& value) const
     size_t seed = 0;
     const locale locale;
 
+    // Character facet is resolved once, per-character locale lookups are
+    // expensive and this hash is used for every lookup into a StringMap
+    const ctype<char>& facet = use_facet<ctype<char>>(locale);
+
     for (const auto it : value)
-        hash_combine(seed, toupper(it, locale));
+        hash_combine(seed, facet.toupper(it));
 
     return seed;
 }
@@ -132,9 +136,24 @@ bool sttp::IsEmptyOrWhiteSpace(const string& value)
 
 bool sttp::IsEqual(const string& left, const string& right, const bool ignoreCase)
 {
-    return ignoreCase ? 
-        iequals(left, right) :
-        equals(left, right);
+    if (!ignoreCase)
+        return equals(left, right);
+
+    if (left.size() != right.size())
+        return false;
+
+    // Character facet is resolved once, per-character locale lookups are
+    // expensive and this comparison is used for every lookup into a StringMap
+    const locale locale;
+    const ctype<char>& facet = use_facet<ctype<char>>(locale);
+
+    for (size_t i = 0; i < left.size(); i++)
+    {
+        if (left[i] != right[i] && facet.toupper(left[i]) != facet.toupper(right[i]))
+            return false;
+    }
+
+    return true;
 }
 
 bool sttp::StartsWith(const string& value, const string& findValue, const bool ignoreCase)
@@ -276,12 +295,24 @@ string sttp::Replace(const string& value, const string& findValue, const string&
 
 string sttp::ToUpper(const string& value)
 {
-    return to_upper_copy(value);
+    // Character facet converts full range, avoids per-character locale lookups
+    const locale locale;
+    string result = value;
+
+    use_facet<ctype<char>>(locale).toupper(result.data(), result.data() + result.size());
+
+    return result;
 }
 
 string sttp::ToLower(const string& value)
 {
-    return to_lower_copy(value);
+    // Character facet converts full range, avoids per-character locale lookups
+    const locale locale;
+    string result = value;
+
+    use_facet<ctype<char>>(locale).tolower(result.data(), result.data() + result.size());
+
+    return result;
 }
 
 string sttp::Trim(const string& value)

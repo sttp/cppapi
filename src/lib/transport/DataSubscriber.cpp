@@ -77,6 +77,7 @@ DataSubscriber::DataSubscriber() :
     m_subscribed(false),
     m_disconnecting(false),
     m_disconnected(false),
+    m_dataChannelDisconnecting(false),
     m_userData(nullptr),
     m_totalCommandChannelBytesReceived(0UL),
     m_totalDataChannelBytesReceived(0UL),
@@ -261,7 +262,7 @@ void DataSubscriber::RunDataChannelResponseThread()
     {
         const uint32_t length = ConvertUInt32(m_dataChannelSocket.receive_from(asio::buffer(buffer), endpoint, 0, error));
 
-        if (IsDisconnecting())
+        if (IsDisconnecting() || m_dataChannelDisconnecting)
             break;
 
         if (error)
@@ -473,7 +474,7 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t 
         // Perform zlib decompression on buffer
         StreamBuffer streamBuffer;
 
-        streamBuffer.push(GZipDecompressor());
+        streamBuffer.push(GZipDecompressor(), StreamFilterBufferSize);
         streamBuffer.push(memoryStream);
 
         CopyStream(&streamBuffer, uncompressedBuffer);
@@ -489,12 +490,24 @@ void DataSubscriber::HandleUpdateSignalIndexCache(const uint8_t* data, uint32_t 
     m_signalIndexCacheMutex.lock();
     m_signalIndexCache[cacheIndex].swap(signalIndexCache);
     m_cacheIndex = cacheIndex;
+    const SignalIndexCachePtr activeSignalIndexCache = m_signalIndexCache[cacheIndex];
+
+    // For the first cache of a connection, publisher applies the same signal mappings to its current
+    // cache index and starts publishing with it right away, i.e., before confirmation of this cache
+    // is processed. Data received in this window is flagged with the alternate cache index, so this
+    // cache is referenced there as well; otherwise, all initial data would be dropped. This matters
+    // when the window is long, e.g., publisher is busy establishing a large subscription, or when
+    // the data is the only data for some time, e.g., cached values for slowly updating signals.
+    // Publisher resets TSSC when it transitions to the confirmed cache, see ParseTSSCMeasurements.
+    if (m_version > 1 && m_signalIndexCache[cacheIndex ^ 1] == nullptr)
+        m_signalIndexCache[cacheIndex ^ 1] = activeSignalIndexCache;
+
     m_signalIndexCacheMutex.unlock();
 
     if (m_version > 1)
         SendServerCommand(ServerCommand::ConfirmUpdateSignalIndexCache);
 
-    DispatchSubscriptionUpdated(AddDispatchReference(m_signalIndexCache[cacheIndex]));
+    DispatchSubscriptionUpdated(AddDispatchReference(activeSignalIndexCache));
 }
 
 // Updates base time offsets.
@@ -766,13 +779,11 @@ void DataSubscriber::Dispatch(const DispatcherFunction& function, const uint8_t*
     CallbackDispatcher dispatcher;
     const SharedPtr<vector<uint8_t>> dataVector = NewSharedPtr<vector<uint8_t>>();
 
-    dataVector->resize(length);
-
+    // Payloads can be large, e.g., metadata, so copy as a block
     if (data != nullptr)
-    {
-        for (uint32_t i = 0; i < length; ++i)
-            dataVector->at(i) = data[offset + i];
-    }
+        dataVector->assign(data + offset, data + offset + length);
+    else
+        dataVector->resize(length);
 
     dispatcher.Source = this;
     dispatcher.Data = dataVector;
@@ -1374,6 +1385,13 @@ void DataSubscriber::SetupConnection()
     m_totalDataChannelBytesReceived = 0UL;
     m_totalMeasurementsReceived = 0UL;
 
+    // Signal index caches only apply to the connection that defined them
+    m_signalIndexCacheMutex.lock();
+    m_signalIndexCache[0] = SignalIndexCache::NullPtr;
+    m_signalIndexCache[1] = SignalIndexCache::NullPtr;
+    m_cacheIndex = 0;
+    m_signalIndexCacheMutex.unlock();
+
     // TODO: Clear UDP key and initialization vectors
     // TODO: Clear buffer block expected sequence number
     // TODO: Reinitialize measurement metadata registry
@@ -1501,11 +1519,14 @@ void DataSubscriber::Unsubscribe()
 {
     ErrorCode error;
 
-    m_disconnecting = true;
+    // Only the data channel is being torn down here - a subscription change is not a disconnect, so
+    // the subscriber-wide disconnecting flag must not be set: command channel reads and the callback
+    // thread check that flag and would permanently stop if they observed it during a resubscribe.
+    m_dataChannelDisconnecting = true;
     m_dataChannelSocket.shutdown(UdpSocket::shutdown_receive, error);
     m_dataChannelSocket.close(error);
     m_dataChannelResponseThread.join();
-    m_disconnecting = false;
+    m_dataChannelDisconnecting = false;
 
     SendServerCommand(ServerCommand::Unsubscribe);
 }

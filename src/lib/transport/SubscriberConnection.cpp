@@ -410,6 +410,13 @@ const SignalIndexCachePtr& SubscriberConnection::GetSignalIndexCache()
 	return m_signalIndexCache;
 }
 
+SignalIndexCachePtr SubscriberConnection::GetSignalIndexCache(int32_t& cacheIndex)
+{
+	ReaderLock readLock(m_signalIndexCacheLock);
+	cacheIndex = m_currentCacheIndex;
+	return m_signalIndexCache;
+}
+
 uint64_t SubscriberConnection::GetTotalCommandChannelBytesSent() const
 {
 	return m_totalCommandChannelBytesSent;
@@ -1227,7 +1234,11 @@ void SubscriberConnection::HandleDefineOperationalModes(const uint8_t* data, con
 	m_version = version;
 
 	if (m_version > 1)
+	{
+		// Cache index is paired with the active signal index cache, so update it under the same lock
+		WriterLock writeLock(m_signalIndexCacheLock);
 		m_currentCacheIndex = 1;
+	}
 
 	SetOperationalModes(operationalModes);
 
@@ -1450,7 +1461,9 @@ void SubscriberConnection::UpdateSignalIndexCache(SignalIndexCachePtr signalInde
 
 void SubscriberConnection::PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
-	const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
+	// Capture cache and its index together so published packets are flagged with the cache that mapped their run-time IDs
+	int32_t cacheIndex;
+	const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache(cacheIndex);
 
 	// Cache not available while initializing
 	if (signalIndexCache == nullptr || signalIndexCache->Count() == 0)
@@ -1479,7 +1492,7 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
 
 		if (packet.size() + length > MaxPacketSize)
 		{
-			PublishCompactDataPacket(packet, count);
+			PublishCompactDataPacket(packet, count, cacheIndex);
 			packet.clear();
 			count = 0;
 		}
@@ -1494,16 +1507,22 @@ void SubscriberConnection::PublishCompactMeasurements(const std::vector<Measurem
 	}
 
 	if (count > 0)
-		PublishCompactDataPacket(packet, count);
+		PublishCompactDataPacket(packet, count, cacheIndex);
 }
 
-void SubscriberConnection::PublishCompactDataPacket(const vector<uint8_t>& packet, const int32_t count)
+void SubscriberConnection::PublishCompactDataPacket(const vector<uint8_t>& packet, const int32_t count, const int32_t cacheIndex)
 {
 	vector<uint8_t> buffer;
 	buffer.reserve(packet.size() + 5);
 
+	uint8_t flags = DataPacketFlags::Compact;
+
+	// Identify which signal index cache maps the run-time IDs in this packet
+	if (cacheIndex > 0)
+		flags |= DataPacketFlags::CacheIndex;
+
 	// Serialize data packet flags into response
-	buffer.push_back(DataPacketFlags::Compact);
+	buffer.push_back(flags);
 
 	// Serialize total number of measurement values to follow
 	EndianConverter::WriteBigEndianBytes(buffer, count);
@@ -1523,7 +1542,9 @@ void SubscriberConnection::PublishCompactDataPacket(const vector<uint8_t>& packe
 
 void SubscriberConnection::PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements)
 {
-	const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache();
+	// Capture cache and its index together so published packets are flagged with the cache that mapped their run-time IDs
+	int32_t cacheIndex;
+	const SignalIndexCachePtr signalIndexCache = GetSignalIndexCache(cacheIndex);
 
 	// Cache not available while initializing
 	if (signalIndexCache == nullptr || signalIndexCache->Count() == 0)
@@ -1558,7 +1579,7 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 
 		if (!m_tsscEncoder.TryAddMeasurement(runtimeID, measurement->Timestamp, static_cast<uint32_t>(measurement->Flags), static_cast<float32_t>(measurement->AdjustedValue())))
 		{
-			PublishTSSCDataPacket(count);
+			PublishTSSCDataPacket(count, cacheIndex);
 			count = 0;
 
 			m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, TSSCBufferSize);
@@ -1569,17 +1590,23 @@ void SubscriberConnection::PublishTSSCMeasurements(const std::vector<Measurement
 	}
 
 	if (count > 0)
-		PublishTSSCDataPacket(count);
+		PublishTSSCDataPacket(count, cacheIndex);
 }
 
-void SubscriberConnection::PublishTSSCDataPacket(const int32_t count)
+void SubscriberConnection::PublishTSSCDataPacket(const int32_t count, const int32_t cacheIndex)
 {
 	const uint32_t length = m_tsscEncoder.FinishBlock();
 	vector<uint8_t> buffer;
 	buffer.reserve(static_cast<size_t>(length) + 8);
 
+	uint8_t flags = DataPacketFlags::Compressed;
+
+	// Identify which signal index cache maps the run-time IDs in this packet
+	if (cacheIndex > 0)
+		flags |= DataPacketFlags::CacheIndex;
+
 	// Serialize data packet flags into response
-	buffer.push_back(DataPacketFlags::Compressed);
+	buffer.push_back(flags);
 
 	// Serialize total number of measurement values to follow
 	EndianConverter::WriteBigEndianBytes(buffer, count);

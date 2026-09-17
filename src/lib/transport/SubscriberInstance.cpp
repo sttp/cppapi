@@ -856,7 +856,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
         const MemoryStream memoryStream(payload);
         StreamBuffer streamBuffer;
 
-        streamBuffer.push(GZipDecompressor());
+        streamBuffer.push(GZipDecompressor(), StreamFilterBufferSize);
         streamBuffer.push(memoryStream);
 
         CopyStream(&streamBuffer, uncompressedBuffer);
@@ -864,8 +864,7 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     else
     {
         // Copy payload to a local non-constant buffer, pugi load_buffer_inplace can modify buffer
-        for (auto byte : payload)
-            uncompressedBuffer.push_back(byte);
+        uncompressedBuffer.assign(payload.begin(), payload.end());
     }
 
     // Step 2: Load string into an XML parser
@@ -1016,16 +1015,19 @@ void SubscriberInstance::ReceivedMetadata(const vector<uint8_t>& payload)
     StringMap<ConfigurationFramePtr> configurationFrames;
     ConstructConfigurationFrames(devices, measurements, configurationFrames);
 
+    stringstream message;
+    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from STTP meta data...";
+
+    // Collections are swapped, not copied, since they can be large - this also means
+    // any prior metadata is released after the lock when local collections go out of scope
     m_configurationUpdateLock.lock();
 
-    m_configurationFrames = configurationFrames;    // Replace the configuration frames list
-    m_devices = devices;                            // Replace the device metadata list
-    m_measurements = measurements;                  // Replace the measurement metadata list
+    m_configurationFrames.swap(configurationFrames);    // Replace the configuration frames list
+    m_devices.swap(devices);                            // Replace the device metadata list
+    m_measurements.swap(measurements);                  // Replace the measurement metadata list
 
     m_configurationUpdateLock.unlock();
 
-    stringstream message;
-    message << "Loaded " << devices.size() << " devices, " << measurements.size() << " measurements and " << phasorCount << " phasors from STTP meta data...";
     StatusMessage(message.str());
 
     // Notify derived class that meta-data has been parsed and is now available

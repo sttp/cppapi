@@ -413,24 +413,50 @@ namespace sttp
         }
     };
 
+    // Buffer size for stream filters, e.g., compression, that are read in blocks. Filters otherwise
+    // default to very small buffers which, for zlib, also bypasses its optimized inflate code path.
+    static constexpr std::streamsize StreamFilterBufferSize = 65536;
+
     template<class T, class TElem = char>
     void CopyStream(T* source, std::vector<uint8_t>& sink)
     {
-        std::istreambuf_iterator<TElem> it{ source };
-        std::istreambuf_iterator<TElem> eos{};
+        if (source == nullptr)
+            return;
 
-        for (; it != eos; ++it)
-            sink.push_back(static_cast<uint8_t>(*it));
+        if constexpr (sizeof(TElem) == 1)
+        {
+            // Read in blocks, per-element iteration is slow for large streams, e.g., metadata
+            static constexpr size_t BlockSize = static_cast<size_t>(StreamFilterBufferSize);
+            size_t length = sink.size();
+
+            while (true)
+            {
+                sink.resize(length + BlockSize);
+
+                const std::streamsize count = source->sgetn(reinterpret_cast<TElem*>(sink.data() + length), static_cast<std::streamsize>(BlockSize));
+
+                if (count <= 0)
+                    break;
+
+                length += static_cast<size_t>(count);
+            }
+
+            sink.resize(length);
+        }
+        else
+        {
+            std::istreambuf_iterator<TElem> it{ source };
+            std::istreambuf_iterator<TElem> eos{};
+
+            for (; it != eos; ++it)
+                sink.push_back(static_cast<uint8_t>(*it));
+        }
     }
 
     template<class T, class TElem = char>
     void CopyStream(T& source, std::vector<uint8_t>& sink)
     {
-        std::istreambuf_iterator<TElem> it{ source };
-        std::istreambuf_iterator<TElem> eos{};
-
-        for (; it != eos; ++it)
-            sink.push_back(static_cast<uint8_t>(*it));
+        CopyStream<std::basic_streambuf<TElem>, TElem>(source.rdbuf(), sink);
     }
 
     template<class T>

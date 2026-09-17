@@ -97,6 +97,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubscriberShutdownTest", "s
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubscriberStartupTest", "samples\SubscriberStartupTest\SubscriberStartupTest.vcxproj", "{C4B8DBA3-AB7D-48E5-A683-F6B75D871B72}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PublisherCacheIndexTest", "samples\PublisherCacheIndexTest\PublisherCacheIndexTest.vcxproj", "{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -241,6 +243,14 @@ Global
 		{C4B8DBA3-AB7D-48E5-A683-F6B75D871B72}.Release|x64.Build.0 = Release|x64
 		{C4B8DBA3-AB7D-48E5-A683-F6B75D871B72}.Release|x86.ActiveCfg = Release|Win32
 		{C4B8DBA3-AB7D-48E5-A683-F6B75D871B72}.Release|x86.Build.0 = Release|Win32
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Debug|x64.ActiveCfg = Debug|x64
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Debug|x64.Build.0 = Debug|x64
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Debug|x86.ActiveCfg = Debug|Win32
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Debug|x86.Build.0 = Debug|Win32
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Release|x64.ActiveCfg = Release|x64
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Release|x64.Build.0 = Release|x64
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Release|x86.ActiveCfg = Release|Win32
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -263,6 +273,7 @@ Global
 		{C2BA680E-FC97-4081-8908-34E276F10D57} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{9CE8ADB5-A8C1-4A6F-A26C-75C2DE99F14C} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 		{C4B8DBA3-AB7D-48E5-A683-F6B75D871B72} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
+		{7E3A1C42-5D96-4B08-9F21-6C0D84B2E5A7} = {5F0EBD31-32E2-4050-8FF5-79180451E897}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B203181-6C35-4A5F-83EC-64DCA74A8B61}

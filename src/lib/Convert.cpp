@@ -660,6 +660,111 @@ const char* sttp::Coalesce(const char* data, const char* nonEmptyValue)
     return data;
 }
 
+// Attempt to parse a fully specified ISO 8601 style timestamp, e.g.: 2018-03-14T19:23:11.665-04:00
+// This is the format used for timestamps in metadata exchange where a very large number of values
+// may need to be parsed, so fixed positions are read directly. Any deviation from this format, or
+// any unusual value, returns false so that general parsing can be applied instead.
+bool TryParseISOTimestamp(const char* time, datetime_t& timestamp, TimeSpan& utcOffset)
+{
+    // A null terminator fails the digit test, so parsing never reads beyond end of string
+    const auto parseDigits = [](const char* value, const int32_t count, int32_t& result)
+    {
+        result = 0;
+
+        for (int32_t i = 0; i < count; i++)
+        {
+            if (value[i] < '0' || value[i] > '9')
+                return false;
+
+            result = result * 10 + (value[i] - '0');
+        }
+
+        return true;
+    };
+
+    int32_t year, month, day, hour, minute, second;
+
+    // Fixed width date and time: YYYY-MM-DDTHH:MM:SS
+    if (!parseDigits(time, 4, year) || time[4] != '-' ||
+        !parseDigits(time + 5, 2, month) || time[7] != '-' ||
+        !parseDigits(time + 8, 2, day) || (time[10] != 'T' && time[10] != 't' && time[10] != ' ') ||
+        !parseDigits(time + 11, 2, hour) || time[13] != ':' ||
+        !parseDigits(time + 14, 2, minute) || time[16] != ':' ||
+        !parseDigits(time + 17, 2, second))
+        return false;
+
+    if (year < 1400 || month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59 || second > 59)
+        return false;
+
+    if (day > gregorian_calendar::end_of_month_day(static_cast<uint16_t>(year), static_cast<uint16_t>(month)))
+        return false;
+
+    const char* position = time + 19;
+    int64_t fraction = 0;
+
+    // Optional fractional seconds: digits beyond supported resolution are dropped
+    if (*position == '.')
+    {
+        const int32_t precision = TimeSpan::num_fractional_digits();
+        int32_t digits = 0;
+
+        for (++position; *position >= '0' && *position <= '9'; ++position, ++digits)
+        {
+            if (digits < precision)
+                fraction = fraction * 10 + (*position - '0');
+        }
+
+        if (digits == 0)
+            return false;
+
+        for (; digits < precision; ++digits)
+            fraction *= 10;
+    }
+
+    int32_t offsetHours = 0, offsetMinutes = 0;
+    bool negativeOffset = false;
+
+    // Optional time zone: Z, +HH:MM, -HH:MM, +HHMM or -HHMM
+    if (*position == 'Z' || *position == 'z')
+    {
+        ++position;
+    }
+    else if (*position == '+' || *position == '-')
+    {
+        negativeOffset = *position == '-';
+
+        if (!parseDigits(++position, 2, offsetHours))
+            return false;
+
+        position += 2;
+
+        if (*position == ':')
+            ++position;
+
+        if (!parseDigits(position, 2, offsetMinutes))
+            return false;
+
+        position += 2;
+
+        if (offsetHours > 23 || offsetMinutes > 59 || (offsetHours == 0 && offsetMinutes != 0))
+            return false;
+    }
+
+    // Entire string must be consumed
+    if (*position != '\0')
+        return false;
+
+    timestamp = datetime_t(date(static_cast<uint16_t>(year), static_cast<uint16_t>(month), static_cast<uint16_t>(day)), TimeSpan(hour, minute, second, fraction));
+
+    // Time zone sign is swapped for conversion to UTC
+    utcOffset = TimeSpan(offsetHours, offsetMinutes, 0);
+
+    if (!negativeOffset)
+        utcOffset = -utcOffset;
+
+    return true;
+}
+
 // Attempt to parse a timestamp string, e.g.: 2018-03-14T19:23:11.665-04:00
 bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const datetime_t& defaultValue, const bool parseAsUTC)
 {
@@ -669,6 +774,16 @@ bool sttp::TryParseTimestamp(const char* time, datetime_t& timestamp, const date
     };
 
     TimeSpan utcOffset{};
+
+    // Common timestamp format is parsed directly, this is much faster than general parsing
+    if (time != nullptr && TryParseISOTimestamp(time, timestamp, utcOffset))
+    {
+        if (parseAsUTC)
+            timestamp += utcOffset;
+
+        return true;
+    }
+
     const string cleanTimestamp = PreparseTimestamp(time, utcOffset);
 
     for (const locale& format : formats)

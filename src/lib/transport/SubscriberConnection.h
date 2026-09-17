@@ -140,9 +140,9 @@ namespace sttp::transport
         SignalIndexCachePtr ParseSubscriptionRequest(const std::string& filterExpression, bool& success);
         void UpdateSignalIndexCache(SignalIndexCachePtr signalIndexCache);
         void PublishCompactMeasurements(const std::vector<MeasurementPtr>& measurements);
-        void PublishCompactDataPacket(const std::vector<uint8_t>& packet, int32_t count);
+        void PublishCompactDataPacket(const std::vector<uint8_t>& packet, int32_t count, int32_t cacheIndex);
         void PublishTSSCMeasurements(const std::vector<MeasurementPtr>& measurements);
-        void PublishTSSCDataPacket(int32_t count);
+        void PublishTSSCDataPacket(int32_t count, int32_t cacheIndex);
         bool SendDataStartTime(uint64_t timestamp);
         void ReadCommandChannel();
         void ReadPayloadHeader(const ErrorCode& error, size_t bytesTransferred);
@@ -295,6 +295,11 @@ namespace sttp::transport
 
         // Gets signal index cache for subscriber representing run-time mappings for subscribed points
         const SignalIndexCachePtr& GetSignalIndexCache();
+
+        // Gets signal index cache for subscriber along with the cache index, i.e., 0 or 1, that is currently
+        // in effect. Both values are captured as a single locked snapshot so that a published data packet can
+        // always be flagged with the index of the cache that actually produced its run-time IDs.
+        SignalIndexCachePtr GetSignalIndexCache(int32_t& cacheIndex);
 
         // Statistical functions
         uint64_t GetTotalCommandChannelBytesSent() const;
