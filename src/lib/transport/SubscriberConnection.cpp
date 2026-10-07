@@ -1402,7 +1402,7 @@ SignalIndexCachePtr SubscriberConnection::ParseSubscriptionRequest(const string&
 	for (size_t i = 0; i < rows.size(); i++)
 	{
 		const DataRowPtr& row = rows[i];
-		const Guid& signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
+		const Guid signalID = row->ValueAsGuid(signalIDColumn).GetValueOrDefault();
 		string source;
 		uint64_t id;
 

@@ -566,11 +566,11 @@ bool sttp::IsGuid(const string& value)
 Guid sttp::ParseGuid(const uint8_t* data, const bool swapEndianness)
 {
     Guid id;
+    uint8_t swappedBytes[16];
     uint8_t* encodedBytes;
 
     if (swapEndianness)
     {
-        uint8_t swappedBytes[16];
         uint8_t copy[8];
 
         for (uint32_t i = 0; i < 16; i++)
